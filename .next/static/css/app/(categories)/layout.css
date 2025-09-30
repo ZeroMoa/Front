@@ -1,0 +1,168 @@
+/*!*****************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./app/(categories)/components/Navbar.module.css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************************/
+/* components/Navbar.module.css */
+.Navbar_navbar__qaFt9 {
+    width: 200px;
+    height: 100%;
+    background-color: white;
+    border-right: 1px solid #eee;
+    position: absolute;
+    left: 0;
+    top: 0;
+    top: 0;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.Navbar_section__IzdsM {
+    margin-bottom: 20px;
+}
+
+.Navbar_sectionTitle__dpvuU {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.Navbar_divider__r5gPd {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 15px 0;
+}
+
+.Navbar_searchBox__tePjX {
+    position: relative;
+    width: 100%;
+}
+
+.Navbar_searchInput__U_RRt {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.Navbar_searchButton__7yBG5 {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.Navbar_filterList__zf6ct {
+    list-style: none;
+    padding: 0;
+}
+
+.Navbar_filterItem__gFOuS {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    cursor: pointer;
+}
+
+.Navbar_filterItem__gFOuS input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.Navbar_filterItem__gFOuS span {
+    font-size: 0.9rem;
+}
+
+@media (max-width: 1024px) {
+    .Navbar_container__yrTUM {
+        width: 100%;
+        padding: 0 20px;
+    }
+    
+    .Navbar_navbar__qaFt9 {
+        width: 180px;
+    }
+    
+    .Navbar_mainContent__9QwIH {
+        width: calc(100% - 180px);
+        margin-left: 180px;
+    }
+}
+/*!******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./app/(categories)/layout.module.css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************/
+/* app/(categories)/layout.module.css */
+.layout_container__725Rd {
+    width: 1024px;
+    margin: 0 auto;
+    display: flex;
+    position: relative;
+    min-height: 100vh;
+}
+
+.layout_mainContent__VCOxv {
+    width: calc(1024px - 200px); /* Navbar 너비를 뺀 값 */
+    margin-left: 200px;  /* Navbar 너비만큼 margin 추가 */
+    padding: 20px;
+    box-sizing: border-box;  /* padding이 width에 포함되도록 설정 */
+}
+
+/* Navbar 스타일 */
+.layout_navbar__bingt {
+    position: fixed;
+    left: calc((100% - 1024px) / 2);  /* 중앙 정렬을 위한 계산 */
+    top: 120px;
+    width: 200px;
+    height: calc(100vh - 120px);
+    background: white;
+    padding: 20px;
+    overflow-y: auto;
+}
+/*!******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./components/SearchHeader.module.css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************/
+/* app/(categories)/components/SearchHeader.module.css */
+.SearchHeader_header__j1Rmo {
+    background-color: #59BAFF;
+    padding: 1rem 0;
+    margin-top: 120px;  /* MainHeader 높이만큼 마진 추가 */
+    width: 100%;
+}
+
+.SearchHeader_navbar__zLx3F {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.SearchHeader_searchContainer___wkgL {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.SearchHeader_searchInput__tgfib {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 25px;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+    padding-right: 3rem;
+}
+
+.SearchHeader_searchButton__y8Wci {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}

@@ -1,0 +1,27 @@
+/* app/(categories)/layout.module.css */
+.container {
+    width: 1024px;
+    margin: 0 auto;
+    display: flex;
+    position: relative;
+    min-height: 100vh;
+}
+
+.mainContent {
+    width: calc(1024px - 200px); /* Navbar 너비를 뺀 값 */
+    margin-left: 200px;  /* Navbar 너비만큼 margin 추가 */
+    padding: 20px;
+    box-sizing: border-box;  /* padding이 width에 포함되도록 설정 */
+}
+
+/* Navbar 스타일 */
+.navbar {
+    position: fixed;
+    left: calc((100% - 1024px) / 2);  /* 중앙 정렬을 위한 계산 */
+    top: 120px;
+    width: 200px;
+    height: calc(100vh - 120px);
+    background: white;
+    padding: 20px;
+    overflow-y: auto;
+}

@@ -1,0 +1,6 @@
+{
+  "/(product)/[productNo]/page": "app/(product)/[productNo]/page.js",
+  "/(categories)/drinks/page": "app/(categories)/drinks/page.js",
+  "/(categories)/snacks/page": "app/(categories)/snacks/page.js",
+  "/(home)/page": "app/(home)/page.js"
+}

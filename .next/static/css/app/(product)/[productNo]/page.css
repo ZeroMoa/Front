@@ -1,0 +1,402 @@
+/*!*************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./app/(product)/[productNo]/page.module.css ***!
+  \*************************************************************************************************************************************************************************************************************************************************************************************/
+.page_wrapper__ujBTN {
+    padding-top: 15px; /* 헤더(100px) + 서치헤더(56px) 높이 */
+}
+
+.page_productContainer__hp3Ec {
+    display: flex;
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 15px 0;
+    gap: 60px;
+}
+
+.page_imageSection___LMDr {
+    width: 430px;
+    flex-shrink: 0;
+}
+
+.page_imageWrapper__YgF3I {
+    position: relative;
+    width: 100%;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.page_productImage__cqTNc {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.page_infoSection__0Fo0x {
+    width: 560px;
+    flex-grow: 1;
+}
+
+.page_productHeader__wBV6P {
+    margin-bottom: 20px;
+}
+
+.page_productMeta__Bh0Z6 {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page_category__Tpqir {
+    display: inline-block;
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.page_productName__fIUiK {
+    font-size: 24px;
+    font-weight: 500;
+    color: #333;
+    line-height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page_companyName__vyenE {
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
+}
+
+.page_description__11P2o {
+    font-size: 14px;
+    color: #b5b5b5;
+    margin-top: 4px;
+}
+
+.page_nutritionTable__FLiSi {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+
+.page_sectionTitle__CLyp_ {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+
+.page_nutritionContent__lq8N3 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 0 40px;
+    gap: 0 40px;
+}
+
+.page_nutritionRow__iMU6x {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-bottom: 1px solid #f4f4f4;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.page_nutritionLabel__Yv9Mq {
+    color: #333;
+}
+
+.page_ingredients__cnHql {
+    margin-top: 30px;
+}
+
+.page_ingredient__TJchk {
+    display: inline-block;
+    margin-right: 4px;
+    line-height: 1.6;
+}
+
+/* 쉼표 다음에 줄바꿈 효과 추가 */
+.page_ingredient__TJchk:after {
+    content: '\A';
+    white-space: pre;
+}
+
+/* 마지막 ingredient는 줄바꿈 하지 않음 */
+.page_ingredient__TJchk:last-child:after {
+    content: '';
+}
+
+.page_loading__J82if, .page_error__cSBTg, .page_notFound__1KIHP {
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
+}
+
+.page_error__cSBTg {
+    color: #e53935;
+}
+
+.page_relatedProducts__irDZd {
+    max-width: 1050px;
+    margin: 60px auto;
+    padding-top: 40px;
+    border-top: 1px solid #ddd;
+}
+
+.page_relatedProductsGrid__3_zz9 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 15px;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.page_relatedProductCard__PmrAX {
+    position: relative;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;  /* 최소 높이만 지정 */
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.page_relatedProductCard__PmrAX:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 키보드 접근성을 위한 포커스 스타일 */
+.page_relatedProductCard__PmrAX:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.page_relatedProductImage__S65Bp {
+    width: 100%;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.page_productImage__cqTNc {
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.page_relatedProductInfo__aIkqJ {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1;
+}
+
+.page_relatedProductInfo__aIkqJ h4 {
+    min-height: 40px;  /* 최소 높이 설정 */
+    height: auto;  /* 자동 높이 조정 */
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+    /* 여러 줄 표시 설정 제거 */
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.page_nutritionDivider__amZyh {
+    width: 100%;
+    border-top: 1px solid #ddd;
+    margin: 20px 0;  /* 위아래 여백 20px */
+}
+
+.page_nutritionInfo__0OkmG {
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;  /* 영양성분 항목 간 간격 */
+}
+
+.page_warningIconsContainer__XEEGh {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    z-index: 2;
+}
+
+.page_tooltipContainer__TnxwB {
+    position: relative;
+    display: inline-block;
+}
+
+.page_tooltip___yuzV {
+    visibility: hidden;
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    margin-bottom: 5px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.page_tooltip___yuzV::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 10px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+}
+
+.page_tooltipContainer__TnxwB:hover .page_tooltip___yuzV {
+    visibility: visible;
+}
+
+/* 대체당 정보가 길 경우를 위한 스타일 */
+.page_nutritionRow__iMU6x:last-child {
+    margin-bottom: 8px;
+}
+
+/* 상세 페이지 영양성분 스타일 */
+.page_page_nutrition__iQAFr {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 12px 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.page_page_nutrition__iQAFr span:first-child {
+    text-align: left;
+}
+
+.page_page_nutrition__iQAFr span:nth-child(2) {
+    text-align: center;
+}
+
+.page_page_nutrition__iQAFr span:last-child {
+    text-align: right;
+}
+
+/* 대체당 정보도 동일한 스타일 적용 */
+.page_nutritionLabel__Yv9Mq {
+    text-align: left;
+}
+
+.page_productTitleContainer__YfXas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page_servingSize__cZDK_ {
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    color: #666;
+    border-bottom: 1px solid #ddd;
+    padding-bottom : 20px
+}
+
+.page_relatedServingSize__rPevh {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.page_warningIconsContainer__XEEGh {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.page_warningIcon__gE0di, .page_coffeeIcon__Sk1Ml {
+    width: 24px;
+    height: 24px;
+}
+
+/* 관련 제품 영양성분 스타일 */
+.page_related_nutrition__auolz {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    border-bottom: 1px solid #ddd;  /* 모든 영양성분 항목에 구분선 추가 */
+}
+
+/* 마지막 항목의 구분선 제거 설정을 삭제 */
+/* .related_nutrition:last-child {
+    border-bottom: none;
+} */
+
+.page_related_nutrition_label__77RSv {
+    flex: 1 1;  /* 라벨 영역 flex 설정 */
+    text-align: left;
+}
+
+.page_related_nutrition__auolz span:last-child {
+    flex: 1 1;  /* 값 영역 flex 설정 */
+    text-align: right;
+}
+/*!******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./components/SearchHeader.module.css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************/
+/* app/(categories)/components/SearchHeader.module.css */
+.SearchHeader_header__j1Rmo {
+    background-color: #59BAFF;
+    padding: 1rem 0;
+    margin-top: 120px;  /* MainHeader 높이만큼 마진 추가 */
+    width: 100%;
+}
+
+.SearchHeader_navbar__zLx3F {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.SearchHeader_searchContainer___wkgL {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.SearchHeader_searchInput__tgfib {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 25px;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+    padding-right: 3rem;
+}
+
+.SearchHeader_searchButton__y8Wci {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}

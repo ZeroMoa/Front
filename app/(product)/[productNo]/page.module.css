@@ -1,0 +1,354 @@
+.wrapper {
+    padding-top: 15px; /* 헤더(100px) + 서치헤더(56px) 높이 */
+}
+
+.productContainer {
+    display: flex;
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 15px 0;
+    gap: 60px;
+}
+
+.imageSection {
+    width: 430px;
+    flex-shrink: 0;
+}
+
+.imageWrapper {
+    position: relative;
+    width: 100%;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.productImage {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.infoSection {
+    width: 560px;
+    flex-grow: 1;
+}
+
+.productHeader {
+    margin-bottom: 20px;
+}
+
+.productMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.category {
+    display: inline-block;
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.productName {
+    font-size: 24px;
+    font-weight: 500;
+    color: #333;
+    line-height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.companyName {
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
+}
+
+.description {
+    font-size: 14px;
+    color: #b5b5b5;
+    margin-top: 4px;
+}
+
+.nutritionTable {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+
+.nutritionContent {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 40px;
+}
+
+.nutritionRow {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-bottom: 1px solid #f4f4f4;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.nutritionLabel {
+    color: #333;
+}
+
+.ingredients {
+    margin-top: 30px;
+}
+
+.ingredient {
+    display: inline-block;
+    margin-right: 4px;
+    line-height: 1.6;
+}
+
+/* 쉼표 다음에 줄바꿈 효과 추가 */
+.ingredient:after {
+    content: '\A';
+    white-space: pre;
+}
+
+/* 마지막 ingredient는 줄바꿈 하지 않음 */
+.ingredient:last-child:after {
+    content: '';
+}
+
+.loading, .error, .notFound {
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
+}
+
+.error {
+    color: #e53935;
+}
+
+.relatedProducts {
+    max-width: 1050px;
+    margin: 60px auto;
+    padding-top: 40px;
+    border-top: 1px solid #ddd;
+}
+
+.relatedProductsGrid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.relatedProductCard {
+    position: relative;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;  /* 최소 높이만 지정 */
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.relatedProductCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 키보드 접근성을 위한 포커스 스타일 */
+.relatedProductCard:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.relatedProductImage {
+    width: 100%;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.productImage {
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.relatedProductInfo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.relatedProductInfo h4 {
+    min-height: 40px;  /* 최소 높이 설정 */
+    height: auto;  /* 자동 높이 조정 */
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+    /* 여러 줄 표시 설정 제거 */
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.nutritionDivider {
+    width: 100%;
+    border-top: 1px solid #ddd;
+    margin: 20px 0;  /* 위아래 여백 20px */
+}
+
+.nutritionInfo {
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;  /* 영양성분 항목 간 간격 */
+}
+
+.warningIconsContainer {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    z-index: 2;
+}
+
+.tooltipContainer {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip {
+    visibility: hidden;
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    margin-bottom: 5px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 10px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+}
+
+.tooltipContainer:hover .tooltip {
+    visibility: visible;
+}
+
+/* 대체당 정보가 길 경우를 위한 스타일 */
+.nutritionRow:last-child {
+    margin-bottom: 8px;
+}
+
+/* 상세 페이지 영양성분 스타일 */
+.page_nutrition {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 12px 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.page_nutrition span:first-child {
+    text-align: left;
+}
+
+.page_nutrition span:nth-child(2) {
+    text-align: center;
+}
+
+.page_nutrition span:last-child {
+    text-align: right;
+}
+
+/* 대체당 정보도 동일한 스타일 적용 */
+.nutritionLabel {
+    text-align: left;
+}
+
+.productTitleContainer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.servingSize {
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    color: #666;
+    border-bottom: 1px solid #ddd;
+    padding-bottom : 20px
+}
+
+.relatedServingSize {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.warningIconsContainer {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.warningIcon, .coffeeIcon {
+    width: 24px;
+    height: 24px;
+}
+
+/* 관련 제품 영양성분 스타일 */
+.related_nutrition {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    border-bottom: 1px solid #ddd;  /* 모든 영양성분 항목에 구분선 추가 */
+}
+
+/* 마지막 항목의 구분선 제거 설정을 삭제 */
+/* .related_nutrition:last-child {
+    border-bottom: none;
+} */
+
+.related_nutrition_label {
+    flex: 1;  /* 라벨 영역 flex 설정 */
+    text-align: left;
+}
+
+.related_nutrition span:last-child {
+    flex: 1;  /* 값 영역 flex 설정 */
+    text-align: right;
+}

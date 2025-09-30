@@ -1,0 +1,75 @@
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('/fonts/NanumSquareRoundB.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'FlightSans';
+  src: url('/fonts/FlightSans-Regular.ttf') format('truetype');
+}
+
+:root {
+  --font: 'NanumSquareRound', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: var(--font);
+}
+  
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+  
+body {
+  position: relative;
+}
+  
+main {
+  width: 1920px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+  
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 메인 페이지 제외한 다른 페이지들을 위한 컨테이너 */
+.limited-container {
+  max-width: 1024px;
+  margin: 0 auto;
+  position: relative;
+  min-height: 100vh;
+  background-color: white;
+}
+
+/* 사이드바 스타일 수정 */
+.limited-container .sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 300px;
+  background-color: white;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+
+.limited-container .content-area {
+  margin-right: 300px; /* 사이드바 너비만큼 여백 */
+  transition: margin-right 0.3s ease;
+}
+
+.limited-container .content-area.expanded {
+  margin-right: 0;
+}

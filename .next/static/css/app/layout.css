@@ -1,0 +1,160 @@
+/*!****************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./components/MainHeader.module.css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************/
+.MainHeader_wrap__bLJ2B {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 100px 10px;
+    background-color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 120px;
+    z-index: 1000;
+    min-width: 1200px;
+    justify-content: center;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: rgba(0, 0, 0, 0.07) 0px 3px 4px 0px;
+}
+
+.MainHeader_navContainer__Zk_SB {
+    width: 1024px;
+    display: flex;
+    align-items: flex-end;
+    position: relative;
+    margin: 0 auto;
+    height: 100%;
+}
+
+.MainHeader_logo__nhb5N {
+    position: absolute;
+    left: -20px;
+}
+
+.MainHeader_nav_links___zgmN {
+    display: flex;
+    list-style: none;
+    font-size: 1.5rem;
+    gap: 5rem;
+    margin: 0 auto;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.MainHeader_nav_links___zgmN a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+}
+
+.MainHeader_nav_icons__CwPBA {
+    position: absolute;
+    right: 2rem;
+    top: 35px;
+    display: flex;
+    gap: 1rem;
+}
+
+.MainHeader_iconButton__6RFhG {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.MainHeader_linkButton____vQG {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: inherit;
+    color: #333;
+    padding: 0;
+    font-weight: 500;
+}
+
+.MainHeader_linkButton____vQG:hover {
+    color: #2563eb;
+}
+/*!***************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./styles/global.css ***!
+  \***************************************************************************************************************************************************************************************************************************************************************/
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('/fonts/NanumSquareRoundB.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'FlightSans';
+  src: url('/fonts/FlightSans-Regular.ttf') format('truetype');
+}
+
+:root {
+  --font: 'NanumSquareRound', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: var(--font);
+}
+  
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+  
+body {
+  position: relative;
+}
+  
+main {
+  width: 1920px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+  
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 메인 페이지 제외한 다른 페이지들을 위한 컨테이너 */
+.limited-container {
+  max-width: 1024px;
+  margin: 0 auto;
+  position: relative;
+  min-height: 100vh;
+  background-color: white;
+}
+
+/* 사이드바 스타일 수정 */
+.limited-container .sidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 300px;
+  background-color: white;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+
+.limited-container .content-area {
+  margin-right: 300px; /* 사이드바 너비만큼 여백 */
+  transition: margin-right 0.3s ease;
+}
+
+.limited-container .content-area.expanded {
+  margin-right: 0;
+}
