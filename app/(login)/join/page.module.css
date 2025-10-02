@@ -1,0 +1,467 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f2f5; /* 기존 배경색 */
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* 기존 그림자 */
+    padding: 2.5rem 3.5rem;
+    width: 600px;
+    max-width: 90%;
+    /* height: auto;  내용에 따라 자동 조절 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.logoContainer {
+    margin-bottom: 2rem;
+}
+
+.logo {
+    width: 250px; /* 적절히 조절 */
+    height: auto;
+    object-fit: contain;
+}
+
+.title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+    width: 100%;
+    text-align: left;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 2.5rem;
+    width: 100%;
+    text-align: left;
+}
+
+.inputGroup {
+    width: 100%;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.inputGroup label {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    color: #333;
+    font-weight: 500;
+}
+
+.inputFieldContainer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.inputField {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid #ddd; /* 기존 보더 색상 */
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.inputField:focus {
+    outline: none;
+    border-color: #007bff; /* 기존 강조색 (파란색) */
+}
+
+.checkButton {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd; /* 기존 보더 색상 */
+    padding: 12px 18px;
+    border-radius: 5px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.checkButton:hover {
+    background-color: #e0e0e0; /* 기존 hover 색상 */
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 40px;
+}
+
+.button {
+    flex: 1;
+    padding: 15px 1.5rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.prevButton {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd; /* 기존 보더 색상 */
+}
+
+.prevButton:hover {
+    background-color: #e0e0e0; /* 기존 hover 색상 */
+}
+
+.nextButton {
+    background-color: #007bff; /* 기존 메인 색상 (파란색) */
+    color: #fff;
+}
+
+.nextButton:hover {
+    background-color: #0056b3; /* 기존 hover 색상 */
+}
+
+/* 회원가입 완료 화면 */
+.completionCard {
+    width: 800px;
+    height: 540px;
+    max-width: 90%;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+}
+
+.checkIcon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 2rem;
+}
+
+.completionMessage {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.completionSubtitle {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 2.5rem;
+    line-height: 1.5;
+}
+
+.loginButton {
+    background-color: #007bff; /* 기존 메인 색상 (파란색) */
+    color: #fff;
+    padding: 1rem 3rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.loginButton:hover {
+    background-color: #0056b3; /* 기존 hover 색상 */
+}
+
+/* 오류 메시지 스타일 */
+.errorMessage {
+    color: #dc3545; /* 빨간색 */
+    font-size: 0.85rem;
+    margin-top: 5px;
+    text-align: left;
+    width: 100%;
+}
+
+/* 성공 메시지 스타일 */
+.successMessage {
+    color: #28a745; /* 초록색 */
+    font-size: 0.85rem;
+    margin-top: 5px;
+    text-align: left;
+    width: 100%;
+}
+
+/* 필수 항목 별표 스타일 */
+.requiredField {
+    color: #dc3545; /* 빨간색 */
+    margin-left: 4px;
+    font-weight: 700;
+}
+
+/* 필수 입력 사항 텍스트 스타일 */
+.requiredInfo {
+    position: absolute;
+    top: 30px;
+    right: 35px;
+    font-size: 0.85rem;
+    color: #333; /* 검정색 */
+    font-weight: 500;
+}
+
+.requiredInfo::before {
+    content: '*';
+    color: #dc3545; /* 빨간색 */
+    margin-right: 4px;
+    font-weight: 700;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .card, .completionCard {
+        width: 95%;
+        padding: 1.5rem;
+    }
+    .title {
+        font-size: 1.5rem;
+    }
+    .subtitle {
+        font-size: 0.9rem;
+    }
+    .inputGroup label {
+        font-size: 0.9rem;
+    }
+    .inputField, .checkButton, .button, .loginButton {
+        font-size: 0.95rem;
+        padding: 0.7rem 1rem;
+    }
+    .completionMessage {
+        font-size: 1.5rem;
+    }
+    .requiredInfo {
+        top: 20px;
+        right: 20px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .card, .completionCard {
+        padding: 1rem;
+    }
+    .checkIcon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 1.5rem;
+    }
+    .completionMessage {
+        font-size: 1.3rem;
+    }
+    .completionSubtitle {
+        font-size: 0.85rem;
+    }
+    .loginButton {
+        padding: 0.8rem 2rem;
+        font-size: 1rem;
+    }
+    .buttonGroup {
+        flex-direction: column;
+    }
+}
+
+.boxEmail {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.boxInput {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd; /* 이 선을 추가하여 div에 테두리를 부여 */
+    border-radius: 5px; /* inputInfo의 border-radius와 동일하게 */
+    overflow: hidden; /* 자식 요소가 부모의 둥근 모서리를 넘지 않도록 */
+}
+
+.inputInfo {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    border: none; /* input 자체의 border 제거 */
+    outline: none; /* 포커스 시 아웃라인 제거 */
+}
+
+.emailInput {
+    padding-right: 40px; /* 아이콘 공간 확보 */
+}
+
+.inputInfo:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.btnDel {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.icoIDel {
+    width: 20px;
+    height: 20px;
+    background-color: #999; /* 예시 색상 */
+    -webkit-mask: url('/images/ico_del.svg') no-repeat 50% 50%; /* 삭제 아이콘 경로 */
+    mask: url('/images/ico_del.svg') no-repeat 50% 50%; /* 삭제 아이콘 경로 */
+    display: block;
+}
+
+.textAt {
+    font-size: 1rem;
+    color: #333;
+}
+
+.boxSelect {
+    position: relative;
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    display: flex; /* 내부 요소들을 배치하기 위해 flex 유지 */
+    align-items: center; /* 세로 중앙 정렬 */
+    height: 44px; /* inputInfo와 높이 맞춤 */
+}
+
+.boxSelect.on .boxLayer {
+    display: block;
+}
+
+.domainDisplayField,
+.domainInputField {
+    flex: 1; /* 나머지 공간을 모두 차지 */
+    padding: 12px 15px;
+    background: none;
+    text-align: left;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box; /* 패딩 포함 너비 계산 */
+    border-radius: 5px; /* 부모 boxSelect와 동일하게 */
+    height: 100%; /* 부모 boxSelect와 높이 맞춤 */
+    display: flex;
+    align-items: center;
+}
+
+.domainInputField {
+    border: none; /* input은 별도 보더 없음, 부모 boxSelect의 보더 사용 */
+    outline: none; /* 포커스 시 아웃라인 제거 */
+}
+
+.selectArrowContainer {
+    position: relative; /* boxSelect 내에서 상대 위치 */
+    width: 40px; /* 화살표 영역 너비 */
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer; /* 화살표 div만 클릭 가능하도록 */
+}
+
+.selectArrow {
+    font-size: 0.8rem;
+    color: #666;
+    pointer-events: none; /* 화살표 자체 클릭 방지, 부모 selectArrowContainer로 이벤트 전달 */
+}
+
+.boxLayer {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.listAdress {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.listItem {
+    padding: 0;
+}
+
+.buttonMail {
+    width: 100%;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+}
+
+.buttonMail:hover {
+    background-color: #f0f0f0;
+}
+
+.textCont {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 10px;
+    width: 100%;
+    text-align: left;
+}
+
+.hasValue {
+    background-color: #f9f9f9; /* 값이 있을 때의 연한 배경색 */
+    transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+}
+
+/* 오류가 있는 경우 배경색이 덮어쓰지 않도록 */
+.inputField.hasValue,
+.inputInfo.hasValue {
+    background-color: #f9f9f9;
+}
+
+.boxInput.hasValue {
+    background-color: #f9f9f9;
+}
+
+.joinError.hasValue .inputInfo,
+.joinError.hasValue.boxInput {
+    background-color: #fff; /* 오류 시에는 기본 배경 유지 */
+}
