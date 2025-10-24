@@ -1,0 +1,660 @@
+/* [project]/styles/global.css [app-client] (css) */
+@font-face {
+  font-family: NanumSquareRound;
+  src: url("/fonts/NanumSquareRoundB.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: FlightSans;
+  src: url("/fonts/FlightSans-Regular.ttf") format("truetype");
+}
+
+:root {
+  --font: "NanumSquareRound", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: var(--font);
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  position: relative;
+}
+
+main {
+  width: 1920px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.limited-container {
+  background-color: #fff;
+  max-width: 1024px;
+  min-height: 100vh;
+  margin: 0 auto;
+  position: relative;
+}
+
+.limited-container .sidebar {
+  z-index: 999;
+  background-color: #fff;
+  width: 300px;
+  height: 100%;
+  transition: all .3s;
+  position: absolute;
+  top: 0;
+  right: 0;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, .1);
+}
+
+.limited-container .content-area {
+  margin-right: 300px;
+  transition: margin-right .3s;
+}
+
+.limited-container .content-area.expanded {
+  margin-right: 0;
+}
+
+/* [project]/components/MainHeader.module.css [app-client] (css) */
+.MainHeader-module__04TKmW__wrap {
+  z-index: 1000;
+  background-color: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-width: 1200px;
+  height: 120px;
+  padding: 20px 100px 10px;
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, .07);
+}
+
+.MainHeader-module__04TKmW__navContainer {
+  align-items: flex-end;
+  width: 1024px;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  position: relative;
+}
+
+.MainHeader-module__04TKmW__logo {
+  position: absolute;
+  left: -20px;
+}
+
+.MainHeader-module__04TKmW__nav_links {
+  gap: 5rem;
+  margin: 0 auto;
+  padding-bottom: 10px;
+  font-size: 1.5rem;
+  list-style: none;
+  display: flex;
+  position: relative;
+}
+
+.MainHeader-module__04TKmW__nav_links a {
+  color: #333;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.MainHeader-module__04TKmW__nav_icons {
+  gap: 1rem;
+  display: flex;
+  position: absolute;
+  top: 35px;
+  right: 2rem;
+}
+
+.MainHeader-module__04TKmW__iconButton {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.MainHeader-module__04TKmW__linkButton {
+  cursor: pointer;
+  font-size: inherit;
+  color: #333;
+  background: none;
+  border: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  font-weight: 500;
+  display: flex;
+}
+
+.MainHeader-module__04TKmW__linkButton:hover {
+  color: #2563eb;
+}
+
+.MainHeader-module__04TKmW__authSection {
+  align-items: center;
+  gap: 15px;
+  display: flex;
+  position: absolute;
+  bottom: 10px;
+  right: 0;
+}
+
+.MainHeader-module__04TKmW__authLinks {
+  align-items: center;
+  gap: 10px;
+  display: flex;
+}
+
+.MainHeader-module__04TKmW__authLinkButton {
+  color: #333;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: color .2s;
+}
+
+.MainHeader-module__04TKmW__authLinkButton:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.MainHeader-module__04TKmW__authSeparator {
+  color: #ccc;
+  margin: 0 2px;
+  font-size: 1rem;
+}
+
+.MainHeader-module__04TKmW__loginButton {
+  color: #333;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 5px 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: color .2s;
+}
+
+.MainHeader-module__04TKmW__loginButton:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.MainHeader-module__04TKmW__iconGroup {
+  align-items: center;
+  gap: 15px;
+  display: flex;
+}
+
+.MainHeader-module__04TKmW__iconButton {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: transform .2s;
+}
+
+.MainHeader-module__04TKmW__iconButton:hover {
+  transform: scale(1.1);
+}
+
+.MainHeader-module__04TKmW__profileButtonContainer {
+  align-items: center;
+  display: flex;
+  position: relative;
+}
+
+.MainHeader-module__04TKmW__profileTooltip {
+  z-index: 1001;
+  background-color: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  flex-direction: column;
+  width: 150px;
+  display: flex;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+}
+
+.MainHeader-module__04TKmW__tooltipItem {
+  text-align: left;
+  cursor: pointer;
+  color: #333;
+  background: none;
+  border: none;
+  width: 100%;
+  padding: 10px 15px;
+  font-size: .95rem;
+  transition: background-color .2s;
+}
+
+.MainHeader-module__04TKmW__tooltipItem:hover {
+  background-color: #f0f0f0;
+}
+
+.MainHeader-module__04TKmW__logoutItem {
+  color: #e53e3e;
+  border-top: 1px solid #eee;
+}
+
+.MainHeader-module__04TKmW__logoutItem:hover {
+  background-color: #ffeaea;
+}
+
+.MainHeader-module__04TKmW__headerIcon {
+  width: 24px;
+  height: 24px;
+}
+
+/* [project]/components/NotificationModal.module.css [app-client] (css) */
+.NotificationModal-module__CPjgpW__modalOverlay {
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, .5);
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 80px;
+  display: flex;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.NotificationModal-module__CPjgpW__modalContent {
+  background-color: #fff;
+  border-radius: 8px;
+  flex-direction: column;
+  width: 380px;
+  max-height: 500px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+}
+
+.NotificationModal-module__CPjgpW__modalHeader {
+  border-bottom: 1px solid #eee;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  display: flex;
+}
+
+.NotificationModal-module__CPjgpW__modalHeader h2 {
+  color: #333;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.NotificationModal-module__CPjgpW__closeButton {
+  cursor: pointer;
+  color: #888;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  transition: color .2s;
+}
+
+.NotificationModal-module__CPjgpW__closeButton:hover {
+  color: #333;
+}
+
+.NotificationModal-module__CPjgpW__notificationList {
+  flex-grow: 1;
+  padding: 10px 20px;
+  overflow-y: auto;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem {
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: flex-start;
+  padding: 12px 0;
+  transition: background-color .2s;
+  display: flex;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem:last-child {
+  border-bottom: none;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem:hover {
+  background-color: #f9f9f9;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem.NotificationModal-module__CPjgpW__read {
+  color: #888;
+  background-color: #f8f8f8;
+}
+
+.NotificationModal-module__CPjgpW__notificationIcon {
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.NotificationModal-module__CPjgpW__notificationText {
+  flex-direction: column;
+  flex-grow: 1;
+  display: flex;
+}
+
+.NotificationModal-module__CPjgpW__notificationMessage {
+  color: #333;
+  margin: 0;
+  font-size: .95rem;
+  line-height: 1.4;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem.NotificationModal-module__CPjgpW__read .NotificationModal-module__CPjgpW__notificationMessage {
+  color: #888;
+}
+
+.NotificationModal-module__CPjgpW__notificationTimestamp {
+  color: #999;
+  margin-top: 4px;
+  font-size: .8rem;
+}
+
+.NotificationModal-module__CPjgpW__modalFooter {
+  text-align: center;
+  border-top: 1px solid #eee;
+  padding: 15px 20px;
+}
+
+.NotificationModal-module__CPjgpW__viewAllButton {
+  color: #fff;
+  cursor: pointer;
+  background-color: #6a0dad;
+  border: none;
+  border-radius: 5px;
+  width: 100%;
+  padding: 10px 15px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color .2s;
+}
+
+.NotificationModal-module__CPjgpW__viewAllButton:hover {
+  background-color: #5a0ca0;
+}
+
+/* [project]/components/LoginModal.module.css [app-client] (css) */
+.LoginModal-module__bikqZa__modalOverlay {
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, .7);
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.LoginModal-module__bikqZa__modalContent {
+  background-color: #fff;
+  border-radius: 10px;
+  flex-direction: column;
+  align-items: center;
+  width: 820px;
+  height: 850px;
+  padding: 2rem;
+  display: flex;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, .3);
+}
+
+.LoginModal-module__bikqZa__closeButton {
+  cursor: pointer;
+  color: #333;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.LoginModal-module__bikqZa__logoContainer {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-top: 1rem;
+}
+
+.LoginModal-module__bikqZa__logo {
+  object-fit: contain;
+  width: 486px;
+  height: 171px;
+}
+
+.LoginModal-module__bikqZa__inputGroup {
+  text-align: left;
+  width: 60%;
+  margin-bottom: 1.5rem;
+}
+
+.LoginModal-module__bikqZa__inputGroup label {
+  color: #333;
+  margin-bottom: .8rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  display: block;
+}
+
+.LoginModal-module__bikqZa__inputField {
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 100%;
+  padding: .8rem 1rem;
+  font-size: 1.1rem;
+}
+
+.LoginModal-module__bikqZa__optionsContainer {
+  justify-content: flex-end;
+  align-items: center;
+  width: 60%;
+  margin-top: .5rem;
+  margin-bottom: 2rem;
+  font-size: .95rem;
+  display: flex;
+}
+
+.LoginModal-module__bikqZa__autoLogin {
+  align-items: center;
+  margin-right: auto;
+  display: flex;
+}
+
+.LoginModal-module__bikqZa__autoLogin input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+}
+
+.LoginModal-module__bikqZa__findLinks {
+  color: #666;
+  text-decoration: none;
+}
+
+.LoginModal-module__bikqZa__findLinks:hover {
+  text-decoration: underline;
+}
+
+.LoginModal-module__bikqZa__buttonGroup {
+  gap: 1rem;
+  width: 60%;
+  margin-bottom: 2.5rem;
+  display: flex;
+}
+
+.LoginModal-module__bikqZa__button {
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  flex: 1;
+  padding: 1rem 1.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  transition: background-color .2s;
+}
+
+.LoginModal-module__bikqZa__signupButton {
+  color: #333;
+  background-color: #f0f0f0;
+}
+
+.LoginModal-module__bikqZa__signupButton:hover {
+  background-color: #e0e0e0;
+}
+
+.LoginModal-module__bikqZa__loginButton {
+  color: #fff;
+  background-color: #007bff;
+}
+
+.LoginModal-module__bikqZa__loginButton:hover {
+  background-color: #0056b3;
+}
+
+.LoginModal-module__bikqZa__socialLoginTitle {
+  color: #555;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.LoginModal-module__bikqZa__socialIcons {
+  gap: 2rem;
+  display: flex;
+}
+
+.LoginModal-module__bikqZa__socialIconContainer {
+  cursor: pointer;
+  background-color: #eee;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  transition: background-color .2s, transform .2s;
+  display: flex;
+}
+
+.LoginModal-module__bikqZa__socialIconContainer:hover {
+  background-color: #ddd;
+  transform: translateY(-3px);
+}
+
+.LoginModal-module__bikqZa__socialIcon {
+  object-fit: contain;
+  width: 40px;
+  height: 40px;
+}
+
+.LoginModal-module__bikqZa__separator {
+  color: #ccc;
+  margin: 0 8px;
+  font-weight: normal;
+}
+
+@media (max-width: 900px) {
+  .LoginModal-module__bikqZa__modalContent {
+    width: 90%;
+    height: auto;
+    max-height: 90vh;
+  }
+
+  .LoginModal-module__bikqZa__logo {
+    width: 80%;
+    height: auto;
+  }
+
+  .LoginModal-module__bikqZa__inputGroup, .LoginModal-module__bikqZa__optionsContainer, .LoginModal-module__bikqZa__buttonGroup {
+    width: 80%;
+  }
+
+  .LoginModal-module__bikqZa__socialIcons {
+    gap: 1rem;
+  }
+
+  .LoginModal-module__bikqZa__socialIconContainer {
+    width: 60px;
+    height: 60px;
+  }
+
+  .LoginModal-module__bikqZa__socialIcon {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 500px) {
+  .LoginModal-module__bikqZa__modalContent {
+    padding: 1rem;
+  }
+
+  .LoginModal-module__bikqZa__heroTitle {
+    font-size: 2rem;
+  }
+
+  .LoginModal-module__bikqZa__inputGroup label {
+    font-size: 1rem;
+  }
+
+  .LoginModal-module__bikqZa__inputField {
+    padding: .6rem .8rem;
+    font-size: 1rem;
+  }
+
+  .LoginModal-module__bikqZa__button {
+    padding: .8rem 1rem;
+    font-size: 1rem;
+  }
+
+  .LoginModal-module__bikqZa__socialIconContainer {
+    width: 50px;
+    height: 50px;
+  }
+
+  .LoginModal-module__bikqZa__socialIcon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .LoginModal-module__bikqZa__socialIcons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/*# sourceMappingURL=_2dbfaba5._.css.map*/

@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAppDispatch } from '../app/store/store'; // Redux dispatch 사용을 위해 import
+import { setLoggedIn, setUser } from '../app/store/authSlice'; // 로그인 상태 업데이트 액션 import
 import styles from './LoginModal.module.css'
 
 interface LoginModalProps {
@@ -15,15 +17,62 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [autoLogin, setAutoLogin] = useState(false);
+    const [loginError, setLoginError] = useState<string | null>(null); // 로그인 에러 메시지 상태 추가
+
+    // 비밀번호 가시성 상태 추가
+    const [showPassword, setShowPassword] = useState(false);
+
     const router = useRouter();
+    const dispatch = useAppDispatch(); // dispatch 초기화
 
     if (!isOpen) return null;
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => { // async로 변경
         e.preventDefault();
+        setLoginError(null); // 로그인 시도 시 에러 메시지 초기화
         console.log('로그인 시도:', { username, password, autoLogin });
-        // 여기에 실제 로그인 API 호출 로직 구현
-        // 로그인 성공 시 onClose();
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/login`, { // URL 수정: /user/login -> /login
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password, autoLogin }),
+                credentials: 'include', // 이 줄을 추가했습니다.
+            });
+
+            if (!response.ok) {
+                let errorData = { message: response.statusText || '로그인 실패: 서버 응답 오류' }; // 기본 오류 메시지를 statusText로 설정
+                const contentType = response.headers.get('content-type');
+
+                if (contentType && contentType.includes('application/json')) {
+                    try {
+                        errorData = await response.json();
+                    } catch (jsonError) {
+                        console.error('응답 JSON 파싱 실패:', jsonError);
+                        // JSON 파싱 실패 시, 이미 statusText로 기본 메시지가 설정되어 있음
+                    }
+                }
+                setLoginError(errorData.message || '로그인 실패: 알 수 없는 오류'); // errorData.message가 비어있을 경우를 대비
+                console.error('로그인 실패:', errorData);
+                return;
+            }
+
+            const userData = await response.json();
+            console.log('로그인 성공:', userData);
+
+            // Redux 상태 업데이트
+            dispatch(setLoggedIn(true));
+            dispatch(setUser({ id: userData.id, username: userData.username }));
+
+            onClose(); // 모달 닫기
+            router.push('/'); // 메인 페이지로 이동 또는 로그인 후 리다이렉트 처리
+
+        } catch (error) {
+            console.error('로그인 요청 중 오류 발생:', error);
+            setLoginError('네트워크 오류 또는 서버 응답 없음');
+        }
     };
 
     const handleSocialLogin = (provider: string) => {
@@ -33,7 +82,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
     const handleSignup = () => {
         onClose(); // 모달 닫기
-        router.push('/join'); // 회원가입 페이지로 이동
+        router.push('/login/join'); // 회원가입 페이지로 이동
     };
 
     return (
@@ -66,15 +115,31 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     </div>
                     <div className={styles.inputGroup}>
                         <label htmlFor="password">비밀번호</label>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            className={styles.inputField}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <div className={styles.inputFieldContainer}> {/* inputFieldContainer로 감싸기 */}
+                            <input 
+                                type={showPassword ? 'text' : 'password'} 
+                                id="password" 
+                                className={styles.inputField}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className={styles.passwordToggle} /* 새로운 스타일 클래스 */
+                                onClick={() => setShowPassword(prev => !prev)}
+                                aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                            >
+                                <Image 
+                                    src={showPassword ? '/images/open_eye.png' : '/images/closed_eye.png'}
+                                    alt={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                                    width={20}
+                                    height={20}
+                                />
+                            </button>
+                        </div>
                     </div>
+                    {loginError && <p className={styles.errorMessage}>{loginError}</p>} {/* 에러 메시지 표시 */}
 
                     <div className={styles.optionsContainer}>
                         <label className={styles.autoLogin}>
@@ -85,9 +150,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                             />
                             자동 로그인
                         </label>
-                        <Link href="/login/find-id" className={styles.findLinks} onClick={onClose}>아이디찾기</Link> 
-                        / 
-                        <Link href="/login/find-pw" className={styles.findLinks} onClick={onClose}>비밀번호 찾기</Link>
+                        <Link href="/login/find/id" className={styles.findLinks} onClick={onClose}>아이디찾기</Link><span className={styles.separator}>|</span><Link href="/login/find/pw" className={styles.findLinks} onClick={onClose}>비밀번호 찾기</Link>
                     </div>
 
                     <div className={styles.buttonGroup}>
@@ -103,10 +166,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <p className={styles.socialLoginTitle}>간편 로그인</p>
                 <div className={styles.socialIcons}>
                     <div className={styles.socialIconContainer} onClick={() => handleSocialLogin('Google')}>
-                        <Image src="/images/google.png" alt="Google" width={40} height={40} className={styles.socialIcon} />
+                        <Image src="/images/google.png" alt="Google" width={20} height={20} className={styles.socialIcon} />
                     </div>
                     <div className={styles.socialIconContainer} onClick={() => handleSocialLogin('Naver')}>
-                        <Image src="/images/naver.png" alt="Naver" width={40} height={40} className={styles.socialIcon} />
+                        <Image src="/images/naver.png" alt="Naver" width={20} height={20} className={styles.socialIcon} />
                     </div>
                 </div>
             </div>

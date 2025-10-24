@@ -1,0 +1,207 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.card {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.tabContainer {
+    display: flex;
+    width: 100%;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.tabButton {
+    flex: 1;
+    padding: 15px 0;
+    font-size: 16px;
+    color: #888;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: default; /* 단일 탭이므로 커서 변경 */
+    transition: all 0.2s ease-in-out;
+}
+
+.tabButton.activeTab {
+    color: #007bff;
+    border-color: #007bff;
+    font-weight: bold;
+}
+
+.tabContent {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.inputGroup {
+    width: 100%;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.inputGroup label {
+    display: block;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.inputField {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.inputField::placeholder {
+    color: #bbb;
+}
+
+.inputField:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(106, 13, 173, 0.2);
+}
+
+.errorBorder {
+    border-color: #ff4d4f !important;
+}
+
+.errorMessage {
+    color: #ff4d4f;
+    font-size: 13px;
+    margin-top: 5px;
+    text-align: left;
+}
+
+.confirmButton {
+    width: 100%;
+    padding: 15px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    margin-top: 10px;
+}
+
+.confirmButton:hover {
+    background-color: #007bff;
+}
+
+.confirmButton:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* 아이디 찾기 성공 화면 */
+.resultContainer {
+    text-align: center;
+    width: 100%;
+}
+
+.resultMessage {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.resultSubMessage {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.foundIdInfo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f8f8;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.profileIcon {
+    margin-right: 10px;
+}
+
+.maskedId {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-right: 15px;
+}
+
+.joinedDate {
+    font-size: 14px;
+    color: #777;
+}
+
+.fullIdButton {
+    width: 100%;
+    padding: 15px;
+    background-color: #fff;
+    color: #007bff;
+    font-size: 18px;
+    font-weight: bold;
+    border: 1px solid #007bff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    margin-bottom: 15px;
+}
+
+.fullIdButton:hover {
+    background-color: #f0e6fa;
+}
+
+.loginButton {
+    width: 100%;
+    padding: 15px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.loginButton:hover {
+    background-color: #007bff;
+}

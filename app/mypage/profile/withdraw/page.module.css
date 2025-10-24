@@ -1,0 +1,259 @@
+.pageWrapper {
+    display: flex;
+    justify-content: center;
+    padding: 40px 0;
+    background-color: #f7f7f7;
+    min-height: calc(100vh - var(--header-height)); /* 헤더 높이를 제외한 최소 높이 설정 */
+}
+
+.withdrawContainer {
+    width: 100%;
+    max-width: 640px;
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.headerSection {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.pageTitle {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+.noticeSection {
+    margin-bottom: 40px;
+    border: 1px solid #eee;
+    padding: 20px;
+    background-color: #fcfcfc;
+    border-radius: 4px;
+}
+
+.noticeHeader {
+    margin-bottom: 15px;
+}
+
+.noticeLabel {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.noticeContentWrapper {
+    line-height: 1.6;
+    color: #555;
+    font-size: 14px;
+}
+
+.strongText {
+    font-weight: 700;
+    color: #333;
+}
+
+.noticeContent ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 15px;
+}
+
+.listItem {
+    margin-bottom: 8px;
+    position: relative;
+    padding-left: 18px;
+}
+
+.listItem::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px; /* li 텍스트 중앙에 오도록 조정 */
+    width: 4px;
+    height: 4px;
+    background-color: #5f0080; /* 컬리 포인트 색상 */
+    border-radius: 50%;
+}
+
+.inputGroup {
+    margin-bottom: 30px;
+}
+
+.labelWrapper {
+    margin-bottom: 10px;
+}
+
+.label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.inputFieldContainer {
+    position: relative;
+}
+
+.passwordInputWrapper {
+    position: relative;
+}
+
+.inputField {
+    width: 100%;
+    height: 48px;
+    padding: 0 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 15px;
+    color: #333;
+    outline: none;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.inputField:focus {
+    border-color: #5f0080;
+}
+
+.errorMessage {
+    color: #ff6666;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.checkboxContainer {
+    margin-bottom: 20px;
+}
+
+.checkboxWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+    color: #333;
+    cursor: pointer;
+    margin-right: 20px; /* 각 체크박스 간격 */
+    margin-bottom: 10px;
+}
+
+.checkboxInput {
+    display: none;
+}
+
+.checkboxSvg {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.checkboxInput:checked + .checkboxSvg {
+    background-color: #5f0080; /* 컬리 포인트 색상 */
+    border-color: #5f0080;
+}
+
+.checkboxInput:checked + .checkboxSvg path:last-child {
+    stroke: #fff;
+}
+
+.commentContainer {
+    margin-top: 20px;
+}
+
+.textareaWrapper {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.commentTextarea {
+    width: 100%;
+    height: 100%;
+    padding: 15px;
+    border: none;
+    resize: none;
+    font-size: 15px;
+    color: #333;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.commentTextarea::placeholder {
+    color: #aaa;
+}
+
+.placeholder {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    color: #aaa;
+    font-size: 15px;
+    pointer-events: none;
+    display: none; /* 실제 textarea의 placeholder가 보이기 때문에 숨김 */
+}
+
+.contentLengthCounter {
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
+    font-size: 13px;
+    color: #888;
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* 버튼 사이 간격 */
+    margin-top: 40px;
+}
+
+.bottomButton {
+    width: 100%;
+    max-width: 200px; /* 버튼 최대 너비 조정 */
+    height: 54px;
+    font-size: 17px;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.cancelButton {
+    background-color: #fff;
+    color: #5f0080; /* 컬리 포인트 색상 */
+    border: 1px solid #5f0080;
+}
+
+.cancelButton:hover {
+    background-color: #f7f7f7;
+}
+
+.withdrawButton {
+    background-color: #5f0080; /* 컬리 포인트 색상 */
+    color: #fff;
+    border: 1px solid #5f0080;
+}
+
+.withdrawButton:hover {
+    background-color: #4c006d;
+}
+
+.buttonText {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}

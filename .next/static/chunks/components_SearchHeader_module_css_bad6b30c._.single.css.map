@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/components/SearchHeader.module.css"],"sourcesContent":["/* app/(categories)/components/SearchHeader.module.css */\r\n.header {\r\n    background-color: #59BAFF;\r\n    padding: 1rem 0;\r\n    margin-top: 120px;  /* MainHeader 높이만큼 마진 추가 */\r\n    width: 100%;\r\n}\r\n\r\n.navbar {\r\n    max-width: 1200px;\r\n    margin: 0 auto;\r\n    padding: 0 2rem;\r\n}\r\n\r\n.searchContainer {\r\n    max-width: 800px;\r\n    margin: 0 auto;\r\n    position: relative;\r\n}\r\n\r\n.searchInput {\r\n    width: 100%;\r\n    padding: 1rem;\r\n    border-radius: 25px;\r\n    border: none;\r\n    font-size: 1rem;\r\n    outline: none;\r\n    padding-right: 3rem;\r\n}\r\n\r\n.searchButton {\r\n    position: absolute;\r\n    right: 10px;\r\n    top: 50%;\r\n    transform: translateY(-50%);\r\n    background: none;\r\n    border: none;\r\n    cursor: pointer;\r\n    padding: 0.5rem;\r\n}"],"names":[],"mappings":"AACA;;;;;;;AAOA;;;;;;AAMA;;;;;;AAMA;;;;;;;;;AAUA"}}]
+}

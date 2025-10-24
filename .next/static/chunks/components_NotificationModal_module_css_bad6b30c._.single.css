@@ -1,0 +1,133 @@
+/* [project]/components/NotificationModal.module.css [app-client] (css) */
+.NotificationModal-module__CPjgpW__modalOverlay {
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, .5);
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 80px;
+  display: flex;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.NotificationModal-module__CPjgpW__modalContent {
+  background-color: #fff;
+  border-radius: 8px;
+  flex-direction: column;
+  width: 380px;
+  max-height: 500px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+}
+
+.NotificationModal-module__CPjgpW__modalHeader {
+  border-bottom: 1px solid #eee;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  display: flex;
+}
+
+.NotificationModal-module__CPjgpW__modalHeader h2 {
+  color: #333;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.NotificationModal-module__CPjgpW__closeButton {
+  cursor: pointer;
+  color: #888;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  transition: color .2s;
+}
+
+.NotificationModal-module__CPjgpW__closeButton:hover {
+  color: #333;
+}
+
+.NotificationModal-module__CPjgpW__notificationList {
+  flex-grow: 1;
+  padding: 10px 20px;
+  overflow-y: auto;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem {
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: flex-start;
+  padding: 12px 0;
+  transition: background-color .2s;
+  display: flex;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem:last-child {
+  border-bottom: none;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem:hover {
+  background-color: #f9f9f9;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem.NotificationModal-module__CPjgpW__read {
+  color: #888;
+  background-color: #f8f8f8;
+}
+
+.NotificationModal-module__CPjgpW__notificationIcon {
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.NotificationModal-module__CPjgpW__notificationText {
+  flex-direction: column;
+  flex-grow: 1;
+  display: flex;
+}
+
+.NotificationModal-module__CPjgpW__notificationMessage {
+  color: #333;
+  margin: 0;
+  font-size: .95rem;
+  line-height: 1.4;
+}
+
+.NotificationModal-module__CPjgpW__notificationItem.NotificationModal-module__CPjgpW__read .NotificationModal-module__CPjgpW__notificationMessage {
+  color: #888;
+}
+
+.NotificationModal-module__CPjgpW__notificationTimestamp {
+  color: #999;
+  margin-top: 4px;
+  font-size: .8rem;
+}
+
+.NotificationModal-module__CPjgpW__modalFooter {
+  text-align: center;
+  border-top: 1px solid #eee;
+  padding: 15px 20px;
+}
+
+.NotificationModal-module__CPjgpW__viewAllButton {
+  color: #fff;
+  cursor: pointer;
+  background-color: #6a0dad;
+  border: none;
+  border-radius: 5px;
+  width: 100%;
+  padding: 10px 15px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color .2s;
+}
+
+.NotificationModal-module__CPjgpW__viewAllButton:hover {
+  background-color: #5a0ca0;
+}
+
+/*# sourceMappingURL=components_NotificationModal_module_css_bad6b30c._.single.css.map*/

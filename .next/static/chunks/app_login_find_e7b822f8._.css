@@ -1,0 +1,176 @@
+/* [project]/app/login/find/pw/page.module.css [app-client] (css) */
+.page-module__39IW6W__container {
+  background-color: #f5f5f5;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+}
+
+.page-module__39IW6W__card {
+  text-align: center;
+  background-color: #fff;
+  border-radius: 8px;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 480px;
+  padding: 40px;
+  display: flex;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+}
+
+.page-module__39IW6W__title {
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.page-module__39IW6W__tabContainer {
+  border-bottom: 1px solid #eee;
+  width: 100%;
+  margin-bottom: 30px;
+  display: flex;
+}
+
+.page-module__39IW6W__tabButton {
+  color: #888;
+  cursor: default;
+  background-color: rgba(0, 0, 0, 0);
+  border: none;
+  border-bottom: 2px solid rgba(0, 0, 0, 0);
+  flex: 1;
+  padding: 15px 0;
+  font-size: 16px;
+  transition: all .2s ease-in-out;
+}
+
+.page-module__39IW6W__tabButton.page-module__39IW6W__activeTab {
+  color: #007bff;
+  border-color: #007bff;
+  font-weight: bold;
+}
+
+.page-module__39IW6W__tabContent {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.page-module__39IW6W__inputGroup {
+  text-align: left;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.page-module__39IW6W__inputGroup label {
+  color: #555;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+}
+
+.page-module__39IW6W__inputField {
+  color: #333;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+}
+
+.page-module__39IW6W__inputField::placeholder {
+  color: #bbb;
+}
+
+.page-module__39IW6W__inputField:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(106, 13, 173, .2);
+}
+
+.page-module__39IW6W__errorBorder {
+  border-color: #ff4d4f !important;
+}
+
+.page-module__39IW6W__errorMessage {
+  color: #ff4d4f;
+  text-align: left;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.page-module__39IW6W__confirmButton {
+  color: #fff;
+  cursor: pointer;
+  background-color: #007bff;
+  border: none;
+  border-radius: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  transition: background-color .2s ease-in-out;
+}
+
+.page-module__39IW6W__confirmButton:hover {
+  background-color: #007bff;
+}
+
+.page-module__39IW6W__confirmButton:disabled {
+  cursor: not-allowed;
+  background-color: #ccc;
+}
+
+/* [project]/app/login/find/component/ErrorModal.module.css [app-client] (css) */
+.ErrorModal-module__0ZwMfa__modalOverlay {
+  z-index: 1000;
+  background: rgba(0, 0, 0, .6);
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.ErrorModal-module__0ZwMfa__modalContent {
+  text-align: center;
+  background: #fff;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 350px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .25);
+}
+
+.ErrorModal-module__0ZwMfa__modalContent p {
+  color: #333;
+  margin-bottom: 25px;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.ErrorModal-module__0ZwMfa__modalContent button {
+  color: #fff;
+  cursor: pointer;
+  background-color: #6a0dad;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 25px;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color .2s ease-in-out;
+}
+
+.ErrorModal-module__0ZwMfa__modalContent button:hover {
+  background-color: #5a0ca0;
+}
+
+/*# sourceMappingURL=app_login_find_e7b822f8._.css.map*/
