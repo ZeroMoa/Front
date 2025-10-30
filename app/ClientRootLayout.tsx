@@ -1,45 +1,28 @@
 'use client'
 
-import React, { useEffect } from 'react';
-import MainHeader from '../components/MainHeader';
+import React from 'react';
+import MainHeader from '../components/MainHeader'; // React Query를 사용하는 MainHeader
 import LoginModal from '../components/LoginModal';
-import { useAppSelector, useAppDispatch } from './store/store';
-import { closeLoginModal, setLoggedIn, setUser } from './store/authSlice';
+import { useAppSelector, useAppDispatch } from '../app/store/slices/store';
+import { closeLoginModal } from '../app/store/slices/authSlice';
 
-export default function ClientRootLayout({ children }: { children: React.ReactNode }) {
-    const dispatch = useAppDispatch();
-    const isLoginModalOpen = useAppSelector((state) => state.auth.isLoginModalOpen);
+export default function ClientRootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const dispatch = useAppDispatch();
+  const isLoginModalOpen = useAppSelector((state) => state.auth.isLoginModalOpen);
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const storedIsLoggedIn = localStorage.getItem('isLoggedIn');
-            const storedUser = localStorage.getItem('user');
+  const handleCloseLoginModal = () => {
+    dispatch(closeLoginModal());
+  };
 
-            if (storedIsLoggedIn === 'true') {
-                dispatch(setLoggedIn(true));
-            }
-
-            if (storedUser) {
-                try {
-                    dispatch(setUser(JSON.parse(storedUser)));
-                } catch (e) {
-                    console.error("Failed to parse user from localStorage", e);
-                    dispatch(setUser(null));
-                    localStorage.removeItem('user');
-                }
-            }
-        }
-    }, [dispatch]);
-
-    const handleCloseLoginModal = () => {
-        dispatch(closeLoginModal());
-    };
-
-    return (
-        <>
-            <MainHeader />
-            {children}
-            <LoginModal isOpen={isLoginModalOpen} onClose={handleCloseLoginModal} />
-        </>
-    );
+  return (
+    <>
+      <MainHeader /> {/* React Query를 사용하는 MainHeader */}
+      <main>{children}</main>
+      {isLoginModalOpen && <LoginModal isOpen={isLoginModalOpen} onClose={handleCloseLoginModal} />}
+    </>
+  );
 }

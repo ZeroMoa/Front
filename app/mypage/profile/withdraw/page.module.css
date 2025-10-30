@@ -4,6 +4,7 @@
     padding: 40px 0;
     background-color: #f7f7f7;
     min-height: calc(100vh - var(--header-height)); /* 헤더 높이를 제외한 최소 높이 설정 */
+    margin-top: 120px;
 }
 
 .withdrawContainer {
@@ -11,9 +12,21 @@
     max-width: 640px;
     background-color: #fff;
     padding: 40px;
-    border-radius: 8px;
+    border-radius: 9px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
+
+.profileCard {
+    box-shadow: 0 4.5px 13.5px rgba(0, 0, 0, 0.1); 
+    padding: 25px 27px; 
+    width: 450px; 
+    max-width: 81%; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
 
 .headerSection {
     margin-bottom: 30px;
@@ -75,7 +88,7 @@
     top: 8px; /* li 텍스트 중앙에 오도록 조정 */
     width: 4px;
     height: 4px;
-    background-color: #5f0080; /* 컬리 포인트 색상 */
+    background-color: #4A90E2; /* 컬리 포인트 색상 */
     border-radius: 50%;
 }
 
@@ -115,7 +128,7 @@
 }
 
 .inputField:focus {
-    border-color: #5f0080;
+    border-color: #4A90E2;
 }
 
 .errorMessage {
@@ -129,9 +142,9 @@
 }
 
 .checkboxWrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    display: grid; /* Flexbox 대신 Grid 사용 */
+    grid-template-columns: repeat(2, 1fr); /* 2열로 정렬 */
+    gap: 10px; /* 항목 간 간격 */
 }
 
 .checkboxLabel {
@@ -140,31 +153,20 @@
     font-size: 15px;
     color: #333;
     cursor: pointer;
-    margin-right: 20px; /* 각 체크박스 간격 */
-    margin-bottom: 10px;
+    padding-left: 5px;
+    /* margin-right: 20px; 이전 스타일 제거 */
+    /* margin-bottom: 10px; 이전 스타일 제거 */
 }
 
 .checkboxInput {
-    display: none;
+    /* display: none; */ /* 기본 체크박스를 위해 숨김 해제 */
+    margin-right: 8px; /* 체크박스와 텍스트 사이 간격 */
+    width: 20px; /* 기본 체크박스 크기 조정 */
+    height: 20px;
+    accent-color: #4A90E2; /* 체크박스 선택 시 색상 */
 }
 
-.checkboxSvg {
-    width: 24px;
-    height: 24px;
-    margin-right: 8px;
-    border-radius: 50%;
-    border: 1px solid #ddd;
-    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-}
-
-.checkboxInput:checked + .checkboxSvg {
-    background-color: #5f0080; /* 컬리 포인트 색상 */
-    border-color: #5f0080;
-}
-
-.checkboxInput:checked + .checkboxSvg path:last-child {
-    stroke: #fff;
-}
+/* .checkboxSvg 관련 스타일을 완전히 제거합니다 */
 
 .commentContainer {
     margin-top: 20px;
@@ -233,8 +235,8 @@
 
 .cancelButton {
     background-color: #fff;
-    color: #5f0080; /* 컬리 포인트 색상 */
-    border: 1px solid #5f0080;
+    color: #4A90E2; /* 보라색 대신 #4A90E2 적용 */
+    border: 1px solid #4A90E2; /* 보라색 대신 #4A90E2 적용 */
 }
 
 .cancelButton:hover {
@@ -242,13 +244,13 @@
 }
 
 .withdrawButton {
-    background-color: #5f0080; /* 컬리 포인트 색상 */
+    background-color: #4A90E2; /* 보라색 대신 #4A90E2 적용 */
     color: #fff;
-    border: 1px solid #5f0080;
+    border: 1px solid #4A90E2; /* 보라색 대신 #4A90E2 적용 */
 }
 
 .withdrawButton:hover {
-    background-color: #4c006d;
+    background-color: #3a75c1; /* hover 시 색상 조정 */
 }
 
 .buttonText {

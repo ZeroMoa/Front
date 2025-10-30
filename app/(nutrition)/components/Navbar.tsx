@@ -6,7 +6,7 @@ import { setSelectedCategories, setSearchQuery, setIsLoading, setProducts, setPa
 import styles from './Navbar.module.css'
 import Image from 'next/image'
 import { useState, useEffect, useMemo } from 'react';
-import { Product } from '../../types/product';
+import { Product } from '../../../types/product';
 
 // 카테고리 매핑 객체 추가
 export const CATEGORY_MAPPING = {

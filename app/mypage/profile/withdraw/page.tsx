@@ -3,17 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
-import Cookies from 'js-cookie'; // Cookies import 추가
+import { submitWithdrawSurvey, withdrawUser } from '../../../store/api/auth';
 
-interface WithdrawSurveyRequestDTO {
-    password: string;
-    reasonCodes: string[];
-    reasonComment?: string;
-}
-
-interface UserWithdrawRequestDTO {
-    password: string;
-}
 
 export default function WithdrawPage() {
     const router = useRouter();
@@ -45,63 +36,28 @@ export default function WithdrawPage() {
             return;
         }
 
-        const xsrfToken = Cookies.get('XSRF-TOKEN');
-
         try {
-            // 1. 탈퇴 설문조사 API 호출 (POST /survey/withdraw)
-            const surveyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/survey/withdraw`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(xsrfToken && { 'X-XSRF-TOKEN': xsrfToken }),
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    password: password, // 백엔드 DTO @NotBlank로 인해 필수
-                    reasonCodes: reasonCodes,
-                    reasonComment: reasonComment.trim() === '' ? undefined : reasonComment,
-                } as WithdrawSurveyRequestDTO),
+            // 1. 회원 탈퇴 API 호출 (DELETE /user) - 먼저 실행
+            await withdrawUser({ password });
+
+            // 2. 탈퇴 성공 시에만 탈퇴 설문조사 API 호출 (POST /survey/withdraw)
+            await submitWithdrawSurvey({
+                password: password, // 백엔드 DTO @NotBlank로 인해 필수 (비밀번호는 이미 위에서 검증되었지만 DTO 요구사항상 포함)
+                reasonCodes: reasonCodes,
+                reasonComment: reasonComment.trim() === '' ? undefined : reasonComment,
             });
 
-            if (!surveyResponse.ok) {
-                const contentType = surveyResponse.headers.get('Content-Type');
-                if (contentType && contentType.includes('application/json')) {
-                    const errorData = await surveyResponse.json();
-                    throw new Error(errorData.message || '탈퇴 설문조사 저장에 실패했습니다.');
-                } else {
-                    const errorText = await surveyResponse.text();
-                    throw new Error(`탈퇴 설문조사 저장에 실패했습니다. (응답: ${surveyResponse.status} ${errorText})`);
-                }
-            }
-
-            // 2. 회원 탈퇴 API 호출 (DELETE /user)
-            const withdrawResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(xsrfToken && { 'X-XSRF-TOKEN': xsrfToken }),
-                },
-                credentials: 'include',
-                body: JSON.stringify({ password } as UserWithdrawRequestDTO),
-            });
-
-            if (!withdrawResponse.ok) {
-                const contentType = withdrawResponse.headers.get('Content-Type');
-                if (contentType && contentType.includes('application/json')) {
-                    const errorData = await withdrawResponse.json();
-                    // 403 Forbidden (비밀번호 불일치) 또는 다른 오류 메시지 처리
-                    throw new Error(errorData.message || '회원 탈퇴에 실패했습니다.');
-                } else {
-                    const errorText = await withdrawResponse.text();
-                    throw new Error(`회원 탈퇴에 실패했습니다. (응답: ${withdrawResponse.status} ${errorText})`);
-                }
-            }
-
-            alert('회원 탈퇴가 성공적으로 처리되었습니다.');
+            alert('회원 탈퇴가 성공적으로 처리되었습니다. 설문조사도 저장되었습니다.');
             router.push('/'); // 탈퇴 후 홈으로 이동
         } catch (err: any) {
             console.error('회원 탈퇴 처리 중 오류 발생:', err);
-            setError(`오류: ${err.message}`);
+            if (err.message.includes('비밀번호가 일치하지 않습니다. 회원 탈퇴를 진행할 수 없습니다.')) {
+                alert('비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
+            } else if (err.message.includes('접근 권한이 없습니다.')) {
+                alert('회원 탈퇴 권한이 없습니다. 관리자에게 문의하세요.');
+            } else {
+                setError(`오류: ${err.message}`);
+            }
         }
     };
 
@@ -157,29 +113,19 @@ export default function WithdrawPage() {
                         <div className={styles.checkboxContainer}>
                             <div className={styles.checkboxWrapper}>
                                 {[
-                                    '고객서비스(상담,포장 등) 불만',
-                                    '배송불만',
-                                    '교환/환불/반품 불만',
+                                    '정보가 적음',
+                                    '정보가 정확하지 않음',
+                                    '사이트의 기능이 적음',
                                     '방문 빈도가 낮음',
-                                    '상품가격 불만',
-                                    '개인 정보유출 우려',
-                                    '쇼핑몰의 신뢰도 불만',
-                                    '쇼핑 기능 불만'
                                 ].map((reason, index) => (
                                     <label key={index} className={styles.checkboxLabel}>
                                         <input
                                             name="reasonCodes"
                                             type="checkbox"
                                             value={reason}
-                                            className={styles.checkboxInput}
+                                            className={styles.checkboxInput} // 클래스 유지
                                             onChange={handleCheckboxChange}
                                         />
-                                        <div className={styles.checkboxSvg}>
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M23.5 12C23.5 18.3513 18.3513 23.5 12 23.5C5.64873 23.5 0.5 18.3513 0.5 12C0.5 5.64873 5.64873 0.5 12 0.5C18.3513 0.5 23.5 5.64873 23.5 12Z" stroke="#ddd" fill="#fff"></path>
-                                                <path d="M7 12.6667L10.3846 16L18 8.5" stroke="#ddd" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-                                            </svg>
-                                        </div>
                                         <span>{reason}</span>
                                     </label>
                                 ))}
@@ -189,7 +135,7 @@ export default function WithdrawPage() {
                             <div className={styles.textareaWrapper}>
                                 <textarea
                                     id="reasonComment"
-                                    placeholder="고객님의 진심어린 충고 부탁드립니다."
+                                    placeholder="회원님의 진심어린 충고 부탁드립니다."
                                     inputMode="text"
                                     aria-label="textarea-message"
                                     name="reasonComment"
@@ -201,10 +147,10 @@ export default function WithdrawPage() {
                                 <span className={styles.contentLengthCounter}>{reasonComment.length}</span>
                             </div>
                         </div>
-                        {error && reasonCodes.length === 0 && reasonComment.trim() === '' && <p className={styles.errorMessage}>{error}</p>}
+                        {error && (password === '' || (reasonCodes.length === 0 && reasonComment.trim() === ''))}
                     </div>
 
-                    <div className={styles.buttonGroup}>
+            <div className={styles.buttonGroup}>
                         <button type="button" className={`${styles.bottomButton} ${styles.cancelButton}`} onClick={() => router.back()}>
                             <span className={styles.buttonText}>취소</span>
                         </button>

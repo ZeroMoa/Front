@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
-    {"offset": {"line": 11, "column": 0}, "map": {"version":3,"sources":["file:///C:/ZeroMoa/Front/app/login/page.tsx"],"sourcesContent":["export default function LoginPage() {\r\n    return (\r\n        <div style={{ padding: '100px 20px', textAlign: 'center' }}>\r\n            <h1>로그인 페이지</h1>\r\n            <p>이곳은 로그인 페이지입니다. 로그인 모달이 아닌 직접 페이지로 이동할 경우 표시됩니다.</p>\r\n        </div>\r\n    );\r\n}\r\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACpB,qBACI,8OAAC;QAAI,OAAO;YAAE,SAAS;YAAc,WAAW;QAAS;;0BACrD,8OAAC;0BAAG;;;;;;0BACJ,8OAAC;0BAAE;;;;;;;;;;;;AAGf","debugId":null}}]
-}

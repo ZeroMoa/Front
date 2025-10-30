@@ -6,7 +6,7 @@ import { setIsLoading, setError, resetState } from '../../store/productSlice';
 import CategoryHeader from '../components/CategoryHeader'
 import ProductList from '../components/ProductList'
 import Navbar, { CATEGORY_MAPPING } from '../components/Navbar';
-import { Product, SearchBody } from '../../types/product';
+import { Product, SearchBody } from '../../../types/product';
 
 export default function LowSugarPage() {
     const dispatch = useAppDispatch();

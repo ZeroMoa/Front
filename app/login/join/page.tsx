@@ -4,9 +4,11 @@ import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '@/app/store/store';
-import { openLoginModal } from '@/app/store/authSlice';
+import { useAppDispatch } from '../../store/slices/store';
+import { openLoginModal } from '../../store/slices/authSlice';
 import styles from './page.module.css';
+import { UserRequestDTO } from '../../../types/auth';
+import { checkExistence, joinUser } from '../../store/api/auth';
 
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -52,7 +54,7 @@ export default function JoinPage() {
     const dispatch = useAppDispatch();
 
     // 아이디 및 이메일 중복 확인 API 호출 함수
-    const checkExistence = useCallback(async (field: 'username' | 'email', value: string): Promise<boolean> => {
+    const checkExistenceCallback = useCallback(async (field: 'username' | 'email', value: string): Promise<boolean> => {
         if (field === 'username') setIsUsernameValidState(null); // 검사 시작 시 상태 초기화
         if (field === 'email') setIsEmailValidState(null); // 검사 시작 시 상태 초기화
 
@@ -71,58 +73,38 @@ export default function JoinPage() {
         }
 
         try {
-            const apiPath = field === 'username' ? '/user/exist' : '/user/exist-email'; // API 엔드포인트 분리
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${apiPath}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ [field]: value }),
-            });
-
-            // 이메일 전용: 409 Conflict 응답 처리 (이미 존재하는 경우)
-            if (field === 'email' && response.status === 409) {
-                setEmailError('이미 사용 중인 이메일입니다.');
-                setEmailSuccess(null);
-                setIsEmailValidState(false);
-                return false; // 중복 시 유효하지 않음
-            }
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: '서버 오류 발생' })); // JSON 파싱 실패 대비
-                if (field === 'username') { setUsernameError(errorData.message || '아이디 확인 중 오류 발생'); setUsernameSuccess(null); setIsUsernameValidState(false); }
-                if (field === 'email') { setEmailError(errorData.message || '이메일 확인 중 오류 발생'); setEmailSuccess(null); setIsEmailValidState(false); }
-                return false; // API 오류 발생 시 유효하지 않음
-            }
-
-            // 200 OK 응답 처리 (isExist 값에 따라 성공/실패 메시지 설정)
-            const isExist = await response.json(); // isExist는 API 응답에 따라 true/false 또는 { isExist: true/false } 형태일 수 있음
-            const isValidResult = field === 'username' ? !Boolean(isExist) : true; // 아이디는 isExist가 false여야 유효, 이메일은 409가 아니면 유효
+            const response = await checkExistence(field, value); // 중앙 API 함수 사용
 
             if (field === 'username') {
-                if (!isValidResult) { // false 반환: 이미 사용 중
+                if (response.isExist) { // true 반환: 이미 사용 중
                     setUsernameError('이미 사용 중인 아이디입니다.');
                     setUsernameSuccess(null);
                     setIsUsernameValidState(false); // 이미 사용 중이면 유효하지 않음
                     return false;
-                } else { // true 반환: 사용 가능
+                } else { // false 반환: 사용 가능
                     setUsernameError(null);
                     setUsernameSuccess('사용 가능한 아이디입니다.');
                     setIsUsernameValidState(true); // 사용 가능하면 유효
                     return true;
                 }
             } else if (field === 'email') {
-                // /user/exist-email은 200 OK 시 isExist가 항상 false (409에서 true 처리됨)
-                setEmailError(null);
-                setEmailSuccess('사용 가능한 이메일입니다.');
-                setIsEmailValidState(true); // 사용 가능하면 유효
-                return true;
+                if (response.isExist) { // 이메일 중복 시
+                    setEmailError('이미 사용 중인 이메일입니다.');
+                    setEmailSuccess(null);
+                    setIsEmailValidState(false);
+                    return false; // 중복
+                } else {
+                    setEmailError(null);
+                    setEmailSuccess('사용 가능한 이메일입니다.');
+                    setIsEmailValidState(true); // 사용 가능하면 유효
+                    return true;
+                }
             }
             return false; // 예상치 못한 경우
-        } catch (error) {
+        } catch (error: any) {
             console.error('중복 확인 중 오류 발생:', error);
-            if (field === 'username') { setUsernameError('중복 확인 중 오류가 발생했습니다.'); setUsernameSuccess(null); setIsUsernameValidState(false); }
-            if (field === 'email') { setEmailError('중복 확인 중 오류가 발생했습니다.'); setEmailSuccess(null); setIsEmailValidState(false); }
+            if (field === 'username') { setUsernameError(error.message || '중복 확인 중 오류가 발생했습니다.'); setUsernameSuccess(null); setIsUsernameValidState(false); }
+            if (field === 'email') { setEmailError(error.message || '중복 확인 중 오류가 발생했습니다.'); setEmailSuccess(null); setIsEmailValidState(false); }
             return false; // 네트워크 또는 기타 오류 시 유효하지 않음
         }
     }, []);
@@ -136,19 +118,15 @@ export default function JoinPage() {
     // Use useEffect to trigger checkExistence when debounced values change
     useEffect(() => {
         if (debouncedUsername) {
-            // checkExistence의 반환값을 사용하지 않고, 오직 상태 업데이트만 의존합니다.
-            // 여기서 직접 isUsernameValidState를 업데이트하도록 변경
-            checkExistence('username', debouncedUsername);
+            checkExistenceCallback('username', debouncedUsername);
         }
-    }, [debouncedUsername, checkExistence]);
+    }, [debouncedUsername, checkExistenceCallback]);
 
     useEffect(() => {
         if (debouncedEmailFront && debouncedEmailBack && debouncedEmail !== '@') {
-            // checkExistence의 반환값을 사용하지 않고, 오직 상태 업데이트만 의존합니다.
-            // 여기서 직접 isEmailValidState를 업데이트하도록 변경
-            checkExistence('email', debouncedEmail);
+            checkExistenceCallback('email', debouncedEmail);
         }
-    }, [debouncedEmail, checkExistence, debouncedEmailFront, debouncedEmailBack]);
+    }, [debouncedEmail, checkExistenceCallback, debouncedEmailFront, debouncedEmailBack]);
 
     const handleNext = async (e: React.FormEvent) => { // async로 변경
         e.preventDefault();
@@ -168,8 +146,8 @@ export default function JoinPage() {
         }
 
         // 2. 최종 제출 시점에 중복 확인 강제 트리거 및 결과 대기
-        const usernameValidity = await checkExistence('username', username);
-        const emailValidity = await checkExistence('email', `${emailFront}@${emailBack}`);
+        const usernameResponse = await checkExistence('username', username);
+        const emailResponse = await checkExistence('email', `${emailFront}@${emailBack}`);
 
         // `checkExistence` 호출 후 상태 업데이트를 기다립니다.
         // 이 부분이 중요합니다. `checkExistence`는 상태를 비동기적으로 업데이트하므로,
@@ -177,12 +155,12 @@ export default function JoinPage() {
         // 실제 상황에서는 `checkExistence` 내부에서 `setIsUsernameValidState`와 `setIsEmailValidState`가
         // 호출되고, 이 상태가 업데이트되는 것을 기다려야 합니다.
         // 여기서는 `checkExistence`의 반환값을 직접 사용하여 `isUsernameValidState`와 `isEmailValidState`를 업데이트합니다.
-        setIsUsernameValidState(usernameValidity);
-        setIsEmailValidState(emailValidity);
+        setIsUsernameValidState(!usernameResponse.isExist);
+        setIsEmailValidState(!emailResponse.isExist); // 이메일은 isExist가 false여야 유효 (409에서 true 처리)
 
         // 3. 최종 유효성 상태 확인
         // 디바운스된 상태가 아닌, 제출 시점에 직접 검사한 결과를 사용합니다.
-        if (!usernameValidity || !emailValidity) {
+        if (usernameResponse.isExist || emailResponse.isExist) {
             alert('아이디 또는 이메일 중복/형식 확인이 필요합니다. 잠시 후 다시 시도해주세요.');
             return;
         }
@@ -191,39 +169,18 @@ export default function JoinPage() {
         console.log('회원가입 정보:', { username, email: `${emailFront}@${emailBack}`, nickname, password });
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user`, { // URL 수정: /user/signup -> /user
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username,
-                    email: `${emailFront}@${emailBack}`,
-                    nickname,
-                    password,
-                }),
+            const successData = await joinUser({
+                username,
+                email: `${emailFront}@${emailBack}`,
+                nickname,
+                password,
             });
-
-            if (!response.ok) {
-                let errorData = { message: '회원가입 실패: 알 수 없는 오류' };
-                try {
-                    errorData = await response.json();
-                } catch (jsonError) {
-                    console.error('회원가입 응답 JSON 파싱 실패:', jsonError);
-                    errorData.message = response.statusText || '회원가입 실패: 서버 응답 오류';
-                }
-                alert(`회원가입 실패: ${errorData.message}`);
-                console.error('회원가입 실패:', errorData);
-                return;
-            }
-
-            const successData = await response.json();
             console.log('회원가입 성공:', successData);
             setStep(2); // 회원가입 성공 시 완료 화면으로 이동
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('회원가입 요청 중 오류 발생:', error);
-            alert('회원가입 요청 중 네트워크 오류가 발생했습니다.');
+            alert(`회원가입 실패: ${error.message}`);
         }
     };
 
@@ -251,6 +208,24 @@ export default function JoinPage() {
             setPasswordMismatchError(true);
         } else {
             setPasswordMismatchError(false);
+        }
+    };
+
+    const availableDomains = ['naver.com', 'gmail.com', 'hanmail.net', 'nate.com', 'hotmail.com', 'daum.net', 'outlook.com', 'kakao.com', '직접입력'];
+
+    const handleEmailDomainChange = (domain: string) => {
+        if (domain === '직접입력') {
+            setEmailBack('');
+            setIsDirectInput(true);
+        } else {
+            setEmailBack(domain);
+            setIsDirectInput(false);
+        }
+        setShowEmailDomainSelect(false);
+        setEmailError(null);
+        setEmailSuccess(null);
+        if (emailFront && domain !== '직접입력') {
+            checkExistenceCallback('email', `${emailFront}@${domain}`);
         }
     };
 
@@ -324,7 +299,7 @@ export default function JoinPage() {
                                                 </li>
                                                 {['naver.com', 'gmail.com', 'hanmail.net', 'nate.com', 'hotmail.com', 'daum.net', 'outlook.com', 'kakao.com'].map((domain) => (
                                                     <li className={styles.listItem} key={domain}>
-                                                        <button type="button" className={styles.buttonMail} onClick={() => { setEmailBack(domain); setIsDirectInput(false); setShowEmailDomainSelect(false); checkExistence('email', `${emailFront}@${domain}`); }}>{domain}</button>
+                                                        <button type="button" className={styles.buttonMail} onClick={() => { setEmailBack(domain); setIsDirectInput(false); setShowEmailDomainSelect(false); checkExistenceCallback('email', `${emailFront}@${domain}`); }}>{domain}</button>
                                                     </li>
                                                 ))}
                                             </ul>

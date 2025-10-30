@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '../../store/store';
 import { setPageInfo, setIsLoading, setError, resetState } from '../../store/productSlice';
 import CategoryHeader from '../../(categories)/components/CategoryHeader'
 import ProductList from '../components/ProductList'
-import { Product, ProductResponse } from '../../types/product'
+import { Product, ProductResponse } from '../../../types/product'
 
 const DRINKS_CONFIG = {
     category: '음료',

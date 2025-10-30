@@ -1,5 +1,4 @@
 {
-  "/(home)/page": "app/(home)/page.js",
-  "/mypage/profile/page": "app/mypage/profile/page.js",
-  "/mypage/profile/withdraw/page": "app/mypage/profile/withdraw/page.js"
+  "/notifications/page": "app/notifications/page.js",
+  "/(home)/page": "app/(home)/page.js"
 }

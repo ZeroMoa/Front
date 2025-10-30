@@ -4,9 +4,11 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAppDispatch } from '../app/store/store'; // Redux dispatch 사용을 위해 import
-import { setLoggedIn, setUser } from '../app/store/authSlice'; // 로그인 상태 업데이트 액션 import
+import { useAppDispatch } from '../app/store/slices/store'; // Redux dispatch 사용을 위해 import
+import { setLoggedIn, setUser } from '../app/store/slices/authSlice'; // 로그인 상태 업데이트 액션 import
 import styles from './LoginModal.module.css'
+import authSlice from './../app/store/slices/authSlice';
+import { useQueryClient } from '@tanstack/react-query'; // useQueryClient import
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -24,6 +26,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
     const router = useRouter();
     const dispatch = useAppDispatch(); // dispatch 초기화
+    const queryClient = useQueryClient(); // queryClient 초기화
 
     if (!isOpen) return null;
 
@@ -65,6 +68,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             // Redux 상태 업데이트
             dispatch(setLoggedIn(true));
             dispatch(setUser({ id: userData.id, username: userData.username }));
+
+            // React Query 캐시 무효화
+            queryClient.invalidateQueries({ queryKey: ['user'] });
 
             onClose(); // 모달 닫기
             router.push('/'); // 메인 페이지로 이동 또는 로그인 후 리다이렉트 처리

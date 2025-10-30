@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css'; // 이 페이지 전용 CSS
 import ErrorModal from '../../find/component/ErrorModal'; // 공통 모달 임포트 경로 수정
+import { findUserId } from '../../../store/api/auth';
+import { FindIdRequest, FindIdResponse } from '../../../../types/auth';
 
 export default function FindIdPage() {
     const router = useRouter();
@@ -38,39 +40,16 @@ export default function FindIdPage() {
         e.preventDefault();
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/find-id`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: findIdName, // API 명세에 name 필드가 없으면 백엔드 수정 필요
-                    email: findIdEmail,
-                }),
+            const data: FindIdResponse = await findUserId({
+                name: findIdName,
+                email: findIdEmail,
             });
-
-            if (response.ok) {
-                const data = await response.json();
-                setFoundUsername(data.username);
-                setFoundCreatedDate(data.createdDate);
-                setFindIdStep(2); // 성공 화면으로 전환
-            } else if (response.status === 404) {
-                openErrorModal('가입 시 입력하신 회원 정보가 맞는지 다시 한번 확인해 주세요.');
-            } else {
-                let errorData = { message: response.statusText || '아이디 찾기 실패: 알 수 없는 오류' };
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    try {
-                        errorData = await response.json();
-                    } catch (jsonError) {
-                        console.error('응답 JSON 파싱 실패:', jsonError);
-                    }
-                }
-                openErrorModal(errorData.message || '아이디 찾기 중 오류가 발생했습니다.');
-            }
-        } catch (error) {
+            setFoundUsername(data.username);
+            setFoundCreatedDate(data.createdDate);
+            setFindIdStep(2); // 성공 화면으로 전환
+        } catch (error: any) {
             console.error('아이디 찾기 요청 중 오류 발생:', error);
-            openErrorModal('네트워크 오류 또는 서버 응답 없음.');
+            openErrorModal(error.message || '아이디 찾기 중 오류가 발생했습니다.');
         }
     };
 

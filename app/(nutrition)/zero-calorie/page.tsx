@@ -6,7 +6,7 @@ import { setPageInfo, setIsLoading, setError, resetState } from '../../store/pro
 import CategoryHeader from '../components/CategoryHeader'
 import ProductList from '../components/ProductList'
 import Navbar, { CATEGORY_MAPPING } from '../components/Navbar';
-import { Product, ProductResponse, SearchBody } from '../../types/product';
+import { Product, ProductResponse, SearchBody } from '../../../types/product';
 
 export default function ZeroCaloriePage() {
     const dispatch = useAppDispatch();

@@ -1,0 +1,178 @@
+/*!*****************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./app/notifications/page.module.css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************/
+/* app/notifications/page.module.css */
+
+.page_container__0TK3i {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 150px;
+}
+
+.page_header__DafCJ {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.page_header__DafCJ h1 {
+    font-size: 28px;
+    color: #333;
+    margin: 0;
+}
+
+.page_settingsButton__md1Z_ {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    color: #666;
+}
+
+.page_tabNav__AT9d4 {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.page_tabButton__TxlEG {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.page_tabButton__TxlEG:hover {
+    background-color: #e0e0e0;
+}
+
+.page_tabButton__TxlEG.page_active__ZF_9Q {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+
+.page_markAllReadButton__DwTrv {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.page_markAllReadButton__DwTrv:hover {
+    background-color: #0056b3;
+}
+
+.page_notificationList__T6Sxp {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.page_notificationItem___MI6A {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.page_notificationItem___MI6A:hover {
+    background-color: #f0f0f0;
+}
+
+.page_notificationItem___MI6A.page_read__ZXCoj {
+    background-color: #f0f0f0;
+    color: #888;
+}
+
+.page_notificationIcon__6JCfL {
+    width: 40px;
+    height: 40px;
+    margin-right: 15px;
+    flex-shrink: 0; /* 아이콘이 줄어들지 않도록 */
+}
+
+.page_notificationText__EPaDa {
+    flex-grow: 1;
+}
+
+.page_notificationTitle__sFWUf {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.page_notificationItem___MI6A.page_read__ZXCoj .page_notificationTitle__sFWUf {
+    color: #888;
+}
+
+.page_notificationContent__vkDqE {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 5px;
+}
+
+.page_notificationItem___MI6A.page_read__ZXCoj .page_notificationContent__vkDqE {
+    color: #999;
+}
+
+.page_notificationTimestamp__0ArAF {
+    font-size: 12px;
+    color: #999;
+}
+
+.page_loading__LM5ig, .page_noNotifications__pu5g0 {
+    text-align: center;
+    padding: 30px;
+    color: #777;
+    font-size: 16px;
+}
+
+.page_pagination__gHIDm {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 10px;
+}
+
+.page_pagination__gHIDm button {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+}
+
+.page_pagination__gHIDm button:hover:not(.page_active__ZF_9Q) {
+    background-color: #e0e0e0;
+}
+
+.page_pagination__gHIDm button.page_active__ZF_9Q {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+

@@ -24,7 +24,7 @@ export default function HomePage() {
     return (
         <main>
             <section className={styles.heroSection}>
-                <h1 className={styles.heroTitle}>모든 식품을 한번에!</h1>
+                <h1 className={styles.heroTitle}>모든 저당, 저칼로리 식품을 한번에!</h1>
                 <form onSubmit={handleSearch} className={styles.searchContainer}>
                     <input 
                         type="text" 

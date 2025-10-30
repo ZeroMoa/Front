@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import styles from './page.module.css';
-import { Product } from '../../types/product';
+import { Product } from '../../../types/product';
 import SearchHeader from '../../../components/SearchHeader';
 
 const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: number, categoryNo: number }) => {

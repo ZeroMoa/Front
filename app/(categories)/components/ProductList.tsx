@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react';
-import { Product, ProductResponse } from '../../types/product';
+import { Product, ProductResponse } from '../../../types/product';
 import PagingBar from './PagingBar';
 import Image from 'next/image';
 import styles from './ProductList.module.css';

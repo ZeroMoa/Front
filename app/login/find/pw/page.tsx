@@ -5,6 +5,12 @@ import Image from 'next/image'; // 이미지가 필요하다면
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css'; // 이 페이지 전용 CSS
 import ErrorModal from '../../find/component/ErrorModal'; // 공통 모달 임포트 경로 수정
+import {
+    InitiatePasswordResetRequest,
+    InitiatePasswordResetResponse,
+    ResetPasswordRequest,
+} from '../../../../types/auth';
+import { initiatePasswordReset, resetUserPassword } from '../../../store/api/auth';
 
 export default function FindPasswordPage() {
     const router = useRouter();
@@ -41,38 +47,15 @@ export default function FindPasswordPage() {
         e.preventDefault();
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/initiate-password-reset`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: findPwUsername,
-                    email: findPwEmail,
-                }),
+            const data: InitiatePasswordResetResponse = await initiatePasswordReset({
+                username: findPwUsername,
+                email: findPwEmail,
             });
-
-            if (response.ok) {
-                const data = await response.json();
-                setResetToken(data.resetToken); // 토큰 저장
-                setFindPwStep(2); // 비밀번호 재설정 폼으로 전환
-            } else if (response.status === 404) {
-                openErrorModal('가입 시 입력하신 회원 정보가 맞는지 다시 한번 확인해 주세요.');
-            } else {
-                let errorData = { message: response.statusText || '비밀번호 찾기 실패: 알 수 없는 오류' };
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    try {
-                        errorData = await response.json();
-                    } catch (jsonError) {
-                        console.error('응답 JSON 파싱 실패:', jsonError);
-                    }
-                }
-                openErrorModal(errorData.message || '비밀번호 찾기 중 오류가 발생했습니다.');
-            }
-        } catch (error) {
+            setResetToken(data.resetToken); // 토큰 저장
+            setFindPwStep(2); // 비밀번호 재설정 폼으로 전환
+        } catch (error: any) {
             console.error('비밀번호 찾기 요청 중 오류 발생:', error);
-            openErrorModal('네트워크 오류 또는 서버 응답 없음.');
+            openErrorModal(error.message || '비밀번호 찾기 중 오류가 발생했습니다.');
         }
     };
 
@@ -88,37 +71,15 @@ export default function FindPasswordPage() {
         setPasswordMismatchError(false);
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    resetToken: resetToken,
-                    password: newPassword,
-                }),
+            await resetUserPassword({
+                resetToken: resetToken,
+                password: newPassword,
             });
-
-            if (response.ok) {
-                alert('비밀번호가 성공적으로 재설정되었습니다. 다시 로그인해주세요.');
-                router.push('/'); // 로그인 페이지로 리다이렉트 (메인 페이지로 가정)
-            } else if (response.status === 400) {
-                openErrorModal('유효하지 않거나 만료된 토큰이거나, 비밀번호 정책에 맞지 않습니다.');
-            } else {
-                let errorData = { message: response.statusText || '비밀번호 재설정 실패: 알 수 없는 오류' };
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    try {
-                        errorData = await response.json();
-                    } catch (jsonError) {
-                        console.error('응답 JSON 파싱 실패:', jsonError);
-                    }
-                }
-                openErrorModal(errorData.message || '비밀번호 재설정 중 오류가 발생했습니다.');
-            }
-        } catch (error) {
+            alert('비밀번호가 성공적으로 재설정되었습니다. 다시 로그인해주세요.');
+            router.push('/'); // 로그인 페이지로 리다이렉트 (메인 페이지로 가정)
+        } catch (error: any) {
             console.error('비밀번호 재설정 요청 중 오류 발생:', error);
-            openErrorModal('네트워크 오류 또는 서버 응답 없음.');
+            openErrorModal(error.message || '비밀번호 재설정 중 오류가 발생했습니다.');
         }
     };
 

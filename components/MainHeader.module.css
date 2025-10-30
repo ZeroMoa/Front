@@ -308,7 +308,7 @@
 }
 
 .viewAllButton {
-    background-color: #6a0dad;
+    background-color: #4A90E2;
     color: #fff;
     border: none;
     padding: 10px 15px;
@@ -321,7 +321,7 @@
 }
 
 .viewAllButton:hover {
-    background-color: #5a0ca0;
+    background-color: #3a7ad7;
 }
 
 .noNotifications {

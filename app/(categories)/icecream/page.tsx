@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '../../store/store';
 import { setPageInfo, setIsLoading, setError, resetState } from '../../store/productSlice';
 import CategoryHeader from '../../(categories)/components/CategoryHeader'
 import ProductList from '../components/ProductList'
-import { SearchBody, Product, ProductResponse } from '../../types/product'
+import { SearchBody, Product, ProductResponse } from '../../../types/product'
 
 export default function IceCreamPage() {
     const dispatch = useAppDispatch();

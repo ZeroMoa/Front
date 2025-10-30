@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import CategoryHeader from './components/CategoryHeader';
 import ProductList from './components/ProductList';
 import Navbar, { CATEGORY_MAPPING } from './components/Navbar';
-import { Product } from '../types/product';
+import { Product } from '../../types/product';
 
 interface ResultPageProps { 
     products: Product[];

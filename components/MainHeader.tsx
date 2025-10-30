@@ -1,19 +1,28 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import styles from './MainHeader.module.css'
-import { useAppDispatch } from '../app/store/store';
-import { resetState } from '../app/store/productSlice';
-import { openLoginModal, logout } from '../app/store/authSlice'; // openLoginModal 액션 import, logout 액션 import
+import { useAppDispatch, useAppSelector } from '../app/store/slices/store';
+import { resetState } from '../app/store/slices/productSlice';
+import { openLoginModal, logout, setLoggedIn, setUser, selectIsLoggedIn } from '../app/store/slices/authSlice'; // setLoggedIn, setUser 액션 추가
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '../app/store/store'; // useAppSelector 임포트
-import { selectIsLoggedIn } from '../app/store/authSlice'; // isLoggedIn 셀렉터 임포트
 import { useState, useRef, useEffect } from 'react'; // useState, useRef, useEffect 임포트
 import Cookies from 'js-cookie'; // Cookies 임포트
+import { useIsLoggedIn } from '../app/hooks/useAuth'; // React Query hook import
+import { useUserNotifications, useMarkNotificationAsRead } from '../app/hooks/useNotification'; // 알림 훅 import
 
 export default function Header() {
     const dispatch = useAppDispatch();
     const router = useRouter();
-    const isLoggedIn = useAppSelector(selectIsLoggedIn); // Redux 스토어에서 로그인 상태 가져오기
+    
+    const { isLoggedIn: queryIsLoggedIn, userData, isLoading: authLoading } = useIsLoggedIn();
+    const { data: notifications, isLoading: notificationsLoading } = useUserNotifications();
+    const markAsReadMutation = useMarkNotificationAsRead();
+
+    const [isHydrated, setIsHydrated] = useState(false);
+    const isLoggedIn = useAppSelector(selectIsLoggedIn); // Redux의 isLoggedIn 상태 사용
+    
     const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false); // 알림 모달 상태 (이제 사용하지 않음)
     const [isProfileTooltipOpen, setIsProfileTooltipOpen] = useState(false); // 프로필 툴팁 상태
     const [isNotificationTooltipOpen, setIsNotificationTooltipOpen] = useState(false); // 알림 툴팁 상태
@@ -21,6 +30,26 @@ export default function Header() {
     // 툴팁 외부 클릭 감지를 위한 ref
     const profileTooltipRef = useRef<HTMLDivElement>(null);
     const notificationTooltipRef = useRef<HTMLDivElement>(null);
+
+    // hydration 완료 감지
+    useEffect(() => {
+        setIsHydrated(true);
+    }, []);
+
+    // React Query 로딩 완료 후 UI 상태 업데이트
+    useEffect(() => {
+        if (isHydrated && !authLoading) {
+            // 로딩이 완료되면 실제 로그인 상태를 UI에 반영
+            
+            // Redux와 동기화
+            if (userData && queryIsLoggedIn) {
+                dispatch(setUser({ id: userData.username, username: userData.username }));
+                dispatch(setLoggedIn(true));
+            } else {
+                dispatch(setLoggedIn(false));
+            }
+        }
+    }, [dispatch, userData, queryIsLoggedIn, isHydrated, authLoading]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -31,7 +60,6 @@ export default function Header() {
                 setIsProfileTooltipOpen(false);
                 setIsNotificationTooltipOpen(false);
             }
-            // 단일 툴팁만 닫는 로직: 한 툴팁이 열려있고, 그 툴팁 밖을 클릭했는데 다른 툴팁은 클릭하지 않았을 경우
             if (isProfileTooltipOpen && profileTooltipRef.current && !profileTooltipRef.current.contains(event.target as Node)) {
                 setIsProfileTooltipOpen(false);
             }
@@ -46,50 +74,6 @@ export default function Header() {
         };
     }, [isProfileTooltipOpen, isNotificationTooltipOpen]);
 
-    // 알림 툴팁에서 사용할 임시 알림 데이터 (NotificationModal에서 가져옴)
-    const dummyNotifications = [
-        {
-            id: 1,
-            type: 'order',
-            message: '주문하신 상품이 배송을 시작했습니다.',
-            isRead: false,
-            timestamp: '2025-10-20T10:00:00Z',
-            imageUrl: '/images/delivery.png'
-        },
-        {
-            id: 2,
-            type: 'event',
-            message: '새로운 이벤트가 시작되었습니다! 지금 확인하세요.',
-            isRead: true,
-            timestamp: '2025-10-19T14:30:00Z',
-            imageUrl: '/images/event.png'
-        },
-        {
-            id: 3,
-            type: 'new_item',
-            message: '새로운 상품이 등록되었습니다: 고구마 스틱.',
-            isRead: false,
-            timestamp: '2025-10-18T09:15:00Z',
-            imageUrl: '/images/new_item.png'
-        },
-        {
-            id: 4,
-            type: 'order',
-            message: '주문하신 상품이 성공적으로 배송 완료되었습니다.',
-            isRead: true,
-            timestamp: '2025-10-17T18:00:00Z',
-            imageUrl: '/images/delivery.png'
-        },
-        {
-            id: 5,
-            type: 'event',
-            message: '할인쿠폰이 발급되었습니다! 마이페이지에서 확인하세요.',
-            isRead: false,
-            timestamp: '2025-10-16T11:00:00Z',
-            imageUrl: '/images/coupon.png'
-        },
-    ];
-
     const handleNavigation = (path: string) => {
         dispatch(resetState()); // 상태 초기화
         router.push(path); // 페이지 이동
@@ -103,6 +87,11 @@ export default function Header() {
         router.push('/login/join'); // 회원가입 페이지 경로
     };
 
+    const handleProfileClick = () => {
+        setIsProfileTooltipOpen(false); // 내 정보 확인 클릭 시 툴팁 닫기
+        router.push('/mypage/profile'); // 프로필 페이지 경로
+    };
+
     const handleProfileIconClick = () => {
         setIsProfileTooltipOpen(prev => !prev);
         setIsNotificationTooltipOpen(false); // 다른 툴팁 닫기
@@ -113,12 +102,17 @@ export default function Header() {
         setIsProfileTooltipOpen(false); // 다른 툴팁 닫기
     };
 
-    const handleProfileClick = () => {
-        setIsProfileTooltipOpen(false); // 내 정보 확인 클릭 시 툴팁 닫기
-        router.push('/mypage/profile'); // 프로필 페이지 경로
+    const handleNotificationItemClick = (userNotificationNo: number) => {
+        markAsReadMutation.mutate(userNotificationNo, {
+            onSuccess: () => {
+                setIsNotificationTooltipOpen(false); // 읽음 처리 성공 후 툴팁 닫기
+                router.push(`/notifications?userNotificationNo=${userNotificationNo}`); // 특정 알림 상세 보기 페이지로 이동
+            }
+        });
     };
 
-    const handleNotificationClick = () => {
+    const handleNotificationClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation(); // 이벤트 버블링 방지
         setIsNotificationTooltipOpen(false); // 전체 알림 보기 클릭 시 툴팁 닫기
         router.push('/notifications'); // 전체 알림 페이지로 이동
     };
@@ -141,15 +135,28 @@ export default function Header() {
 
             if (response.ok) {
                 console.log('로그아웃 성공');
+                alert('로그아웃 되었습니다.'); // 로그아웃 성공 메시지
             } else {
-                const errorData = await response.json();
-                console.error('로그아웃 실패:', errorData.message || '알 수 없는 오류');
+                let errorData: { message?: string } = {};
+                try {
+                    errorData = await response.json();
+                } catch (e) {
+                    errorData.message = '로그아웃 실패: 서버 응답 오류';
+                }
+                const errorMessage = errorData.message || `로그아웃 실패: ${response.status}`;
+
+                if (response.status === 401 && (errorMessage.includes('액세스 토큰이 없습니다. 로그인해주세요.') || errorMessage.includes('액세스 토큰이 만료되었습니다. 다시 로그인해주세요.'))) {
+                    alert('인증 정보가 유효하지 않습니다. 다시 로그인해주세요.');
+                } else {
+                    console.error('로그아웃 실패:', errorMessage);
+                    alert(`로그아웃 실패: ${errorMessage}`);
+                }
             }
         } catch (error) {
             console.error('로그아웃 중 오류 발생:', error);
+            alert(`로그아웃 처리 중 오류 발생: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
         } finally {
-            dispatch(logout());
-            router.push('/');
+            dispatch(logout()); // Redux 상태에서 로그아웃 처리
             setIsProfileTooltipOpen(false); // 툴팁 닫기
         }
     };
@@ -179,21 +186,19 @@ export default function Header() {
                                 <Image src="/images/icecream.png" alt="아이스크림" width={24} height={24} />아이스크림
                             </button>
                         </li>
-                        {/* <li>
-                            <button onClick={() => handleNavigation('/cafe')} className={styles.linkButton}>
-                                <Image src="/images/cafe.png" alt="카페" width={24} height={24} />카페
-                            </button>
-                        </li> */}
                     </ul>
                     <div className={styles.authSection}>
-                        {isLoggedIn ? (
+                        {!isHydrated || authLoading ? (
+                            // 로딩 중일 때는 빈 공간 유지 (깜빡임 방지)
+                            <div style={{ width: '200px', height: '50px' }}></div>
+                        ) : isLoggedIn ? (
                             <div className={styles.iconGroup}>
                                 <div className={styles.profileButtonContainer}>
                                     <button onClick={handleProfileIconClick} className={styles.iconButton}>
                                         <Image src="/images/profile.png" alt="프로필" width={50} height={50} className={styles.headerIcon} />
                                     </button>
                                     {isProfileTooltipOpen && (
-                                        <div ref={profileTooltipRef} className={styles.profileTooltip}> {/* ref 추가 */}
+                                        <div ref={profileTooltipRef} className={styles.profileTooltip}>
                                             <button onClick={handleProfileClick} className={styles.tooltipItem}>내 정보 확인</button>
                                             <button onClick={handleLogoutClick} className={`${styles.tooltipItem} ${styles.logoutItem}`}>로그아웃</button>
                                         </div>
@@ -206,34 +211,43 @@ export default function Header() {
                                 >
                                     <button className={styles.iconButton}>
                                         <Image src="/images/bell.png" alt="알림" width={30} height={30} className={styles.headerIcon} />
+                                        {/* {!unreadCountLoading && unreadCount && unreadCount > 0 && (
+                                            <span className={styles.unreadBadge}>{unreadCount}</span>
+                                        )} */}
                                 </button>
                                     {isNotificationTooltipOpen && (
-                                        <div ref={notificationTooltipRef} className={styles.notificationTooltip}> {/* ref 추가 */}
+                                        <div ref={notificationTooltipRef} className={styles.notificationTooltip}>
                                             <div className={styles.notificationHeader}>
                                                 <h3>알림</h3>
+                                                {/* <button onClick={handleMarkAllAsRead} className={styles.markAllReadButton}>모두 읽기</button> */}
                                                 <button onClick={(e) => { e.stopPropagation(); setIsNotificationTooltipOpen(false); }} className={styles.closeButton}>×</button>    
                                             </div>
                                             <div className={styles.notificationList}>
-                                                {dummyNotifications.length > 0 ? (
-                                                    dummyNotifications.map((notification) => (
-                                                        <div key={notification.id} className={`${styles.notificationItem} ${notification.isRead ? styles.read : ''}`}>
-                                                            {notification.imageUrl && (
-                                                                <Image src={notification.imageUrl} alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
-                                                            )}
+                                                {notificationsLoading ? (
+                                                    <p className={styles.loadingNotifications}>알림을 불러오는 중...</p>
+                                                ) : notifications?.length === 0 ? (
+                                                    <p className={styles.noNotifications}>새로운 알림이 없습니다.</p>
+                                                ) : (
+                                                    notifications?.map((notification) => (
+                                                        <div 
+                                                            key={notification.userNotificationNo} 
+                                                            className={`${styles.notificationItem} ${notification.isRead ? styles.read : ''}`}
+                                                            onClick={() => handleNotificationItemClick(notification.userNotificationNo)}
+                                                        >
+                                                            {/* 알림 타입에 따른 아이콘 (필요시 추가, 현재는 기본 종 모양) */}
+                                                            <Image src="/images/bell.png" alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
                                                             <div className={styles.notificationText}>
-                                                                <p className={styles.notificationMessage}>{notification.message}</p>
-                                                                <span className={styles.notificationTimestamp}>{new Date(notification.timestamp).toLocaleString()}</span>
+                                                                <p className={styles.notificationMessage}>{notification.title}</p>
+                                                                <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
                                                             </div>
                                                         </div>
                                                     ))
-                                                ) : (
-                                                    <p className={styles.noNotifications}>새로운 알림이 없습니다.</p>
                                                 )}
                                             </div>
-                                            <div className={styles.notificationFooter}>
+                                            <div className={styles.notificationFooter} onClick={(e) => e.stopPropagation()}> {/* 이벤트 버블링 방지 */}
                                                 <button onClick={handleNotificationClick} className={styles.viewAllButton}>
                                                     전체 알림 보기
-                                </button>
+                                                </button>
                                             </div>
                                         </div>
                                     )}
@@ -255,4 +269,4 @@ export default function Header() {
             </nav>
         </header>
     );
-};
+}
