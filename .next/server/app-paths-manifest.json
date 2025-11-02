@@ -1,7 +1,1 @@
-{
-  "/board/page": "app/board/page.js",
-  "/board/[id]/page": "app/board/[id]/page.js",
-  "/mypage/profile/page": "app/mypage/profile/page.js",
-  "/board/write/page": "app/board/write/page.js",
-  "/(home)/page": "app/(home)/page.js"
-}
+{}
