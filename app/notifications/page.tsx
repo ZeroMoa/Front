@@ -125,17 +125,19 @@ export default function NotificationsPage() {
                             <div className={styles.notificationText}>
                                 <h2 className={styles.notificationTitle}>{notification.title}</h2>
                                 <p className={styles.notificationContent}>{notification.content}</p>
-                                <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
-                            </div>
-                            <div className={styles.notificationActions}>
-                                {!notification.isRead && (
-                                    <button onClick={(e) => { e.stopPropagation(); handleNotificationClick(notification.userNotificationNo); }} className={styles.markAsReadButton}>
-                                        읽음
-                                    </button>
-                                )}
-                                <button onClick={(e) => { e.stopPropagation(); handleDeleteNotification(notification.userNotificationNo); }} className={styles.deleteButton}>
-                                    삭제
-                                </button>
+                                <div className={styles.notificationFooterContent}> {/* 이 div로 타임스탬프와 액션 버튼을 감쌉니다. */}
+                                    <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
+                                    <div className={styles.notificationActions}> {/* notificationActions를 이 위치로 이동 */}
+                                        {!notification.isRead && (
+                                            <button onClick={(e) => { e.stopPropagation(); handleNotificationClick(notification.userNotificationNo); }} className={styles.markAsReadButton}>
+                                                읽음
+                                            </button>
+                                        )}
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteNotification(notification.userNotificationNo); }} className={styles.deleteButton}>
+                                            <Image src="/images/delete.png" alt="삭제" width={20} height={20} />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))

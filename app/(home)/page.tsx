@@ -123,6 +123,24 @@ export default function HomePage() {
                     </div>
                 </Link>
             </section>
+
+            <section className={styles.noticeSection}> {/* 공지사항 섹션 추가 */}
+                <Link href="/board" className={styles.noticeLink}>
+                    <div className={styles.noticeItem}>
+                        <Image
+                            src="/images/notice.png"
+                            alt="공지사항"
+                            width={80}
+                            height={80}
+                            className={styles.noticeImage}
+                        />
+                        <div className={styles.noticeText}>
+                            <h3>공지사항</h3>
+                            <span>제로모아의 새로운 소식을 만나보세요!</span>
+                        </div>
+                    </div>
+                </Link>
+            </section>
         </main>
     )
 }

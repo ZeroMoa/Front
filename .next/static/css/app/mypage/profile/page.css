@@ -1,0 +1,409 @@
+/*!******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./app/mypage/profile/page.module.css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************/
+.page_pageWrapper__y1p1u {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* 이 줄을 추가합니다. */
+    min-height: 100vh; /* calc(100vh - 80px) -> 100vh 로 변경 */
+    background-color: #f0f2f5;
+    padding-top: 150px; /* 140px * 0.9 = 126px */
+}
+
+.page_profileCard__J5K5t {
+    background-color: #fff;
+    border-radius: 9px; /* 10px * 0.9 = 9px */
+    box-shadow: 0 4.5px 13.5px rgba(0, 0, 0, 0.1); /* 0 5px 15px -> 0 4.5px 13.5px */
+    padding: 25px 27px; /* 20px 30px -> 18px 27px */
+    width: 450px; /* 500px * 0.9 = 450px */
+    max-width: 81%; /* 90% * 0.9 = 81% */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.page_headerSection__LpuHp {
+    margin-bottom: 18px; /* 20px * 0.9 = 18px */
+    text-align: left;
+    width: 100%;
+    border-bottom: none;
+}
+
+.page_pageTitle__HUSAd {
+    font-size: 1.62rem; /* 1.8rem * 0.9 = 1.62rem */
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.45rem; /* 0.5rem * 0.9 = 0.45rem */
+    width: 100%;
+    text-align: left;
+}
+
+.page_formSection__F8gpf form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px; /* 20px * 0.9 = 18px */
+    width: 100%;
+}
+
+.page_inputGroup___a87v {
+    width: 100%;
+    margin-bottom: 0;
+    text-align: left;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.page_inputGroup___a87v label {
+    display: block;
+    font-size: 0.855rem; /* 0.95rem * 0.9 = 0.855rem */
+    margin-bottom: 9px; /* 10px * 0.9 = 9px */
+    color: #333;
+    font-weight: 500;
+}
+
+.page_inputFieldContainer__GFI98 {
+    position: relative; /* 추가: 자식 요소의 absolute 위치 지정을 위함 */
+    display: flex;
+    gap: 9px; /* 10px * 0.9 = 9px */
+    align-items: center;
+    width: 100%;
+}
+
+.page_input__JQB2g, .page_readOnlyInput__SHVyo {
+    flex: 1 1;
+    padding: 10.8px 13.5px; /* 12px 15px -> 10.8px 13.5px */
+    border: 1px solid #ddd;
+    border-radius: 4.5px; /* 5px * 0.9 = 4.5px */
+    font-size: 0.9rem; /* 1rem * 0.9 = 0.9rem */
+    box-sizing: border-box;
+    color: #333;
+    transition: border-color 0.2s ease;
+}
+
+.page_inputField__Hj2M6 {
+    flex: 1 1;
+    padding: 10.8px 13.5px; /* 12px 15px -> 10.8px 13.5px */
+    border: 1px solid #ddd;
+    border-radius: 4.5px; /* 5px * 0.9 = 4.5px */
+    font-size: 0.9rem; /* 1rem * 0.9 = 0.9rem */
+    box-sizing: border-box;
+    color: #333;
+    transition: border-color 0.2s ease;
+}
+
+.page_input__JQB2g:focus, .page_inputField__Hj2M6:focus {
+    outline: none;
+    border-color: #4f7cff;
+}
+
+.page_readOnlyInput__SHVyo {
+    background-color: #f0f0f0;
+    color: #888;
+    cursor: not-allowed;
+    border-color: #ddd;
+}
+
+.page_errorBorder__fQRvm {
+    border-color: #dc3545; /* 오류 시 빨간색 테두리 */
+}
+
+.page_passwordToggle__KbulT {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    z-index: 5;
+}
+
+.page_passwordToggle__KbulT:hover {
+    opacity: 0.8;
+}
+
+.page_emailIdInput__w3ZeF, .page_emailSeparator__Cy5JS, .page_emailDomainSelectWrapper__RhWMp, .page_emailDomainButton__cmqc0, .page_emailDomainOptions__qRFhR, .page_emailDomainOptionItem__KwVjX, .page_emailDirectInput__wKGM3 {
+    /* 이전 이메일 관련 스타일 삭제 또는 주석 처리 */
+    /* display: none; */
+}
+
+.page_boxEmail__Zwptm {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.page_boxInput__wtWPr {
+    flex: 1 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.page_inputInfo__ESZBO {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+}
+
+.page_emailInput__ybyE6 {
+    padding-right: 15px;
+}
+
+.page_inputInfo__ESZBO:focus {
+    outline: none;
+    border-color: #4f7cff;
+}
+
+.page_textAt__f9_iG {
+    font-size: 1rem;
+    color: #333;
+}
+
+.page_boxSelect__abMSd {
+    position: relative;
+    flex: 1 1;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    height: 44px;
+}
+
+.page_boxSelect__abMSd.page_on__v27Vz .page_boxLayer__tSAQ8 {
+    display: block;
+}
+
+.page_domainDisplayField__E5u_o,
+.page_domainInputField__4qhVS {
+    flex: 1 1;
+    padding: 12px 15px;
+    background: none;
+    text-align: left;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+    border-radius: 5px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.page_domainInputField__4qhVS {
+    border: none;
+    outline: none;
+}
+
+.page_selectArrowContainer__jekDf {
+    position: relative;
+    width: 40px;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.page_selectArrow__1HToo {
+    font-size: 0.8rem;
+    color: #666;
+    pointer-events: none;
+}
+
+.page_boxLayer__tSAQ8 {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.page_listAdress__QfQRm {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.page_listItem__gbogs {
+    padding: 0;
+}
+
+.page_buttonMail__J307E {
+    width: 100%;
+    padding: 10px 15px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+}
+
+.page_buttonMail__J307E:hover {
+    background-color: #f0f0f0;
+}
+
+.page_textCont__9SY4N {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 10px;
+    width: 100%;
+    text-align: left;
+}
+
+.page_hasValue__2XNJh {
+    background-color: #f9f9f9;
+    transition: background-color 0.2s ease;
+}
+
+/* 오류가 있는 경우 배경색이 덮어쓰지 않도록 */
+.page_inputField__Hj2M6.page_hasValue__2XNJh,
+.page_inputInfo__ESZBO.page_hasValue__2XNJh {
+    background-color: #f9f9f9;
+}
+
+.page_boxInput__wtWPr.page_hasValue__2XNJh {
+    background-color: #f9f9f9;
+}
+
+.page_joinError__lOmUD.page_hasValue__2XNJh .page_inputInfo__ESZBO,
+.page_joinError__lOmUD.page_hasValue__2XNJh.page_boxInput__wtWPr {
+    background-color: #fff;
+}
+
+.page_buttonGroup__cjjfX {
+    display: flex;
+    gap: 9px; /* 10px * 0.9 = 9px */
+    width: 100%;
+    margin-top: 4.5px; /* 5px * 0.9 = 4.5px */
+}
+
+.page_bottomButton__IBq9q {
+    flex: 1 1;
+    padding: 13.5px 1.35rem; /* 15px 1.5rem -> 13.5px 1.35rem */
+    border: none;
+    border-radius: 4.5px; /* 5px * 0.9 = 4.5px */
+    font-size: 0.99rem; /* 1.1rem * 0.9 = 0.99rem */
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.page_withdrawButton__erALM {
+    background-color: #ff4d4f; /* 기본 빨간색 배경 */
+    color: #fff; /* 글자색 흰색 */
+    border: 1px solid #d9363e; /* 테두리 진한 빨강 */
+}
+
+.page_withdrawButton__erALM:hover {
+    background-color: #d9363e; /* 호버 시 더 진한 빨강 */
+}
+
+.page_saveButton__47KBs {
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
+    color: #fff;
+}
+
+.page_saveButton__47KBs:hover {
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
+}
+
+.page_loading__9P4Iy, .page_error__SqIZJ, .page_noData__8KQIB {
+    text-align: center;
+    padding: 90px; /* 100px * 0.9 = 90px */
+    font-size: 1.08rem; /* 1.2rem * 0.9 = 1.08rem */
+    color: #555;
+}
+
+/* 오류 메시지 스타일 */
+.page_errorMessage__id9bE {
+    color: #dc3545; /* 빨간색 */
+    font-size: 0.85rem;
+    margin-top: 5px; /* 입력 필드 바로 아래 */
+    text-align: left;
+    width: 100%;
+}
+
+/* 성공 메시지 스타일 (generalUpdateError에 사용될 수 있음) */
+.page_successMessage__3S85C {
+    color: #28a745; /* 초록색 */
+    font-size: 0.85rem;
+    margin-top: 5px; /* 입력 필드 바로 아래 */
+    text-align: left;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .page_profileCard__J5K5t {
+        width: 85.5%; /* 95% * 0.9 = 85.5% */
+        padding: 1.35rem; /* 1.5rem * 0.9 = 1.35rem */
+    }
+    .page_pageTitle__HUSAd {
+        font-size: 1.35rem; /* 1.5rem * 0.9 = 1.35rem */
+    }
+    .page_inputGroup___a87v label {
+        font-size: 0.81rem; /* 0.9rem * 0.9 = 0.81rem */
+    }
+    .page_input__JQB2g, .page_readOnlyInput__SHVyo, .page_emailIdInput__w3ZeF, .page_emailDomainButton__cmqc0, .page_emailDomainOptionItem__KwVjX, .page_emailDirectInput__wKGM3, .page_bottomButton__IBq9q {
+        font-size: 0.855rem; /* 0.95rem * 0.9 = 0.855rem */
+        padding: 0.63rem 0.9rem; /* 0.7rem 1rem -> 0.63rem 0.9rem */
+    }
+    .page_buttonGroup__cjjfX {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 500px) {
+    .page_profileCard__J5K5t {
+        padding: 0.9rem; /* 1rem * 0.9 = 0.9rem */
+    }
+    .page_pageTitle__HUSAd {
+        font-size: 1.17rem; /* 1.3rem * 0.9 = 1.17rem */
+    }
+    .page_inputGroup___a87v {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .page_label__bpA5x {
+        flex-basis: auto;
+        width: 100%;
+        margin-bottom: 4.5px; /* 5px * 0.9 = 4.5px */
+    }
+    .page_inputFieldContainer__GFI98, .page_emailInputContainer__PysZ5 {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4.5px; /* 5px * 0.9 = 4.5px */
+    }
+    .page_emailDomainSelectWrapper__RhWMp {
+        width: 100%;
+        flex-basis: auto;
+    }
+    .page_emailSeparator__Cy5JS {
+        margin: 4.5px 0; /* 5px 0 -> 4.5px 0 */
+    }
+}
+

@@ -91,7 +91,7 @@
 
 .input:focus, .inputField:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #4f7cff;
 }
 
 .readOnlyInput {
@@ -162,7 +162,7 @@
 
 .inputInfo:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #4f7cff;
 }
 
 .textAt {
@@ -320,12 +320,12 @@
 }
 
 .saveButton {
-    background-color: #4A90E2;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
     color: #fff;
 }
 
 .saveButton:hover {
-    background-color: #0056b3;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
 }
 
 .loading, .error, .noData {

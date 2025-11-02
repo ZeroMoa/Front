@@ -184,3 +184,51 @@
     cursor: pointer;
     vertical-align: middle;
 }
+
+/* 공지사항 섹션 스타일 */
+.noticeSection {
+    max-width: 1100px;
+    margin: 40px auto; /* 위아래 40px, 좌우 자동 마진 */
+    padding: 20px; /* 내부 여백 */
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+}
+
+.noticeLink {
+    text-decoration: none;
+    color: inherit;
+}
+
+.noticeItem {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.noticeItem:hover {
+    background-color: #f0f0f0;
+}
+
+.noticeImage {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-right: 20px;
+}
+
+.noticeText h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+}
+
+.noticeText span {
+    font-size: 15px;
+    color: #666;
+    margin-top: 5px;
+    display: block; /* 줄바꿈 */
+}

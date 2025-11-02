@@ -81,7 +81,7 @@
 
 .inputField:focus {
     outline: none;
-    border-color: #007bff; /* 기존 강조색 (파란색) */
+    border-color: #4f7cff; /* 기존 강조색 (파란색) */
 }
 
 .checkButton {
@@ -130,7 +130,7 @@
 }
 
 .nextButton {
-    background-color: #007bff; /* 기존 메인 색상 (파란색) */
+    background: linear-gradient(135deg, #4f7cff, #6c5cff); /* 기존 메인 색상 (파란색) */
     color: #fff;
 }
 
@@ -175,7 +175,7 @@
 }
 
 .loginButton {
-    background-color: #007bff; /* 기존 메인 색상 (파란색) */
+    background: linear-gradient(135deg, #4f7cff, #6c5cff); /* 기존 메인 색상 (파란색) */
     color: #fff;
     padding: 1rem 3rem;
     border: none;
@@ -187,7 +187,7 @@
 }
 
 .loginButton:hover {
-    background-color: #0056b3; /* 기존 hover 색상 */
+    background: linear-gradient(135deg, #4f7cff, #6c5cff); /* 기존 hover 색상 */
 }
 
 /* 오류 메시지 스타일 */
@@ -317,7 +317,7 @@
 
 .inputInfo:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #4f7cff;
 }
 
 .textAt {

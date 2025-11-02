@@ -47,8 +47,9 @@
 }
 
 .tabButton.activeTab {
-    color: #007bff;
-    border-color: #007bff;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
+    color: #fff;
+    border-color: #4f7cff;
     font-weight: bold;
 }
 
@@ -87,7 +88,7 @@
 
 .inputField:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #4f7cff;
     box-shadow: 0 0 0 2px rgba(106, 13, 173, 0.2);
 }
 
@@ -105,7 +106,7 @@
 .confirmButton {
     width: 100%;
     padding: 15px;
-    background-color: #007bff;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
     color: #fff;
     font-size: 18px;
     font-weight: bold;
@@ -117,7 +118,7 @@
 }
 
 .confirmButton:hover {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
 }
 
 .confirmButton:disabled {

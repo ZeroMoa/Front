@@ -1,5 +1,5 @@
 /*!*****************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./app/notifications/page.module.css ***!
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./app/notifications/page.module.css ***!
   \*****************************************************************************************************************************************************************************************************************************************************************************/
 /* app/notifications/page.module.css */
 
@@ -53,18 +53,14 @@
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.page_tabButton__TxlEG:hover {
-    background-color: #e0e0e0;
-}
-
 .page_tabButton__TxlEG.page_active__ZF_9Q {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
     color: #fff;
-    border-color: #007bff;
+    border-color: #4f7cff;
 }
 
 .page_markAllReadButton__DwTrv {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -75,7 +71,7 @@
 }
 
 .page_markAllReadButton__DwTrv:hover {
-    background-color: #0056b3;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
 }
 
 .page_notificationList__T6Sxp {
@@ -113,6 +109,8 @@
 
 .page_notificationText__EPaDa {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .page_notificationTitle__sFWUf {
@@ -140,6 +138,52 @@
 .page_notificationTimestamp__0ArAF {
     font-size: 12px;
     color: #999;
+}
+
+.page_notificationFooterContent__vjvf8 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%; /* 부모의 전체 너비를 차지하도록 */
+    margin-top: 5px; /* 알림 내용과의 간격 */
+}
+
+.page_notificationActions__3bzvH {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.page_markAsReadButton__Y6SVF {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 0.9em;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+}
+
+.page_markAsReadButton__Y6SVF:hover {
+    color: #555;
+}
+
+.page_deleteButton__NbbDg {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.page_deleteButton__NbbDg img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.page_deleteButton__NbbDg:hover img {
+    opacity: 1;
 }
 
 .page_loading__LM5ig, .page_noNotifications__pu5g0 {
@@ -171,8 +215,8 @@
 }
 
 .page_pagination__gHIDm button.page_active__ZF_9Q {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
     color: #fff;
-    border-color: #007bff;
+    border-color: #4f7cff;
 }
 

@@ -136,12 +136,12 @@
 }
 
 .loginButton {
-    background-color: #007bff; /* 파란색 */
+    background: linear-gradient(135deg, #4f7cff, #6c5cff); /* 파란색 */
     color: #fff;
 }
 
 .loginButton:hover {
-    background-color: #0056b3;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
 }
 
 .socialLoginTitle {
@@ -182,6 +182,15 @@
     margin: 0 8px; /* 구분선 좌우 여백 */
     color: #ccc; /* 구분선 색상 */
     font-weight: normal;
+}
+
+.errorMessage {
+    color: #e53e3e; /* 붉은색 텍스트 */
+    font-size: 0.9rem; /* 적당한 크기 */
+    margin-top: -1rem; /* inputGroup의 margin-bottom과 겹치지 않도록 조정 */
+    margin-bottom: 1rem; /* 아래쪽 여백 추가 */
+    width: 60%;
+    text-align: left;
 }
 
 .passwordToggle {

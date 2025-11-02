@@ -50,18 +50,14 @@
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.tabButton:hover {
-    background-color: #e0e0e0;
-}
-
 .tabButton.active {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
     color: #fff;
-    border-color: #007bff;
+    border-color: #4f7cff;
 }
 
 .markAllReadButton {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -72,7 +68,7 @@
 }
 
 .markAllReadButton:hover {
-    background-color: #0056b3;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
 }
 
 .notificationList {
@@ -110,6 +106,8 @@
 
 .notificationText {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .notificationTitle {
@@ -137,6 +135,52 @@
 .notificationTimestamp {
     font-size: 12px;
     color: #999;
+}
+
+.notificationFooterContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%; /* 부모의 전체 너비를 차지하도록 */
+    margin-top: 5px; /* 알림 내용과의 간격 */
+}
+
+.notificationActions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.markAsReadButton {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 0.9em;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+}
+
+.markAsReadButton:hover {
+    color: #555;
+}
+
+.deleteButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.deleteButton img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.deleteButton:hover img {
+    opacity: 1;
 }
 
 .loading, .noNotifications {
@@ -168,7 +212,7 @@
 }
 
 .pagination button.active {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
     color: #fff;
-    border-color: #007bff;
+    border-color: #4f7cff;
 }

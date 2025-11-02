@@ -171,7 +171,7 @@
 
 /* 키보드 접근성을 위한 포커스 스타일 */
 .relatedProductCard:focus {
-    outline: 2px solid #007bff;
+    outline: 2px solid #4f7cff;
     outline-offset: 2px;
 }
 

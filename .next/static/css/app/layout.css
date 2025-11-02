@@ -1,5 +1,5 @@
 /*!****************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/MainHeader.module.css ***!
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./components/MainHeader.module.css ***!
   \****************************************************************************************************************************************************************************************************************************************************************************/
 .MainHeader_wrap__bLJ2B {
     display: flex;
@@ -339,7 +339,7 @@
     height: 30px;
 }
 /*!****************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/LoginModal.module.css ***!
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./components/LoginModal.module.css ***!
   \****************************************************************************************************************************************************************************************************************************************************************************/
 .LoginModal_modalOverlay__kLl1S {
     position: fixed;
@@ -479,12 +479,12 @@
 }
 
 .LoginModal_loginButton__w8EAo {
-    background-color: #007bff; /* 파란색 */
+    background: linear-gradient(135deg, #4f7cff, #6c5cff); /* 파란색 */
     color: #fff;
 }
 
 .LoginModal_loginButton__w8EAo:hover {
-    background-color: #0056b3;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
 }
 
 .LoginModal_socialLoginTitle__tUbC_ {
@@ -525,6 +525,15 @@
     margin: 0 8px; /* 구분선 좌우 여백 */
     color: #ccc; /* 구분선 색상 */
     font-weight: normal;
+}
+
+.LoginModal_errorMessage__Iz3PC {
+    color: #e53e3e; /* 붉은색 텍스트 */
+    font-size: 0.9rem; /* 적당한 크기 */
+    margin-top: -1rem; /* inputGroup의 margin-bottom과 겹치지 않도록 조정 */
+    margin-bottom: 1rem; /* 아래쪽 여백 추가 */
+    width: 60%;
+    text-align: left;
 }
 
 .LoginModal_passwordToggle__vryIM {
@@ -610,7 +619,7 @@
 }
 
 /*!***************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./styles/global.css ***!
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./styles/global.css ***!
   \***************************************************************************************************************************************************************************************************************************************************************/
 @font-face {
   font-family: 'NanumSquareRound';
