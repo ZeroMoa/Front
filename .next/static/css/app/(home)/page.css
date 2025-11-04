@@ -1,0 +1,239 @@
+/*!**********************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./app/(home)/page.module.css ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************/
+/* 히어로 섹션 스타일 */
+.page_heroSection__8r2Q5 {
+    background-color: #59BAFF;
+    padding-top: 9rem;
+    padding-bottom: 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;    
+    text-align: center;
+    color: white;
+}
+
+.page_heroTitle__a2FGh {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.page_searchContainer__DfrWD {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.page_searchInput__Qr_GV {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 25px;
+    border: none;
+    font-size: 24px;
+}
+
+.page_searchButton__a4tsE {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.page_searchTags__kooiT {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.page_tag__iynFU {
+    background-color: white;
+    border: none;
+    padding: 0.5rem 2rem;
+    width: -moz-fit-content;
+    width: fit-content;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.page_features__Kh8UQ a {
+    color: inherit; /* 링크의 기본 색상 상속 */
+    text-decoration: none; /* 링크의 기본 밑줄 제거 */
+}
+
+.page_features__Kh8UQ a:hover {
+    color: inherit; /* 호버 시 색상 유지 */
+    text-decoration: none; /* 호버 시 밑줄 제거 */
+}
+
+/* 특징 섹션 스타일 */
+.page_features__Kh8UQ {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 20px;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.page_featureItem__GGrco {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* 그림자 효과 추가 */
+    height: 100px;
+    width: 100%;
+    transition: box-shadow 0.2s ease; /* 부드러운 그림자 전환 효과 */
+}
+
+.page_featureImage__mgRPP {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-right: 16px;
+}
+
+.page_featureText__mclQ7 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.page_featureText__mclQ7 h3 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+}
+
+.page_featureText__mclQ7 span {
+    margin: 0;
+    font-weight: 400;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+    .page_features__Kh8UQ {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .page_features__Kh8UQ {
+        grid-template-columns: 1fr;
+    }
+}
+
+.page_tooltipContainer__SXcEO {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+}
+
+.page_tooltip__iSozc {
+    visibility: hidden;
+    position: absolute;
+    background-color: black;
+    color: white !important;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: normal;
+    
+    /* 툴팁 위치 조정 */
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 5px;
+    
+    /* 툴팁이 나타날 때의 애니메이션 */
+    opacity: 0;
+    transition: opacity 0.2s;
+    
+    white-space: nowrap;
+    z-index: 999;
+}
+
+/* 툴팁 화살표 */
+.page_tooltip__iSozc::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: black transparent transparent transparent;
+}
+
+/* 호버 시 툴팁 표시 */
+.page_tooltipContainer__SXcEO:hover .page_tooltip__iSozc {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* 정보 아이콘 스타일링 */
+.page_tooltipContainer__SXcEO img {
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* 공지사항 섹션 스타일 */
+.page_noticeSection__th8Wq {
+    max-width: 1100px;
+    margin: 40px auto; /* 위아래 40px, 좌우 자동 마진 */
+    padding: 20px; /* 내부 여백 */
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+}
+
+.page_noticeLink___vNoT {
+    text-decoration: none;
+    color: inherit;
+}
+
+.page_noticeItem__0ykk_ {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.page_noticeItem__0ykk_:hover {
+    background-color: #f0f0f0;
+}
+
+.page_noticeImage__IjJov {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-right: 20px;
+}
+
+.page_noticeText__bFHTY h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+}
+
+.page_noticeText__bFHTY span {
+    font-size: 15px;
+    color: #666;
+    margin-top: 5px;
+    display: block; /* 줄바꿈 */
+}

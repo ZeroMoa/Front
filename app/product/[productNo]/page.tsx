@@ -5,6 +5,24 @@ import Image from 'next/image';
 import styles from './page.module.css';
 import { Product } from '../../../types/product';
 import SearchHeader from '../../../components/SearchHeader';
+import { getCdnUrl } from '@/lib/cdn';
+
+const PRODUCT_API_BASE_URL =
+    process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    'http://localhost:8080';
+
+const PRODUCT_ENDPOINT = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product`;
+const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
+const WARN_ICON = getCdnUrl('/images/warning.png');
+const CAFFEINE_ICON = getCdnUrl('/images/coffee.png');
+
+const resolveImageUrl = (url?: string | null) => {
+    if (!url) {
+        return DEFAULT_IMAGE;
+    }
+    return /^https?:\/\//i.test(url) ? url : getCdnUrl(url);
+};
 
 const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: number, categoryNo: number }) => {
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -23,9 +41,13 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
         const fetchRelatedProducts = async () => {
             try {
                 // size를 11로 설정 (현재 제품 제외하고 10개 보여주기 위해)
-                const response = await fetch(
-                    `http://localhost:8000/product/category/${categoryNo}?page=0&size=20&sort=productName,asc`
-                );
+                const endpoint = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product/category/${categoryNo}?page=0&size=20&sort=productName,asc`;
+
+                const response = await fetch(endpoint, {
+                    cache: 'no-store',
+                    credentials: 'omit',
+                });
+
                 if (!response.ok) throw new Error('관련 제품을 가져오는데 실패했습니다');
                 const data = await response.json();
                 
@@ -45,125 +67,108 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
 
     // 제품 클릭 핸들러 추가
     const handleProductClick = (productNo: number) => {
-        router.push(`/${productNo}`);
+        router.push(`/product/${productNo}`);
     };
 
     if (relatedProducts.length === 0) return null;
-
-    return (
-        <div className={styles.relatedProducts}>
-            <h3 className={styles.sectionTitle}>관련 제품</h3>
-            <div className={styles.relatedProductsGrid}>
-                {relatedProducts.map((product) => (
-                    <div 
-                        key={product.productNo} 
-                        className={styles.relatedProductCard}
-                        onClick={() => handleProductClick(product.productNo)}
-                        role="button"
-                        tabIndex={0}
-                    >
-                        {/* 경고 아이콘 추가 */}
-                        {(hasAlternativeSweeteners(product) || product.caffeineMg > 0) && (
-                            <div className={styles.warningIconsContainer}>
-                                {hasAlternativeSweeteners(product) && (
-                                    <span className={styles.tooltipContainer}>
-                                        <Image 
-                                            src="/images/warning.png" 
-                                            alt="대체당 경고" 
-                                            width={20} 
-                                            height={20}
-                                            className={styles.warningIcon}
-                                            priority
-                                        />
-                                        <span className={styles.tooltip}>
-                                            대체당은 과다복용시 복통과 
-                                            설사를 유발할 수 있어요! 조심!
-                                        </span>
-                                    </span>
-                                )}
-                                {product.caffeineMg > 0 && (
-                                    <span className={styles.tooltipContainer}>
-                                        <Image 
-                                            src="/images/coffee.png" 
-                                            alt="카페인 경고" 
-                                            width={20} 
-                                            height={20}
-                                            className={styles.coffeeIcon}
-                                            priority
-                                        />
-                                        <span className={styles.tooltip}>
-                                            카페인이 포함돼있어요! 불면증을 조심하세요~
-                                        </span>
-                                    </span>
-                                )}
-                            </div>
-                        )}
-                        <div className={styles.relatedProductImage}>
-                            <Image
-                                src={(() => {
-                                    if (!product.imageurl) return '/images/default-product.png';
-                                    return product.imageurl.split('/')
-                                        .map((part, index, array) => {
-                                            if (index === array.length - 1) {
-                                                const [filename, ext] = part.split('.');
-                                                return `${encodeURIComponent(filename)}.${ext}`;
-                                            }
-                                            return encodeURIComponent(part);
-                                        })
-                                        .join('/');
-                                })()}
-                                alt={product.productName}
-                                width={100}
-                                height={100}
-                                className={styles.productImage}
-                                unoptimized
-                            />
-                        </div>
-                        <div className={styles.relatedProductInfo}>
-                            <h4>{product.productName}</h4>
-                            <div className={styles.nutritionDivider} />
-                            <div className={styles.relatedServingSize}>
-                                내용량: {product.servingSize}{product.servingUnit}
-                            </div>
-                            <div className={styles.nutritionInfo}>
-                                {product.energyKcal > 0 && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>칼로리</span>
-                                        <span>{`${product.energyKcal}kcal`}</span>
-                                    </div>
-                                )}
-                                {product.sugarG > 0 && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>당류</span>
-                                        <span>{`${product.sugarG}g`}</span>
-                                    </div>
-                                )}
-                                {product.sugarAlcoholG > 0 && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>당알코올</span>
-                                        <span>{`${product.sugarAlcoholG}g`}</span>
-                                    </div>
-                                )}
-                                {product.alluloseG > 0 && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>알룰로스</span>
-                                        <span>{`${product.alluloseG}g`}</span>
-                                    </div>
-                                )}
-                                {product.erythritolG > 0 && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>에리스리톨</span>
-                                        <span>{`${product.erythritolG}g`}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
+ 
+     return (
+         <div className={styles.relatedProducts}>
+             <h3 className={styles.sectionTitle}>관련 제품</h3>
+             <div className={styles.relatedProductsGrid}>
+                 {relatedProducts.map((product) => {
+                     const hasSweeteners = hasAlternativeSweeteners(product);
+                     const hasCaffeine = (product.caffeineMg ?? 0) > 0;
+                     const hasBadges = hasSweeteners || hasCaffeine;
+ 
+                     return (
+                         <div 
+                             key={product.productNo} 
+                             className={styles.relatedProductCard}
+                             onClick={() => handleProductClick(product.productNo)}
+                             role="button"
+                             tabIndex={0}
+                         >
+                             <div
+                                 className={`${styles.relatedBadgeRow} ${hasBadges ? styles.relatedBadgeRowVisible : ''}`.trim()}
+                             >
+                                 {hasBadges && (
+                                     <>
+                                         {hasSweeteners && (
+                                             <span className={`${styles.relatedBadge} ${styles.relatedBadgeSweetener}`}>
+                                                 <Image src={WARN_ICON} alt="대체당 경고" width={18} height={18} />
+                                                 <span>대체당</span>
+                                             </span>
+                                         )}
+                                         {hasCaffeine && (
+                                             <span className={`${styles.relatedBadge} ${styles.relatedBadgeCaffeine}`}>
+                                                 <Image src={CAFFEINE_ICON} alt="카페인 경고" width={18} height={18} />
+                                                 <span>카페인</span>
+                                             </span>
+                                         )}
+                                     </>
+                                 )}
+                             </div>
+                             <div className={styles.relatedProductImage}>
+                                 <Image
+                                     src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
+                                     alt={product.productName}
+                                     width={100}
+                                     height={100}
+                                     className={styles.productImage}
+                                     unoptimized
+                                     onError={(event) => {
+                                         const target = event.target as HTMLImageElement;
+                                         target.src = DEFAULT_IMAGE;
+                                     }}
+                                 />
+                             </div>
+                             <div className={styles.relatedProductInfo}>
+                                 <h4>{product.productName}</h4>
+                                 <div className={styles.nutritionDivider} />
+                                 <div className={styles.relatedServingSize}>
+                                     내용량: {product.servingSize}{product.servingUnit}
+                                 </div>
+                                 <div className={styles.nutritionInfo}>
+                                     {product.energyKcal > 0 && (
+                                         <div className={styles.related_nutrition}>
+                                             <span className={styles.related_nutrition_label}>칼로리</span>
+                                             <span>{`${product.energyKcal}kcal`}</span>
+                                         </div>
+                                     )}
+                                     {product.sugarG > 0 && (
+                                         <div className={styles.related_nutrition}>
+                                             <span className={styles.related_nutrition_label}>당류</span>
+                                             <span>{`${product.sugarG}g`}</span>
+                                         </div>
+                                     )}
+                                     {product.sugarAlcoholG > 0 && (
+                                         <div className={styles.related_nutrition}>
+                                             <span className={styles.related_nutrition_label}>당알코올</span>
+                                             <span>{`${product.sugarAlcoholG}g`}</span>
+                                         </div>
+                                     )}
+                                     {product.alluloseG > 0 && (
+                                         <div className={styles.related_nutrition}>
+                                             <span className={styles.related_nutrition_label}>알룰로스</span>
+                                             <span>{`${product.alluloseG}g`}</span>
+                                         </div>
+                                     )}
+                                     {product.erythritolG > 0 && (
+                                         <div className={styles.related_nutrition}>
+                                             <span className={styles.related_nutrition_label}>에리스리톨</span>
+                                             <span>{`${product.erythritolG}g`}</span>
+                                         </div>
+                                     )}
+                                 </div>
+                             </div>
+                         </div>
+                     );
+                 })}
+             </div>
+         </div>
+     );
+ };
 
 export default function ProductDetail() {
 
@@ -187,8 +192,17 @@ export default function ProductDetail() {
         const fetchProduct = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch(`http://localhost:8080/product/${params.productNo}`);
-                if (!response.ok) throw new Error('제품을 찾을 수 없습니다');
+                const endpoint = `${PRODUCT_ENDPOINT}/${params.productNo}`;
+
+                const response = await fetch(endpoint, {
+                    cache: 'no-store',
+                    credentials: 'omit',
+                });
+
+                if (!response.ok) {
+                    throw new Error('제품을 찾을 수 없습니다');
+                }
+
                 const data = await response.json();
                 
                 if (mounted) {
@@ -250,21 +264,6 @@ export default function ProductDetail() {
         return `${parentName} | ${subName}`;
     };
 
-    // 이미지 URL 처리 로직
-    const processedImageUrl = (() => {
-        if (!product?.imageurl) return '/images/default-product.png';
-        
-        return product.imageurl.split('/')
-            .map((part, index, array) => {
-                if (index === array.length - 1) {
-                    const [filename, ext] = part.split('.');
-                    return `${encodeURIComponent(filename)}.${ext}`;
-                }
-                return encodeURIComponent(part);
-            })
-            .join('/');
-    })();
-
     return (
         <>
             <SearchHeader />
@@ -274,7 +273,7 @@ export default function ProductDetail() {
                     <div className={styles.imageSection}>
                         <div className={styles.imageWrapper}>
                             <Image
-                                src={processedImageUrl}
+                                src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
                                 alt={product?.productName || '제품 이미지'}
                                 width={430}
                                 height={552}
@@ -282,7 +281,7 @@ export default function ProductDetail() {
                                 unoptimized
                                 onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.src = '/images/default-product.png';
+                                    target.src = DEFAULT_IMAGE;
                                 }}
                             />
                         </div>
@@ -294,7 +293,10 @@ export default function ProductDetail() {
                         <div className={styles.productHeader}>
                             <div className={styles.productMeta}>
                                 <span className={styles.category}>
-                                    {getCategoryNames(product.parentCategoryNo, product.categoryNo)}
+                                    {getCategoryNames(
+                                        (product as Product & { parentCategoryNo?: number }).parentCategoryNo ?? product.categoryNo,
+                                        product.categoryNo,
+                                    )}
                                 </span>
                                 <div className={styles.productTitleContainer}>
                                     <h1 className={styles.productName}>
@@ -304,20 +306,20 @@ export default function ProductDetail() {
                                     {/* 경고 아이콘 컨테이너 */}
                                     <div className={styles.warningIconsContainer}>
                                         {hasAlternativeSweeteners(product) && (
-                                            <Image 
-                                                src="/images/warning.png" 
-                                                alt="대체당 경고" 
-                                                width={24} 
+                                            <Image
+                                                src={WARN_ICON}
+                                                alt="대체당 경고"
+                                                width={24}
                                                 height={24}
                                                 className={styles.warningIcon}
                                                 priority
                                             />
                                         )}
                                         {product.caffeineMg > 0 && (
-                                            <Image 
-                                                src="/images/coffee.png" 
-                                                alt="카페인 경고" 
-                                                width={24} 
+                                            <Image
+                                                src={CAFFEINE_ICON}
+                                                alt="카페인 경고"
+                                                width={24}
                                                 height={24}
                                                 className={styles.coffeeIcon}
                                                 priority

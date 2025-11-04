@@ -23,7 +23,7 @@ export default function SearchHeader() {
                 <form onSubmit={handleSearch} className={styles.searchContainer}>
                     <input 
                         type="text" 
-                        placeholder="채팅처럼 자유롭게 음식을 찾아보세요!" 
+                        placeholder="저당, 저칼로리 식품을 검색해보세요!" 
                         className={styles.searchInput}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}

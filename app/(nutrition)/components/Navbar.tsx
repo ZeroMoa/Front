@@ -1,8 +1,8 @@
 // (nutrition)/components/Navbar.tsx
 'use client'
 
-import { useAppDispatch, useAppSelector } from '../../store/store';
-import { setSelectedCategories, setSearchQuery, setIsLoading, setProducts, setPageInfo, setError } from '../../store/productSlice';
+import { useAppDispatch, useAppSelector } from '../../../app/store/slices/store';
+import { setSelectedCategories, setSearchQuery, setIsLoading, setProducts, setPageInfo, setError } from '../../../app/store/slices/productSlice';
 import styles from './Navbar.module.css'
 import Image from 'next/image'
 import { useState, useEffect, useMemo } from 'react';

@@ -5,7 +5,13 @@ const nextConfig = {
             {
                 protocol: 'http',
                 hostname: 'localhost',
-                port: '8000',
+                port: '8080',
+                pathname: '/images/**',
+            },
+            {
+                protocol: 'https',
+                hostname: process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN || '',
+                port: '',
                 pathname: '/images/**',
             },
         ],
@@ -16,4 +22,4 @@ const nextConfig = {
     }
 }
 
-module.exports = nextConfig; 
+module.exports = nextConfig 

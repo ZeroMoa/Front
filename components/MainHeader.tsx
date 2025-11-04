@@ -5,12 +5,24 @@ import Link from 'next/link'
 import styles from './MainHeader.module.css'
 import { useAppDispatch, useAppSelector } from '../app/store/slices/store';
 import { resetState } from '../app/store/slices/productSlice';
-import { openLoginModal, logout, setLoggedIn, setUser, selectIsLoggedIn } from '../app/store/slices/authSlice'; // setLoggedIn, setUser 액션 추가
+import { openLoginModal, logout, setLoggedIn, setUser, selectIsLoggedIn } from '../app/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react'; // useState, useRef, useEffect 임포트
 import Cookies from 'js-cookie'; // Cookies 임포트
 import { useIsLoggedIn } from '../app/hooks/useAuth'; // React Query hook import
 import { useUserNotifications, useMarkNotificationAsRead } from '../app/hooks/useNotification'; // 알림 훅 import
+import type { CategorySlug } from '../app/product/config';
+import { getCdnUrl } from '../lib/cdn';
+
+const CATEGORY_NAV_ITEMS: Array<{
+    slug: CategorySlug;
+    label: string;
+    icon: string;
+}> = [
+    { slug: 'drinks', label: '음료', icon: '/images/drinks.png' },
+    { slug: 'snacks', label: '과자', icon: '/images/snack.png' },
+    { slug: 'icecream', label: '아이스크림', icon: '/images/icecream.png' },
+];
 
 export default function Header() {
     const dispatch = useAppDispatch();
@@ -23,7 +35,6 @@ export default function Header() {
     const [isHydrated, setIsHydrated] = useState(false);
     const isLoggedIn = useAppSelector(selectIsLoggedIn); // Redux의 isLoggedIn 상태 사용
     
-    const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false); // 알림 모달 상태 (이제 사용하지 않음)
     const [isProfileTooltipOpen, setIsProfileTooltipOpen] = useState(false); // 프로필 툴팁 상태
     const [isNotificationTooltipOpen, setIsNotificationTooltipOpen] = useState(false); // 알림 툴팁 상태
 
@@ -74,9 +85,9 @@ export default function Header() {
         };
     }, [isProfileTooltipOpen, isNotificationTooltipOpen]);
 
-    const handleNavigation = (path: string) => {
-        dispatch(resetState()); // 상태 초기화
-        router.push(path); // 페이지 이동
+    const handleCategoryNavigation = (slug: CategorySlug) => {
+        dispatch(resetState());
+        router.push(`/product?type=${slug}`);
     };
 
     const handleLoginClick = () => {
@@ -167,25 +178,21 @@ export default function Header() {
                 <div className={styles.navContainer}>
                     <div className={styles.logo}>
                         <Link href="/" onClick={() => dispatch(resetState())}>
-                            <Image src="/images/logo.png" alt="제로모아" width={190} height={100} priority={true}/>
+                            <Image src={getCdnUrl('/images/logo.png')} alt="제로모아" width={190} height={100} priority={true}/>
                         </Link>
                     </div>
                     <ul className={styles.nav_links}>
-                        <li>
-                            <button onClick={() => handleNavigation('/categories/drinks')} className={styles.linkButton}>
-                                <Image src="/images/drinks.png" alt="음료" width={24} height={24} />음료
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleNavigation('/categories/snacks')} className={styles.linkButton}>
-                                <Image src="/images/snack.png" alt="과자" width={24} height={24} />과자
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleNavigation('/categories/icecream')} className={styles.linkButton}>
-                                <Image src="/images/icecream.png" alt="아이스크림" width={24} height={24} />아이스크림
-                            </button>
-                        </li>
+                        {CATEGORY_NAV_ITEMS.map((item) => (
+                            <li key={item.slug}>
+                                <button
+                                    onClick={() => handleCategoryNavigation(item.slug)}
+                                    className={styles.linkButton}
+                                >
+                                    <Image src={getCdnUrl(item.icon)} alt={item.label} width={24} height={24} />
+                                    {item.label}
+                                </button>
+                            </li>
+                        ))}
                     </ul>
                     <div className={styles.authSection}>
                         {!isHydrated || authLoading ? (
@@ -195,7 +202,7 @@ export default function Header() {
                             <div className={styles.iconGroup}>
                                 <div className={styles.profileButtonContainer}>
                                     <button onClick={handleProfileIconClick} className={styles.iconButton}>
-                                        <Image src="/images/profile.png" alt="프로필" width={50} height={50} className={styles.headerIcon} />
+                                        <Image src={getCdnUrl('/images/profile.png')} alt="프로필" width={50} height={50} className={styles.headerIcon} />
                                     </button>
                                     {isProfileTooltipOpen && (
                                         <div ref={profileTooltipRef} className={styles.profileTooltip}>
@@ -210,7 +217,7 @@ export default function Header() {
                                     onClick={handleNotificationIconClick}
                                 >
                                     <button className={styles.iconButton}>
-                                        <Image src="/images/bell.png" alt="알림" width={30} height={30} className={styles.headerIcon} />
+                                        <Image src={getCdnUrl('/images/bell.png')} alt="알림" width={30} height={30} className={styles.headerIcon} />
                                         {/* {!unreadCountLoading && unreadCount && unreadCount > 0 && (
                                             <span className={styles.unreadBadge}>{unreadCount}</span>
                                         )} */}
@@ -235,7 +242,7 @@ export default function Header() {
                                                             onClick={() => handleNotificationItemClick(notification.userNotificationNo)}
                                                         >
                                                             {/* 알림 타입에 따른 아이콘 (필요시 추가, 현재는 기본 종 모양) */}
-                                                            <Image src="/images/bell.png" alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
+                                                            <Image src={getCdnUrl('/images/bell.png')} alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
                                                             <div className={styles.notificationText}>
                                                                 <p className={styles.notificationMessage}>{notification.title}</p>
                                                                 <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
@@ -254,7 +261,7 @@ export default function Header() {
                                 </div>
 
                                 <button onClick={handleFavoritesClick} className={styles.iconButton}>
-                                    <Image src="/images/favorite.png" alt="좋아요" width={30} height={30} className={styles.headerIcon} />
+                                    <Image src={getCdnUrl('/images/favorite.png')} alt="좋아요" width={30} height={30} className={styles.headerIcon} />
                                 </button>
                             </div>
                         ) : (

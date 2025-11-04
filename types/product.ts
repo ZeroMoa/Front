@@ -65,8 +65,10 @@ export interface Product {
     productNo: number; // BIGSERIAL
     productName: string; // VARCHAR(255)
     imageUrl: string; // VARCHAR(255)
+    imageurl?: string; // legacy
   
     categoryNo: number; // BIGINT
+    parentCategoryNo: number; // BIGINT
     companyName: string; // VARCHAR(255)
     manufacturerName: string; // VARCHAR(255)
     distributorName: string; // VARCHAR(255)

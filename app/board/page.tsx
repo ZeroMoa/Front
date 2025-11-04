@@ -107,6 +107,18 @@ export default function BoardPage() {
         });
     };
 
+    const handleFirstPage = () => {
+        setPage(0);
+    };
+
+    const handleLastPage = () => {
+        if (!data) {
+            return;
+        }
+        const lastPage = Math.max((data.totalPages ?? 1) - 1, 0);
+        setPage(lastPage);
+    };
+
     const listContent = () => {
         if (notices.length === 0) {
             return <div className={styles.noNotices}>{emptyMessage}</div>;
@@ -141,6 +153,13 @@ export default function BoardPage() {
                 {totalPages > 0 && (
                     <div className={styles.pagination}>
                         <button
+                            className={`${styles.pageArrow} ${styles.firstArrow}`}
+                            onClick={handleFirstPage}
+                            disabled={currentPage === 0}
+                        >
+                            <span className={styles.visuallyHidden}>첫 페이지</span>
+                        </button>
+                        <button
                             className={`${styles.pageArrow} ${styles.prevArrow}`}
                             onClick={handlePrevPage}
                             disabled={currentPage === 0}
@@ -165,6 +184,13 @@ export default function BoardPage() {
                             disabled={currentPage >= totalPages - 1}
                         >
                             <span className={styles.visuallyHidden}>다음 페이지</span>
+                        </button>
+                        <button
+                            className={`${styles.pageArrow} ${styles.lastArrow}`}
+                            onClick={handleLastPage}
+                            disabled={currentPage >= totalPages - 1}
+                        >
+                            <span className={styles.visuallyHidden}>마지막 페이지</span>
                         </button>
                     </div>
                 )}

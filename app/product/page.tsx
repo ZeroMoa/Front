@@ -1,0 +1,241 @@
+import { redirect } from 'next/navigation';
+import styles from './page.module.css';
+import {
+    CATEGORY_CONFIG,
+    DEFAULT_CATEGORY_SLUG,
+    DEFAULT_FILTER_STATE,
+    NUTRITION_CONFIG,
+    PRODUCT_FILTER_KEYS,
+    ProductFilterKey,
+    getSubCategorySlug,
+    isCategorySlug,
+    isNutritionSlug,
+} from './config';
+import type { CategorySlug, NutritionSlug } from './config';
+import { fetchCategoryProducts, fetchNutritionProducts, fetchProductSearch } from '../store/api/product';
+import ProductPageClient from './components/ProductPageClient';
+
+interface ProductSearchParams {
+    type?: string | string[];
+    collection?: string | string[];
+    category?: string | string[];
+    sub?: string | string[];
+    page?: string | string[];
+    size?: string | string[];
+    sort?: string | string[];
+    keyword?: string | string[];
+    isZeroCalorie?: string | string[];
+    isZeroSugar?: string | string[];
+    isLowCalorie?: string | string[];
+    isLowSugar?: string | string[];
+}
+
+const parseSingleValue = (value: string | string[] | undefined) => {
+    if (Array.isArray(value)) {
+        return value[0];
+    }
+    return value;
+};
+
+const parseNumberParam = (value: string | undefined, fallback: number, min = 0) => {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed < min) {
+        return fallback;
+    }
+    return parsed;
+};
+
+const parseFilters = (searchParams: ProductSearchParams) => {
+    return PRODUCT_FILTER_KEYS.reduce<Record<ProductFilterKey, boolean>>((accumulator, key) => {
+        const raw = parseSingleValue(searchParams[key]);
+        accumulator[key] = raw === 'true';
+        return accumulator;
+    }, { ...DEFAULT_FILTER_STATE });
+};
+
+export default async function ProductPage({ searchParams }: { searchParams: Promise<ProductSearchParams> }) {
+    const params = await searchParams;
+
+    const collectionParam = parseSingleValue(params.collection);
+    if (collectionParam && isNutritionSlug(collectionParam)) {
+        return renderNutritionPage(collectionParam, params);
+    }
+
+    const typeParam = parseSingleValue(params.type);
+    const categorySlug: CategorySlug = typeParam && isCategorySlug(typeParam)
+        ? typeParam
+        : DEFAULT_CATEGORY_SLUG;
+
+    if (!typeParam || !isCategorySlug(typeParam)) {
+        redirect(`/product?type=${DEFAULT_CATEGORY_SLUG}`);
+    }
+
+    const categoryConfig = CATEGORY_CONFIG[categorySlug];
+    const subParam = parseSingleValue(params.sub);
+    const selectedSubCategory = getSubCategorySlug(categoryConfig, subParam);
+
+    const page = parseNumberParam(parseSingleValue(params.page), 0, 0);
+    const size = parseNumberParam(
+        parseSingleValue(params.size),
+        categoryConfig.pageSizeOptions[0] ?? 30,
+        1,
+    );
+    const sort = parseSingleValue(params.sort) ?? categoryConfig.defaultSort;
+    const keyword = parseSingleValue(params.keyword) ?? '';
+    const filters = parseFilters(params);
+
+    const activeFilters = Object.entries(filters).reduce<NonNullable<Parameters<typeof fetchCategoryProducts>[0]['filters']>>(
+        (accumulator, [key, value]) => {
+            if (value) {
+                accumulator[key as ProductFilterKey] = true;
+            }
+            return accumulator;
+        },
+        {},
+    );
+
+    const hasKeyword = Boolean(keyword);
+
+    const searchCategoryNo = selectedSubCategory.categoryNo && selectedSubCategory.categoryNo > 0
+        ? selectedSubCategory.categoryNo
+        : undefined;
+
+    const productResponse = hasKeyword
+        ? await fetchProductSearch(
+              {
+                  query: keyword,
+                  categoryNo: searchCategoryNo,
+                  page,
+                  size,
+                  sort,
+                  filters,
+              },
+              { cache: 'no-store' },
+          )
+        : await fetchCategoryProducts(
+              {
+                  categoryNo: selectedSubCategory.categoryNo,
+                  page,
+                  size,
+                  sort,
+                  filters: activeFilters,
+              },
+              { cache: 'no-store' },
+          );
+
+    return (
+        <div className={styles.pageWrapper}>
+            <ProductPageClient
+                mode="category"
+                categorySlug={categorySlug}
+                config={categoryConfig}
+                data={productResponse}
+                selectedSubCategory={selectedSubCategory}
+                page={page}
+                size={size}
+                sort={sort}
+                filters={filters}
+                keyword={keyword}
+            />
+        </div>
+    );
+}
+
+async function renderNutritionPage(nutritionSlug: NutritionSlug, params: ProductSearchParams) {
+     const config = NUTRITION_CONFIG[nutritionSlug];
+ 
+     const page = parseNumberParam(parseSingleValue(params.page), 0, 0);
+     const size = parseNumberParam(parseSingleValue(params.size), config.pageSizeOptions[0] ?? 30, 1);
+     const sort = parseSingleValue(params.sort) ?? config.defaultSort;
+     const keyword = parseSingleValue(params.keyword) ?? '';
+
+    const categoryParam = parseSingleValue(params.category);
+    const categorySlug = categoryParam && isCategorySlug(categoryParam) ? categoryParam : undefined;
+    const categoryConfig = categorySlug ? CATEGORY_CONFIG[categorySlug] : undefined;
+    const subParam = parseSingleValue(params.sub);
+
+    const filtersFromQuery = parseFilters(params);
+    const filters: Record<ProductFilterKey, boolean> = {
+        ...DEFAULT_FILTER_STATE,
+        ...config.defaultFilters,
+        ...filtersFromQuery,
+    } as Record<ProductFilterKey, boolean>;
+
+    config.lockedFilters.forEach((filterKey) => {
+        filters[filterKey] = true;
+    });
+
+    const selectedSubCategory = categoryConfig
+        ? getSubCategorySlug(categoryConfig, subParam)
+        : config.subCategories?.[0] ?? { slug: 'all', label: '전체', categoryNo: 0 };
+
+    const activeFilters = Object.entries(filters).reduce<NonNullable<Parameters<typeof fetchCategoryProducts>[0]['filters']>>(
+        (accumulator, [filterKey, isActive]) => {
+            if (isActive) {
+                accumulator[filterKey as ProductFilterKey] = true;
+            }
+            return accumulator;
+        },
+        {},
+    );
+
+    const hasKeyword = Boolean(keyword);
+
+    const searchCategoryNo = selectedSubCategory.categoryNo && selectedSubCategory.categoryNo > 0
+        ? selectedSubCategory.categoryNo
+        : undefined;
+
+    const productResponse = hasKeyword
+        ? await fetchProductSearch(
+              {
+                  query: keyword,
+                  categoryNo: searchCategoryNo,
+                  page,
+                  size,
+                  sort,
+                  filters,
+              },
+              { cache: 'no-store' },
+          )
+        : categoryConfig
+        ? await fetchCategoryProducts(
+              {
+                  categoryNo: selectedSubCategory.categoryNo,
+                  page,
+                  size,
+                  sort,
+                  filters: activeFilters,
+              },
+              { cache: 'no-store' },
+          )
+        : await fetchNutritionProducts(
+              config.endpoint,
+              {
+                  page,
+                  size,
+                  sort,
+                  keyword: keyword || undefined,
+              },
+              { cache: 'no-store' },
+          );
+ 
+    return (
+        <div className={styles.pageWrapper}>
+            <ProductPageClient
+                mode="nutrition"
+                categorySlug={categorySlug}
+                collectionSlug={nutritionSlug}
+                config={config}
+                data={productResponse}
+                selectedSubCategory={selectedSubCategory}
+                page={page}
+                size={size}
+                sort={sort}
+                filters={filters}
+                keyword={keyword}
+                lockedFilters={config.lockedFilters}
+            />
+        </div>
+    );
+}
+

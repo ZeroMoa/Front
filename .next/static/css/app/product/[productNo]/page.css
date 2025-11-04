@@ -1,0 +1,457 @@
+/*!***********************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./app/product/[productNo]/page.module.css ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************/
+.page_wrapper__DLlat {
+    padding-top: 15px; /* 헤더(100px) + 서치헤더(56px) 높이 */
+}
+
+.page_productContainer__ZXGNk {
+    display: flex;
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 15px 0;
+    gap: 60px;
+}
+
+.page_imageSection__Nt0Zv {
+    width: 430px;
+    flex-shrink: 0;
+}
+
+.page_imageWrapper__kVjib {
+    position: relative;
+    width: 100%;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.page_productImage__lzC6n {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.page_infoSection__w749p {
+    width: 560px;
+    flex-grow: 1;
+}
+
+.page_productHeader__h7j3s {
+    margin-bottom: 20px;
+}
+
+.page_productMeta__m8yLA {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page_category__gklJP {
+    display: inline-block;
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.page_productName__QGZlj {
+    font-size: 24px;
+    font-weight: 500;
+    color: #333;
+    line-height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page_companyName__aes6X {
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
+}
+
+.page_description__JY_NE {
+    font-size: 14px;
+    color: #b5b5b5;
+    margin-top: 4px;
+}
+
+.page_nutritionTable__1tpLJ {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+
+.page_sectionTitle__P2clj {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+
+.page_nutritionContent__dLzxL {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 0 40px;
+    gap: 0 40px;
+}
+
+.page_nutritionRow__1FMPb {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-bottom: 1px solid #f4f4f4;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.page_nutritionLabel__LQQfn {
+    color: #333;
+}
+
+.page_ingredients__WPIip {
+    margin-top: 30px;
+}
+
+.page_ingredient__MW1g9 {
+    display: inline-block;
+    margin-right: 4px;
+    line-height: 1.6;
+}
+
+/* 쉼표 다음에 줄바꿈 효과 추가 */
+.page_ingredient__MW1g9:after {
+    content: '\A';
+    white-space: pre;
+}
+
+/* 마지막 ingredient는 줄바꿈 하지 않음 */
+.page_ingredient__MW1g9:last-child:after {
+    content: '';
+}
+
+.page_loading__eHhlb, .page_error__klGFH, .page_notFound__1cZff {
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
+}
+
+.page_error__klGFH {
+    color: #e53935;
+}
+
+.page_relatedProducts__tPfvL {
+    max-width: 1050px;
+    margin: 60px auto;
+    padding-top: 40px;
+    border-top: 1px solid #ddd;
+}
+
+.page_relatedProductsGrid__o2sKf {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 20px;
+    gap: 20px;
+    margin-top: 24px;
+}
+
+@media (max-width: 1024px) {
+    .page_relatedProductsGrid__o2sKf {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 720px) {
+    .page_relatedProductsGrid__o2sKf {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.page_relatedProductCard__ZmqOl {
+    position: relative;
+    padding: 56px 20px 22px;
+    border: 1px solid rgba(189, 205, 232, 0.45);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 249, 255, 0.92) 100%);
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.page_relatedProductCard__ZmqOl:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 32px rgba(50, 72, 112, 0.12);
+}
+
+.page_relatedBadgeRow__JQhiA {
+    position: absolute;
+    top: 18px;
+    left: 20px;
+    display: none;
+    gap: 8px;
+    z-index: 2;
+}
+
+.page_relatedBadgeRowVisible__MJf0E {
+    display: inline-flex;
+}
+
+.page_relatedBadge__FlIie {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(90, 110, 180, 0.9);
+}
+
+.page_relatedBadge__FlIie span {
+    line-height: 1;
+}
+
+.page_relatedBadgeSweetener__oF_Zh {
+    background: rgba(255, 242, 225, 0.9);
+
+}
+
+.page_relatedBadgeCaffeine___Xv2z {
+    background: rgba(255, 242, 225, 0.9);
+
+}
+
+.page_relatedProductImage__RlehC {
+    width: 100%;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    background: rgba(244, 248, 255, 0.85);
+    border-radius: 14px;
+}
+
+.page_productImage__lzC6n {
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.page_relatedProductInfo__v8L9V {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1;
+}
+
+.page_relatedProductInfo__v8L9V h4 {
+    min-height: 40px;  /* 최소 높이 설정 */
+    height: auto;  /* 자동 높이 조정 */
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+    /* 여러 줄 표시 설정 제거 */
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.page_nutritionDivider__yYI1R {
+    width: 100%;
+    border-top: 1px solid #ddd;
+    margin: 20px 0;  /* 위아래 여백 20px */
+}
+
+.page_nutritionInfo__jEobE {
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;  /* 영양성분 항목 간 간격 */
+}
+
+.page_warningIconsContainer__CjWIQ {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    z-index: 2;
+}
+
+.page_tooltipContainer__GvZjZ {
+    position: relative;
+    display: inline-block;
+}
+
+.page_tooltip__7Bg80 {
+    visibility: hidden;
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    margin-bottom: 5px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.page_tooltip__7Bg80::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 10px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+}
+
+.page_tooltipContainer__GvZjZ:hover .page_tooltip__7Bg80 {
+    visibility: visible;
+}
+
+/* 대체당 정보가 길 경우를 위한 스타일 */
+.page_nutritionRow__1FMPb:last-child {
+    margin-bottom: 8px;
+}
+
+/* 상세 페이지 영양성분 스타일 */
+.page_page_nutrition__0WaR4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 12px 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.page_page_nutrition__0WaR4 span:first-child {
+    text-align: left;
+}
+
+.page_page_nutrition__0WaR4 span:nth-child(2) {
+    text-align: center;
+}
+
+.page_page_nutrition__0WaR4 span:last-child {
+    text-align: right;
+}
+
+/* 대체당 정보도 동일한 스타일 적용 */
+.page_nutritionLabel__LQQfn {
+    text-align: left;
+}
+
+.page_productTitleContainer__iGxw0 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page_servingSize__6KxjC {
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    color: #666;
+    border-bottom: 1px solid #ddd;
+    padding-bottom : 20px
+}
+
+.page_relatedServingSize__LvMO8 {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.page_warningIconsContainer__CjWIQ {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.page_warningIcon__Ese5u, .page_coffeeIcon___Fqj_ {
+    width: 24px;
+    height: 24px;
+}
+
+/* 관련 제품 영양성분 스타일 */
+.page_related_nutrition__oGN03 {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    border-bottom: 1px solid #ddd;  /* 모든 영양성분 항목에 구분선 추가 */
+}
+
+/* 마지막 항목의 구분선 제거 설정을 삭제 */
+/* .related_nutrition:last-child {
+    border-bottom: none;
+} */
+
+.page_related_nutrition_label__SDnOP {
+    flex: 1 1;  /* 라벨 영역 flex 설정 */
+    text-align: left;
+}
+
+.page_related_nutrition__oGN03 span:last-child {
+    flex: 1 1;  /* 값 영역 flex 설정 */
+    text-align: right;
+}
+/*!******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./components/SearchHeader.module.css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************/
+/* app/(categories)/components/SearchHeader.module.css */
+.SearchHeader_header__j1Rmo {
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 10px 24px rgba(79, 124, 255, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    padding: 1rem 0;
+    margin-top: 120px;  /* MainHeader 높이만큼 마진 추가 */
+    width: 100%;
+}
+
+.SearchHeader_navbar__zLx3F {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.SearchHeader_searchContainer___wkgL {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.SearchHeader_searchInput__tgfib {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 25px;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+    padding-right: 3rem;
+}
+
+.SearchHeader_searchButton__y8Wci {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}

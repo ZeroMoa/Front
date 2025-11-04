@@ -60,7 +60,12 @@ export default function HomePage() {
             </section>
 
             <section className={styles.features}>
-                <Link href="/zero-calorie">
+                <Link
+                    href={{
+                        pathname: '/product',
+                        query: { collection: 'zero-calorie' },
+                    }}
+                >
                     <div className={styles.featureItem}>
                         <Image 
                             src="/images/zero_calorie.png" 
@@ -75,7 +80,12 @@ export default function HomePage() {
                         </div>
                     </div>
                 </Link>
-                <Link href="/zero-sugar">
+                <Link
+                    href={{
+                        pathname: '/product',
+                        query: { collection: 'zero-sugar' },
+                    }}
+                >
                     <div className={styles.featureItem}>
                         <Image 
                             src="/images/zero_sugar.png" 
@@ -90,7 +100,12 @@ export default function HomePage() {
                         </div>
                     </div>
                 </Link>
-                <Link href="/low-calorie">
+                <Link
+                    href={{
+                        pathname: '/product',
+                        query: { collection: 'low-calorie' },
+                    }}
+                >
                     <div className={styles.featureItem}>
                         <Image 
                             src="/images/low_calorie.png" 
@@ -106,7 +121,12 @@ export default function HomePage() {
                         </div>
                     </div>
                 </Link>
-                <Link href="/low-sugar">
+                <Link
+                    href={{
+                        pathname: '/product',
+                        query: { collection: 'low-sugar' },
+                    }}
+                >
                     <div className={styles.featureItem}>
                         <Image 
                             src="/images/low_sugar.png" 

@@ -1,16 +1,16 @@
 'use client'
 
 import { useEffect, useCallback, useState, useMemo } from 'react'
-import { useAppDispatch, useAppSelector } from '../../store/store';
-import { setPageInfo, setIsLoading, setError, resetState } from '../../store/productSlice';
+import { useAppDispatch, useAppSelector } from '../../../app/store/slices/store';
+import { setIsLoading, setError, resetState } from '../../../app/store/slices/productSlice';
 import CategoryHeader from '../components/CategoryHeader'
 import ProductList from '../components/ProductList'
 import Navbar, { CATEGORY_MAPPING } from '../components/Navbar';
-import { Product, ProductResponse, SearchBody } from '../../../types/product';
+import { Product, SearchBody } from '../../../types/product';
 
 export default function ZeroCaloriePage() {
     const dispatch = useAppDispatch();
-    const { isLoading, error, filters, pageInfo } = useAppSelector(state => state.product);
+    const { isLoading, error, filters } = useAppSelector(state => state.product);
     const [pageSize, setPageSize] = useState<number>(30);
     const [currentPage, setCurrentPage] = useState<number>(0);
     const [products, setProducts] = useState<Product[]>([]);
