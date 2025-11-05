@@ -129,6 +129,10 @@ export default function Header() {
     };
 
     const handleFavoritesClick = () => {
+        if (!isLoggedIn) {
+            alert('로그인 후 이용해주세요');
+            return;
+        }
         router.push('/favorites'); // 좋아요 상품 페이지 경로
     };
 
@@ -260,7 +264,7 @@ export default function Header() {
                                     )}
                                 </div>
 
-                                <button onClick={handleFavoritesClick} className={styles.iconButton}>
+                                <button onClick={handleFavoritesClick} className={styles.iconButton} aria-label="좋아요한 상품">
                                     <Image src={getCdnUrl('/images/favorite.png')} alt="좋아요" width={30} height={30} className={styles.headerIcon} />
                                 </button>
                             </div>

@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import styles from './page.module.css';
-import { Product } from '../../../types/product';
+import { Product, normalizeProduct } from '../../../types/product';
 import SearchHeader from '../../../components/SearchHeader';
 import { getCdnUrl } from '@/lib/cdn';
+import FavoriteToggleButton from '../components/FavoriteToggleButton';
 
 const PRODUCT_API_BASE_URL =
     process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL ||
@@ -16,6 +17,29 @@ const PRODUCT_ENDPOINT = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product`;
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
 const WARN_ICON = getCdnUrl('/images/warning.png');
 const CAFFEINE_ICON = getCdnUrl('/images/coffee.png');
+
+const SWEETENER_KEYWORDS = [
+    '알룰로스',
+    '에리스리톨',
+    '말티톨',
+    '솔비톨',
+    '자일리톨',
+    '아스파탐',
+    '아세설팜',
+    '수크랄로스',
+    '사카린',
+    '스테비올',
+    '이소말트',
+    '타가토스',
+];
+const CAFFEINE_KEYWORDS = ['카페인'];
+
+const hasNumberValue = (value: number) => !Number.isNaN(value);
+const hasPositiveValue = (value: number) => !Number.isNaN(value) && value > 0;
+const formatQuantity = (value: number, unit: string, emptyText = '없음') =>
+    hasNumberValue(value) ? `${value}${unit}` : emptyText;
+const formatPercentage = (value: number, base: number) =>
+    hasNumberValue(value) ? `${Math.round((value / base) * 100)}%` : '-';
 
 const resolveImageUrl = (url?: string | null) => {
     if (!url) {
@@ -30,10 +54,10 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
 
     // 대체당 포함 여부 확인 함수 추가
     const hasAlternativeSweeteners = (product: Product) => {
-        return Boolean(
-            product.sugarAlcoholG || 
-            product.alluloseG || 
-            product.erythritolG
+        return (
+            hasPositiveValue(product.sugarAlcoholG) ||
+            hasPositiveValue(product.alluloseG) ||
+            hasPositiveValue(product.erythritolG)
         );
     };
 
@@ -50,9 +74,12 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
 
                 if (!response.ok) throw new Error('관련 제품을 가져오는데 실패했습니다');
                 const data = await response.json();
+                const normalizedContent: Product[] = Array.isArray(data?.content)
+                    ? data.content.map((item: unknown) => normalizeProduct(item as Record<string, unknown>))
+                    : [];
                 
                 // 현재 제품을 제외하고 처음 10개 선택
-                const filteredProducts = data.content
+                const filteredProducts = normalizedContent
                     .filter((p: Product) => p.productNo !== currentProductNo)
                     .slice(0, 10);
                 
@@ -71,24 +98,27 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
     };
 
     if (relatedProducts.length === 0) return null;
- 
-     return (
-         <div className={styles.relatedProducts}>
-             <h3 className={styles.sectionTitle}>관련 제품</h3>
-             <div className={styles.relatedProductsGrid}>
+
+    return (
+        <div className={styles.relatedProducts}>
+            <h3 className={styles.sectionTitle}>관련 제품</h3>
+            <div className={styles.relatedProductsGrid}>
                  {relatedProducts.map((product) => {
                      const hasSweeteners = hasAlternativeSweeteners(product);
-                     const hasCaffeine = (product.caffeineMg ?? 0) > 0;
+                    const hasCaffeine = hasPositiveValue(product.caffeineMg);
                      const hasBadges = hasSweeteners || hasCaffeine;
+                    const servingSizeText = hasNumberValue(product.servingSize)
+                        ? `${product.servingSize}${product.servingUnit || ''}`
+                        : '-';
  
                      return (
-                         <div 
-                             key={product.productNo} 
-                             className={styles.relatedProductCard}
-                             onClick={() => handleProductClick(product.productNo)}
-                             role="button"
-                             tabIndex={0}
-                         >
+                    <div 
+                        key={product.productNo} 
+                        className={styles.relatedProductCard}
+                        onClick={() => handleProductClick(product.productNo)}
+                        role="button"
+                        tabIndex={0}
+                    >
                              <div
                                  className={`${styles.relatedBadgeRow} ${hasBadges ? styles.relatedBadgeRowVisible : ''}`.trim()}
                              >
@@ -98,86 +128,86 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
                                              <span className={`${styles.relatedBadge} ${styles.relatedBadgeSweetener}`}>
                                                  <Image src={WARN_ICON} alt="대체당 경고" width={18} height={18} />
                                                  <span>대체당</span>
-                                             </span>
-                                         )}
+                                    </span>
+                                )}
                                          {hasCaffeine && (
                                              <span className={`${styles.relatedBadge} ${styles.relatedBadgeCaffeine}`}>
                                                  <Image src={CAFFEINE_ICON} alt="카페인 경고" width={18} height={18} />
                                                  <span>카페인</span>
-                                             </span>
+                                    </span>
                                          )}
                                      </>
-                                 )}
-                             </div>
-                             <div className={styles.relatedProductImage}>
-                                 <Image
+                                )}
+                            </div>
+                        <div className={styles.relatedProductImage}>
+                            <Image
                                      src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
-                                     alt={product.productName}
-                                     width={100}
-                                     height={100}
-                                     className={styles.productImage}
-                                     unoptimized
+                                alt={product.productName}
+                                width={100}
+                                height={100}
+                                className={styles.productImage}
+                                unoptimized
                                      onError={(event) => {
                                          const target = event.target as HTMLImageElement;
                                          target.src = DEFAULT_IMAGE;
                                      }}
-                                 />
-                             </div>
-                             <div className={styles.relatedProductInfo}>
-                                 <h4>{product.productName}</h4>
-                                 <div className={styles.nutritionDivider} />
-                                 <div className={styles.relatedServingSize}>
-                                     내용량: {product.servingSize}{product.servingUnit}
-                                 </div>
-                                 <div className={styles.nutritionInfo}>
-                                     {product.energyKcal > 0 && (
-                                         <div className={styles.related_nutrition}>
-                                             <span className={styles.related_nutrition_label}>칼로리</span>
-                                             <span>{`${product.energyKcal}kcal`}</span>
-                                         </div>
-                                     )}
-                                     {product.sugarG > 0 && (
-                                         <div className={styles.related_nutrition}>
-                                             <span className={styles.related_nutrition_label}>당류</span>
-                                             <span>{`${product.sugarG}g`}</span>
-                                         </div>
-                                     )}
-                                     {product.sugarAlcoholG > 0 && (
-                                         <div className={styles.related_nutrition}>
-                                             <span className={styles.related_nutrition_label}>당알코올</span>
-                                             <span>{`${product.sugarAlcoholG}g`}</span>
-                                         </div>
-                                     )}
-                                     {product.alluloseG > 0 && (
-                                         <div className={styles.related_nutrition}>
-                                             <span className={styles.related_nutrition_label}>알룰로스</span>
-                                             <span>{`${product.alluloseG}g`}</span>
-                                         </div>
-                                     )}
-                                     {product.erythritolG > 0 && (
-                                         <div className={styles.related_nutrition}>
-                                             <span className={styles.related_nutrition_label}>에리스리톨</span>
-                                             <span>{`${product.erythritolG}g`}</span>
-                                         </div>
-                                     )}
-                                 </div>
-                             </div>
-                         </div>
+                            />
+                        </div>
+                        <div className={styles.relatedProductInfo}>
+                            <h4>{product.productName}</h4>
+                            <div className={styles.nutritionDivider} />
+                            <div className={styles.relatedServingSize}>
+                                    내용량: {servingSizeText}
+                            </div>
+                            <div className={styles.nutritionInfo}>
+                                    {hasNumberValue(product.energyKcal) && (
+                                    <div className={styles.related_nutrition}>
+                                        <span className={styles.related_nutrition_label}>칼로리</span>
+                                            <span>{formatQuantity(product.energyKcal, 'kcal', '-')}</span>
+                                    </div>
+                                )}
+                                    {hasNumberValue(product.sugarG) && (
+                                    <div className={styles.related_nutrition}>
+                                        <span className={styles.related_nutrition_label}>당류</span>
+                                            <span>{formatQuantity(product.sugarG, 'g', '-')}</span>
+                                    </div>
+                                )}
+                                    {hasPositiveValue(product.sugarAlcoholG) && (
+                                    <div className={styles.related_nutrition}>
+                                        <span className={styles.related_nutrition_label}>당알코올</span>
+                                            <span>{formatQuantity(product.sugarAlcoholG, 'g', '-')}</span>
+                                    </div>
+                                )}
+                                    {hasPositiveValue(product.alluloseG) && (
+                                    <div className={styles.related_nutrition}>
+                                        <span className={styles.related_nutrition_label}>알룰로스</span>
+                                            <span>{formatQuantity(product.alluloseG, 'g', '-')}</span>
+                                    </div>
+                                )}
+                                    {hasPositiveValue(product.erythritolG) && (
+                                    <div className={styles.related_nutrition}>
+                                        <span className={styles.related_nutrition_label}>에리스리톨</span>
+                                            <span>{formatQuantity(product.erythritolG, 'g', '-')}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                      );
                  })}
-             </div>
-         </div>
-     );
- };
+            </div>
+        </div>
+    );
+};
 
 export default function ProductDetail() {
 
     // 대체당 포함 여부 확인 함수 추가
     const hasAlternativeSweeteners = (product: Product) => {
-        return Boolean(
-            product.sugarAlcoholG || 
-            product.alluloseG || 
-            product.erythritolG
+        return (
+            hasPositiveValue(product.sugarAlcoholG) ||
+            hasPositiveValue(product.alluloseG) ||
+            hasPositiveValue(product.erythritolG)
         );
     };
     
@@ -204,9 +234,10 @@ export default function ProductDetail() {
                 }
 
                 const data = await response.json();
+                const normalized = normalizeProduct(data as Record<string, unknown>);
                 
                 if (mounted) {
-                    setProduct(data);
+                    setProduct(normalized);
                     setIsLoading(false);
                 }
             } catch (err: any) {
@@ -264,6 +295,90 @@ export default function ProductDetail() {
         return `${parentName} | ${subName}`;
     };
 
+    const [favoriteState, setFavoriteState] = useState({
+        isFavorite: Boolean(product.isFavorite),
+        likesCount: product.likesCount ?? 0,
+    });
+
+    useEffect(() => {
+        setFavoriteState({
+            isFavorite: Boolean(product.isFavorite),
+            likesCount: product.likesCount ?? 0,
+        });
+    }, [product.productNo, product.isFavorite, product.likesCount]);
+
+    const totalContentLabel = product.totalContent?.trim() || undefined;
+    const nutritionBasisText = product.nutritionBasisText?.trim() || undefined;
+    const nutritionBasisValueLabel = hasNumberValue(product.nutritionBasisValue)
+        ? `${product.nutritionBasisValue}${(product.nutritionBasisUnit ?? '').trim()}`
+        : undefined;
+    const nutritionBasisLabel = nutritionBasisText || nutritionBasisValueLabel;
+    const servingSizeLabel = hasNumberValue(product.servingSize) && product.servingSize > 0
+        ? `${product.servingSize}${(product.servingUnit ?? '').trim()}`
+        : undefined;
+    const nutritionSectionTitle = nutritionBasisText
+        ? `영양정보 (${nutritionBasisText} 기준)`
+        : nutritionBasisValueLabel
+        ? `영양정보 (${nutritionBasisValueLabel} 기준)`
+        : '영양정보';
+    const manufacturerLabel = product.manufacturerName?.trim() || undefined;
+    const distributorLabel = product.distributorName?.trim() || undefined;
+    const foodTypeLabel = product.foodType?.trim() || undefined;
+    const servingHighlights = (
+        [
+            totalContentLabel ? { label: '총 내용량', value: totalContentLabel } : null,
+            servingSizeLabel ? { label: '1회 제공량', value: servingSizeLabel } : null,
+        ].filter(Boolean) as Array<{ label: string; value: string }>
+    );
+    const likesLabel = favoriteState.likesCount > 0 ? `${favoriteState.likesCount.toLocaleString()}명` : null;
+    const metaItems = (
+        [
+            // manufacturerLabel ? { label: '제조사', value: manufacturerLabel } : null, // 제거
+            // distributorLabel ? { label: '유통사', value: distributorLabel } : null,   // 제거
+            foodTypeLabel ? { label: '식품 유형', value: foodTypeLabel } : null,
+        ].filter(Boolean) as Array<{ label: string; value: string }>
+    );
+    const nutritionRows: Array<{ label: string; value: string; percent?: string }> = [];
+    const pushNutritionRow = (label: string, amount: number, unit: string, percentBase?: number) => {
+        if (!hasNumberValue(amount) || amount === 0) { // 0 값 체크 추가
+            return;
+        }
+        const row: { label: string; value: string; percent?: string } = {
+            label,
+            value: formatQuantity(amount, unit),
+        };
+        if (percentBase) {
+            row.percent = formatPercentage(amount, percentBase);
+        }
+        nutritionRows.push(row);
+    };
+
+    pushNutritionRow('열량', product.energyKcal, 'kcal');
+    pushNutritionRow('탄수화물', product.carbohydrateG, 'g', 324);
+    pushNutritionRow('당류', product.sugarG, 'g', 100);
+    pushNutritionRow('단백질', product.proteinG, 'g', 55);
+    pushNutritionRow('지방', product.fatG, 'g', 54);
+    pushNutritionRow('포화지방', product.saturatedFattyAcidsG, 'g', 15);
+    pushNutritionRow('트랜스지방', product.transFattyAcidsG, 'g');
+    pushNutritionRow('콜레스테롤', product.cholesterolMg, 'mg', 300);
+    pushNutritionRow('나트륨', product.sodiumMg, 'mg', 2000);
+
+    if (hasNumberValue(product.caffeineMg) && product.caffeineMg > 0) { // 0 값 체크 추가
+        pushNutritionRow('카페인', product.caffeineMg, 'mg', 400);
+    }
+    if (hasNumberValue(product.taurineMg) && product.taurineMg > 0) { // 0 값 체크 추가
+        pushNutritionRow('타우린', product.taurineMg, 'mg');
+    }
+    if (hasNumberValue(product.sugarAlcoholG) && product.sugarAlcoholG > 0) { // 0 값 체크 추가
+        pushNutritionRow('당알코올', product.sugarAlcoholG, 'g');
+    }
+    if (hasNumberValue(product.alluloseG) && product.alluloseG > 0) { // 0 값 체크 추가
+        pushNutritionRow('알룰로스', product.alluloseG, 'g');
+    }
+    if (hasNumberValue(product.erythritolG) && product.erythritolG > 0) { // 0 값 체크 추가
+        pushNutritionRow('에리스리톨', product.erythritolG, 'g');
+    }
+
     return (
         <>
             <SearchHeader />
@@ -271,171 +386,121 @@ export default function ProductDetail() {
                 <main className={styles.productContainer}>
                     {/* 왼쪽: 상품 이미지 섹션 */}
                     <div className={styles.imageSection}>
-                        <div className={styles.imageWrapper}>
                             <Image
-                                src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
+                            src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
                                 alt={product?.productName || '제품 이미지'}
-                                width={430}
-                                height={552}
+                            width={300}
+                            height={300}
                                 className={styles.productImage}
                                 unoptimized
                                 onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.src = DEFAULT_IMAGE;
+                                target.src = DEFAULT_IMAGE;
                                 }}
                             />
-                        </div>
                     </div>
 
                     {/* 오른쪽: 상품 정보 섹션 */}
                     <section className={styles.infoSection}>
-                        {/* 상품 기본 정보 */}
+                        <div className={styles.infoCard}>
                         <div className={styles.productHeader}>
                             <div className={styles.productMeta}>
                                 <span className={styles.category}>
-                                    {getCategoryNames(
-                                        (product as Product & { parentCategoryNo?: number }).parentCategoryNo ?? product.categoryNo,
-                                        product.categoryNo,
-                                    )}
+                                        {getCategoryNames(
+                                            (product as Product & { parentCategoryNo?: number }).parentCategoryNo ?? product.categoryNo,
+                                            product.categoryNo,
+                                        )}
                                 </span>
-                                <div className={styles.productTitleContainer}>
+                                    <div className={styles.productTitleRow}>
                                     <h1 className={styles.productName}>
                                         {product.productName}
-                                        <span className={styles.companyName}>| {product.companyName || '제조사 정보 없음'}</span>
+                                            {product.companyName?.trim() && (
+                                                <span className={styles.companyNameInline}>{product.companyName.trim()}</span>
+                                            )}
                                     </h1>
-                                    {/* 경고 아이콘 컨테이너 */}
-                                    <div className={styles.warningIconsContainer}>
-                                        {hasAlternativeSweeteners(product) && (
-                                            <Image
-                                                src={WARN_ICON}
-                                                alt="대체당 경고"
-                                                width={24}
-                                                height={24}
-                                                className={styles.warningIcon}
-                                                priority
-                                            />
-                                        )}
-                                        {product.caffeineMg > 0 && (
-                                            <Image
-                                                src={CAFFEINE_ICON}
-                                                alt="카페인 경고"
-                                                width={24}
-                                                height={24}
-                                                className={styles.coffeeIcon}
-                                                priority
-                                            />
-                                        )}
-                                    </div>
+                                        <FavoriteToggleButton
+                                            productNo={product.productNo}
+                                            initialIsFavorite={favoriteState.isFavorite}
+                                            initialLikesCount={favoriteState.likesCount}
+                                            className={styles.detailFavoriteButton}
+                                            onChange={(next) => {
+                                                setFavoriteState(next);
+                                            }}
+                                        />
                                 </div>
                             </div>
                         </div>
 
-                        {/* 영양 정보 테이블 */}
-                        <div className={styles.nutritionTable}>
-                            <div className={styles.servingSize}>
-                                내용량: {product.servingSize}{product.servingUnit}
+                            {servingHighlights.length > 0 && (
+                                <div className={styles.servingHighlights}>
+                                    {servingHighlights.map((item) => (
+                                        <div key={item.label} className={styles.servingHighlight}>
+                                            <span className={styles.servingHighlightLabel}>{item.label}</span>
+                                            <span className={styles.servingHighlightValue}>{item.value}</span>
                             </div>
-                            <h3 className={styles.sectionTitle}>영양성분</h3>
-                            {/* 총 내용량 추가 */}
-                            <div className={styles.nutritionContent}>
-                                {/* 기본 영양성분 - 항상 표시 */}
-                                <div className={styles.page_nutrition}>
-                                    <span>열량</span>
-                                    <span>{!product.energyKcal ? '없음' : `${product.energyKcal}kcal`}</span>
-                                    <span></span>
-                                </div>
-                                <div className={styles.page_nutrition}>
-                                    <span>탄수화물</span>
-                                    <span>{!product.carbohydrateG ? '없음' : `${product.carbohydrateG}g`}</span>
-                                    <span>{product.carbohydrateG ? `${Math.round((product.carbohydrateG / 324) * 100)}%` : '-'}</span>
-                                </div>
-                                <div className={styles.page_nutrition}>
-                                    <span>당류</span>
-                                    <span>{!product.sugarG ? '없음' : `${product.sugarG}g`}</span>
-                                    <span>{product.sugarG ? `${Math.round((product.sugarG / 100) * 100)}%` : '-'}</span>
-                                </div>
-                                <div className={styles.page_nutrition}>
-                                    <span>단백질</span>
-                                    <span>{!product.proteinG ? '없음' : `${product.proteinG}g`}</span>
-                                    <span>{product.proteinG ? `${Math.round((product.proteinG / 55) * 100)}%` : '-'}</span>
-                                </div>
-                                <div className={styles.page_nutrition}>
-                                    <span>지방</span>
-                                    <span>{!product.fatG ? '없음' : `${product.fatG}g`}</span>
-                                    <span>{product.fatG ? `${Math.round((product.fatG / 54) * 100)}%` : '-'}</span>
-                                </div>
-                                <div className={styles.page_nutrition}>
-                                    <span>포화지방</span>
-                                    <span>{!product.saturatedFattyAcidsG ? '없음' : `${product.saturatedFattyAcidsG}g`}</span>
-                                    <span>{product.saturatedFattyAcidsG ? `${Math.round((product.saturatedFattyAcidsG / 15) * 100)}%` : '-'}</span>
-                                </div>
-                                <div className={styles.page_nutrition}>
-                                    <span>트랜스지방</span>
-                                    <span>{!product.transFattyAcidsG ? '없음' : `${product.transFattyAcidsG}g`}</span>
-                                    <span>-</span>
-                                </div>
-                                <div className={styles.page_nutrition}>
-                                    <span>콜레스테롤</span>
-                                    <span>{!product.cholesterolMg ? '없음' : `${product.cholesterolMg}mg`}</span>
-                                    <span>{product.cholesterolMg ? `${Math.round((product.cholesterolMg / 300) * 100)}%` : '-'}</span>
-                                </div>
-                                <div className={styles.page_nutrition}>
-                                    <span>나트륨</span>
-                                    <span>{!product.sodiumMg ? '없음' : `${product.sodiumMg}mg`}</span>
-                                    <span>{product.sodiumMg ? `${Math.round((product.sodiumMg / 2000) * 100)}%` : '-'}</span>
-                                </div>
+                                    ))}
+                                        </div>
+                                    )}
 
-                                    {/* 선택적 영양성분 - 값이 있을 때만 표시 */}
-                                    {product.caffeineMg > 0 && (
-                                        <div className={styles.page_nutrition}>
-                                            <span>카페인</span>
-                                            <span>{`${product.caffeineMg}mg`}</span>
-                                            <span>{`${Math.round((product.caffeineMg / 400) * 100)}%`}</span>
+                            {metaItems.length > 0 || likesLabel ? (
+                                <div className={styles.metaGrid}>
+                                    {metaItems.map((item) => (
+                                        <div key={item.label} className={styles.metaItem}>
+                                            <span className={styles.metaLabel}>{item.label}</span>
+                                            <span className={styles.metaValue}>{item.value}</span>
                                         </div>
-                                    )}
-                                    {product.taurineMg > 0 && (
-                                        <div className={styles.page_nutrition}>
-                                            <span>타우린</span>
-                                            <span>{`${product.taurineMg}mg`}</span>
-                                            <span>-</span>
-                                        </div>
-                                    )}
-                                    {/* 대체당 정보 - 값이 있을 때만 표시 */}
-                                    {product.sugarAlcoholG > 0 && (
-                                        <div className={styles.page_nutrition}>
-                                            <span>당알코올</span>
-                                            <span>{`${product.sugarAlcoholG}g`}</span>
-                                            <span>-</span>
-                                        </div>
-                                    )}
-                                    {product.alluloseG > 0 && (
-                                        <div className={styles.page_nutrition}>
-                                            <span>알룰로스</span>
-                                            <span>{`${product.alluloseG}g`}</span>
-                                            <span>-</span>
-                                        </div>
-                                    )}
-                                    {product.erythritolG > 0 && (
-                                        <div className={styles.page_nutrition}>
-                                            <span>에리스리톨</span>
-                                            <span>{`${product.erythritolG}g`}</span>
-                                            <span>-</span>
+                                    ))}
+                                    {likesLabel && (
+                                        <div className={`${styles.metaItem} ${styles.metaItemAccent}`}>
+                                            <span className={styles.metaLabel}>관심도</span>
+                                            <span className={styles.metaValue}>{likesLabel}</span>
                                         </div>
                                     )}
                                 </div>
+                            ) : null}
+
+                            {nutritionRows.length > 0 && (
+                                <div className={styles.nutritionTable}>
+                                    <h3 className={styles.sectionTitle}>{nutritionSectionTitle}</h3>
+                                    <div className={styles.nutritionContent}>
+                                        {nutritionRows.map((row) => (
+                                            <div key={row.label} className={styles.page_nutrition}>
+                                                <span>{row.label}</span>
+                                                <span>{row.value}</span>
+                                                <span>{row.percent ?? ''}</span>
+                                        </div>
+                                        ))}
+                                        </div>
+                                        </div>
+                                    )}
                             </div>
 
-                            {/* 원재료 정보 */}
-                            {product.ingredients && (
+                        {product.ingredients && product.ingredients.trim() && (
                                 <div className={styles.ingredients}>
                                     <h3 className={styles.sectionTitle}>원재료</h3>
                                     <p>
-                                        {product.ingredients.split(',').map((ingredient, index) => (
-                                            <span key={index} className={styles.ingredient}>
-                                                {ingredient.trim()}
-                                                {index < product.ingredients.split(',').length - 1 && ','}
+                                    {product.ingredients
+                                        .split(',')
+                                        .map((ingredient, index) => {
+                                            const label = ingredient.trim();
+                                            if (!label) {
+                                                return null;
+                                            }
+                                            return (
+                                                <span
+                                                    key={`${label}-${index}`}
+                                                    className={`${styles.ingredient} ${
+                                                        SWEETENER_KEYWORDS.some((keyword) => label.includes(keyword))
+                                                            ? styles.ingredientHighlightSweetener
+                                                            : CAFFEINE_KEYWORDS.some((keyword) => label.includes(keyword))
+                                                            ? styles.ingredientHighlightCaffeine
+                                                            : ''
+                                                    }`.trim()}
+                                                >
+                                                    {label}
                                             </span>
-                                        ))}
+                                            );
+                                        })}
                                     </p>
                                 </div>
                             )}

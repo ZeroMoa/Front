@@ -3,12 +3,20 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import styles from './page.module.css'
+import ProductGrid from '../product/components/ProductGrid'
+import { fetchFavoriteProducts } from '../store/api/favorite'
+import { Product } from '@/types/product'
+import { useIsLoggedIn } from '../hooks/useAuth'
 
 export default function HomePage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const { isLoggedIn } = useIsLoggedIn();
+    const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
+    const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+    const [favoriteError, setFavoriteError] = useState<string | null>(null);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,6 +27,52 @@ export default function HomePage() {
 
     const handleTagClick = (query: string) => {
         router.push(`/chat?q=${encodeURIComponent(query)}`);
+    };
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadFavorites = async () => {
+            if (!isLoggedIn) {
+                setFavoriteProducts([]);
+                setFavoriteError(null);
+                return;
+            }
+
+            setIsFavoriteLoading(true);
+            setFavoriteError(null);
+
+            try {
+                const response = await fetchFavoriteProducts({ page: 0, size: 10, sort: 'createdDate,desc' });
+                if (!cancelled) {
+                    setFavoriteProducts(response.content.slice(0, 10));
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    const message = error instanceof Error ? error.message : '좋아요한 제품을 불러오지 못했습니다.';
+                    setFavoriteError(message);
+                    setFavoriteProducts([]);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsFavoriteLoading(false);
+                }
+            }
+        };
+
+        loadFavorites();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [isLoggedIn]);
+
+    const handleViewAllFavorites = () => {
+        if (!isLoggedIn) {
+            alert('로그인 후 이용해주세요');
+            return;
+        }
+        router.push('/favorites');
     };
 
     return (
@@ -160,6 +214,27 @@ export default function HomePage() {
                         </div>
                     </div>
                 </Link>
+            </section>
+
+            <section className={styles.favoriteSection}>
+                <div className={styles.favoriteHeader}>
+                    <h2 className={styles.favoriteTitle}>내가 좋아하는 상품</h2>
+                    <button type="button" className={styles.favoriteViewAllButton} onClick={handleViewAllFavorites}>
+                        전체 보기
+                    </button>
+                </div>
+
+                {!isLoggedIn ? (
+                    <p className={styles.favoriteMessage}>로그인 후 좋아요한 제품을 확인할 수 있습니다.</p>
+                ) : isFavoriteLoading ? (
+                    <p className={styles.favoriteMessage}>좋아요한 제품을 불러오는 중입니다...</p>
+                ) : favoriteError ? (
+                    <p className={styles.favoriteError}>{favoriteError}</p>
+                ) : favoriteProducts.length === 0 ? (
+                    <p className={styles.favoriteMessage}>아직 좋아요한 제품이 없어요.</p>
+                ) : (
+                    <ProductGrid products={favoriteProducts} />
+                )}
             </section>
         </main>
     )

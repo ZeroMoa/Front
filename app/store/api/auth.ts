@@ -17,14 +17,14 @@ import {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Helper function for fetching with XSRF token and Authorization header
-const fetchWithAuth = async (url: string, options: RequestInit = {}, retried = false): Promise<Response> => {
+export const fetchWithAuth = async (url: string, options: RequestInit = {}, retried = false): Promise<Response> => {
     const xsrfToken = Cookies.get('XSRF-TOKEN');
-    // const accessToken = localStorage.getItem('accessToken'); // HttpOnly: false인 Access Token을 가져옴
+    const accessToken = Cookies.get('accessToken');
 
     const headers: HeadersInit = {
         'Content-Type': 'application/json',
         ...(xsrfToken && { 'X-XSRF-TOKEN': xsrfToken }),
-        // ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }), // Access Token 추가
+        ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
         ...options.headers,
     };
 

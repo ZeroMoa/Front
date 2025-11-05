@@ -775,4 +775,55 @@
     }
 }
 
+.page_cardFavoriteButton__LF4ZY {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+}
+
+.page_favoriteButton__4jsd6 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 2px solid #eaeaea;
+    background-color: #ffffff;
+    box-shadow: 0 6px 16px rgba(51, 63, 89, 0.14);
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    padding: 0;
+}
+
+.page_favoriteButton__4jsd6:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(51, 63, 89, 0.18);
+}
+
+.page_favoriteButton__4jsd6:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+    transform: none;
+}
+
+.page_favoriteButtonActive__qLbJQ {
+    border-color: rgba(255, 122, 156, 0.6);
+    background: linear-gradient(135deg, rgba(255, 239, 245, 0.95), rgba(255, 221, 234, 0.95));
+}
+
+.page_favoriteButtonInner__YF7a4 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.page_favoriteHeartImage__O3M5a {
+    width: 22px;
+    height: 20px;
+}
+
 

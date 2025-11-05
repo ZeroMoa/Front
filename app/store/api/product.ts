@@ -1,9 +1,20 @@
 import { cookies } from 'next/headers';
-import { ProductResponse } from '@/types/product';
+import { ProductResponse, normalizeProduct } from '@/types/product';
 import type { NutritionSlug } from '@/product/config';
 
 const PRODUCT_API_BASE_URL =
     process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+
+const normalizeProductResponse = (payload: any): ProductResponse => {
+    const normalizedContent = Array.isArray(payload?.content)
+        ? payload.content.map((item: Record<string, unknown>) => normalizeProduct(item))
+        : [];
+
+    return {
+        ...payload,
+        content: normalizedContent,
+    } as ProductResponse;
+};
 
 export interface FetchCategoryProductsParams {
     categoryNo: number;
@@ -100,7 +111,8 @@ export async function fetchCategoryProducts(
         throw new Error(`제품 목록 조회에 실패했습니다. (status: ${response.status})`);
     }
 
-    return response.json();
+    const payload = await response.json();
+    return normalizeProductResponse(payload);
 }
 
 interface FetchNutritionProductsParams {
@@ -156,7 +168,8 @@ export async function fetchNutritionProducts(
         throw new Error(`영양 기준 제품 조회에 실패했습니다. (status: ${response.status})`);
     }
 
-    return response.json();
+    const payload = await response.json();
+    return normalizeProductResponse(payload);
 }
 
 export interface FetchProductSearchParams {
@@ -243,6 +256,7 @@ export async function fetchProductSearch(
         throw new Error(`제품 검색에 실패했습니다. (status: ${response.status})`);
     }
 
-    return response.json();
+    const payload = await response.json();
+    return normalizeProductResponse(payload);
 }
 

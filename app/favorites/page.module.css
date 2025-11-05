@@ -1,0 +1,76 @@
+.pageWrapper {
+    max-width: 1180px;
+    margin: 160px auto 100px;
+    padding: 0 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.titleGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2f5c;
+    margin: 0;
+}
+
+.description {
+    font-size: 0.95rem;
+    color: #5a6787;
+    margin: 0;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pageSizeLabel {
+    font-size: 0.9rem;
+    color: #53607f;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pageSizeSelect {
+    border-radius: 12px;
+    border: 1px solid rgba(189, 205, 232, 0.7);
+    padding: 6px 12px;
+    font-size: 0.95rem;
+    color: #3a4d72;
+    background: #f9fbff;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.message {
+    font-size: 0.95rem;
+    color: #5a6787;
+    text-align: center;
+}
+
+.errorMessage {
+    font-size: 0.95rem;
+    color: #d9534f;
+    text-align: center;
+}
