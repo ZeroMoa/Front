@@ -28,6 +28,7 @@ interface ProductSearchParams {
     isZeroSugar?: string | string[];
     isLowCalorie?: string | string[];
     isLowSugar?: string | string[];
+    isNew?: string | string[];
 }
 
 const parseSingleValue = (value: string | string[] | undefined) => {
@@ -43,6 +44,19 @@ const parseNumberParam = (value: string | undefined, fallback: number, min = 0) 
         return fallback;
     }
     return parsed;
+};
+
+const parseBooleanParam = (value: string | undefined) => {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === 'true') {
+        return true;
+    }
+    if (value === 'false') {
+        return false;
+    }
+    return undefined;
 };
 
 const parseFilters = (searchParams: ProductSearchParams) => {
@@ -83,6 +97,7 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
     const sort = parseSingleValue(params.sort) ?? categoryConfig.defaultSort;
     const keyword = parseSingleValue(params.keyword) ?? '';
     const filters = parseFilters(params);
+    const isNewParam = parseBooleanParam(parseSingleValue(params.isNew));
 
     const activeFilters = Object.entries(filters).reduce<NonNullable<Parameters<typeof fetchCategoryProducts>[0]['filters']>>(
         (accumulator, [key, value]) => {
@@ -108,6 +123,7 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
                   page,
                   size,
                   sort,
+                  isNew: isNewParam,
                   filters,
               },
               { cache: 'no-store' },
@@ -118,6 +134,7 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
                   page,
                   size,
                   sort,
+                  isNew: isNewParam,
                   filters: activeFilters,
               },
               { cache: 'no-store' },
@@ -136,6 +153,7 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
                 sort={sort}
                 filters={filters}
                 keyword={keyword}
+                isNew={Boolean(isNewParam)}
             />
         </div>
     );
@@ -148,6 +166,7 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
      const size = parseNumberParam(parseSingleValue(params.size), config.pageSizeOptions[0] ?? 30, 1);
      const sort = parseSingleValue(params.sort) ?? config.defaultSort;
      const keyword = parseSingleValue(params.keyword) ?? '';
+    const isNewParam = parseBooleanParam(parseSingleValue(params.isNew));
 
     const categoryParam = parseSingleValue(params.category);
     const categorySlug = categoryParam && isCategorySlug(categoryParam) ? categoryParam : undefined;
@@ -193,6 +212,7 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
                   page,
                   size,
                   sort,
+                  isNew: isNewParam,
                   filters,
               },
               { cache: 'no-store' },
@@ -204,6 +224,7 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
                   page,
                   size,
                   sort,
+                  isNew: isNewParam,
                   filters: activeFilters,
               },
               { cache: 'no-store' },
@@ -215,6 +236,7 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
                   size,
                   sort,
                   keyword: keyword || undefined,
+                  isNew: isNewParam,
               },
               { cache: 'no-store' },
           );
@@ -233,6 +255,7 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
                 sort={sort}
                 filters={filters}
                 keyword={keyword}
+                isNew={Boolean(isNewParam)}
                 lockedFilters={config.lockedFilters}
             />
         </div>

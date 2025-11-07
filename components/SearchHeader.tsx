@@ -5,6 +5,7 @@ import Image from 'next/image'
 import styles from './SearchHeader.module.css'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getCdnUrl } from '@/lib/cdn'
 
 export default function SearchHeader() {
     const router = useRouter();
@@ -13,7 +14,7 @@ export default function SearchHeader() {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+            router.push(`/product/search?q=${encodeURIComponent(searchQuery.trim())}`);
         }
     };
 
@@ -30,7 +31,7 @@ export default function SearchHeader() {
                     />
                     <button type="submit" className={styles.searchButton}>
                         <Image 
-                            src="/images/search.png" 
+                            src={getCdnUrl('/images/search.png')} 
                             alt="검색" 
                             width={20} 
                             height={20} 

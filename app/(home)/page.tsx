@@ -7,33 +7,54 @@ import { useEffect, useState } from 'react'
 import styles from './page.module.css'
 import ProductGrid from '../product/components/ProductGrid'
 import { fetchFavoriteProducts } from '../store/api/favorite'
+import { fetchProductSearch } from '../store/api/product'
 import { Product } from '@/types/product'
 import { useIsLoggedIn } from '../hooks/useAuth'
+import { getCdnUrl } from '@/lib/cdn'
+import { useAppDispatch } from '../store/slices/store'
+import { setLoggedIn, setUser } from '../store/slices/authSlice'
 
 export default function HomePage() {
     const router = useRouter();
+    const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
-    const { isLoggedIn } = useIsLoggedIn();
+    const { isLoggedIn: queryIsLoggedIn, userData, isLoading: authLoading, error: authError } = useIsLoggedIn();
     const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
     const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
     const [favoriteError, setFavoriteError] = useState<string | null>(null);
+    const [newProducts, setNewProducts] = useState<Product[]>([]);
+    const [isNewLoading, setIsNewLoading] = useState(false);
+    const [newError, setNewError] = useState<string | null>(null);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            router.push(`/chat?q=${encodeURIComponent(searchQuery.trim())}`);
+            router.push(`/product/search?q=${encodeURIComponent(searchQuery.trim())}`);
         }
     };
 
     const handleTagClick = (query: string) => {
-        router.push(`/chat?q=${encodeURIComponent(query)}`);
+        router.push(`/product/search?q=${encodeURIComponent(query)}`);
     };
+
+    // React Query의 로그인 상태를 Redux에 동기화
+    useEffect(() => {
+        if (!authLoading && !authError) {
+            if (userData && queryIsLoggedIn) {
+                dispatch(setLoggedIn(true));
+                dispatch(setUser({ id: userData.username, username: userData.username }));
+            } else {
+                dispatch(setLoggedIn(false));
+                dispatch(setUser(null));
+            }
+        }
+    }, [authLoading, authError, userData, queryIsLoggedIn, dispatch]);
 
     useEffect(() => {
         let cancelled = false;
 
         const loadFavorites = async () => {
-            if (!isLoggedIn) {
+            if (!queryIsLoggedIn) {
                 setFavoriteProducts([]);
                 setFavoriteError(null);
                 return;
@@ -65,14 +86,50 @@ export default function HomePage() {
         return () => {
             cancelled = true;
         };
-    }, [isLoggedIn]);
+    }, [queryIsLoggedIn]);
 
     const handleViewAllFavorites = () => {
-        if (!isLoggedIn) {
+        if (!queryIsLoggedIn) {
             alert('로그인 후 이용해주세요');
             return;
         }
         router.push('/favorites');
+    };
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadNewProducts = async () => {
+            setIsNewLoading(true);
+            setNewError(null);
+
+            try {
+                const response = await fetchProductSearch({ page: 0, size: 10, sort: 'createdDate,desc', isNew: true });
+                if (!cancelled) {
+                    setNewProducts(response.content.slice(0, 10));
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    const message = error instanceof Error ? error.message : '신제품을 불러오지 못했습니다.';
+                    setNewError(message);
+                    setNewProducts([]);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsNewLoading(false);
+                }
+            }
+        };
+
+        loadNewProducts();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const handleViewAllNew = () => {
+        router.push('/product/new');
     };
 
     return (
@@ -88,7 +145,7 @@ export default function HomePage() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                     <button type="submit" className={styles.searchButton}>
-                        <Image src="/images/search.png" alt="검색" width={20} height={20} />
+                        <Image src={getCdnUrl('/images/search.png')} alt="검색" width={20} height={20} />
                     </button>
                 </form>
                 <div className={styles.searchTags}>
@@ -122,7 +179,7 @@ export default function HomePage() {
                 >
                     <div className={styles.featureItem}>
                         <Image 
-                            src="/images/zero_calorie.png" 
+                            src={getCdnUrl('/images/zero_calorie.png')} 
                             alt="제로 칼로리" 
                             width={80} 
                             height={80}
@@ -142,7 +199,7 @@ export default function HomePage() {
                 >
                     <div className={styles.featureItem}>
                         <Image 
-                            src="/images/zero_sugar.png" 
+                            src={getCdnUrl('/images/zero_sugar.png')} 
                             alt="제로 슈가" 
                             width={80} 
                             height={80}
@@ -162,7 +219,7 @@ export default function HomePage() {
                 >
                     <div className={styles.featureItem}>
                         <Image 
-                            src="/images/low_calorie.png" 
+                            src={getCdnUrl('/images/low_calorie.png')} 
                             alt="저칼로리" 
                             width={80} 
                             height={80}
@@ -183,7 +240,7 @@ export default function HomePage() {
                 >
                     <div className={styles.featureItem}>
                         <Image 
-                            src="/images/low_sugar.png" 
+                            src={getCdnUrl('/images/low_sugar.png')} 
                             alt="저당 식품" 
                             width={80} 
                             height={80}
@@ -202,7 +259,7 @@ export default function HomePage() {
                 <Link href="/board" className={styles.noticeLink}>
                     <div className={styles.noticeItem}>
                         <Image
-                            src="/images/notice.png"
+                            src={getCdnUrl('/images/notice.png')}
                             alt="공지사항"
                             width={80}
                             height={80}
@@ -216,6 +273,23 @@ export default function HomePage() {
                 </Link>
             </section>
 
+            <section className={styles.newSection}>
+                <div className={styles.favoriteHeader}>
+                    <h2 className={styles.favoriteTitle}>따끈따끈 신제품</h2>
+                    <button type="button" className={styles.favoriteViewAllButton} onClick={handleViewAllNew}>
+                        전체 보기
+                    </button>
+                </div>
+
+                {isNewLoading ? null : newError ? (
+                    <p className={styles.favoriteError}>{newError}</p>
+                ) : newProducts.length === 0 ? (
+                    <p className={styles.favoriteMessage}>아직 등록된 신제품이 없어요.</p>
+                ) : (
+                    <ProductGrid products={newProducts} className={styles.favoriteGrid} />
+                )}
+            </section>
+
             <section className={styles.favoriteSection}>
                 <div className={styles.favoriteHeader}>
                     <h2 className={styles.favoriteTitle}>내가 좋아하는 상품</h2>
@@ -224,18 +298,18 @@ export default function HomePage() {
                     </button>
                 </div>
 
-                {!isLoggedIn ? (
-                    <p className={styles.favoriteMessage}>로그인 후 좋아요한 제품을 확인할 수 있습니다.</p>
-                ) : isFavoriteLoading ? (
-                    <p className={styles.favoriteMessage}>좋아요한 제품을 불러오는 중입니다...</p>
-                ) : favoriteError ? (
+                {!queryIsLoggedIn && !authLoading ? (
+                    <p className={styles.favoriteMessage}>로그인 후 좋아하는 제품을 확인해보세요!</p>
+                ) : authLoading || isFavoriteLoading ? null : favoriteError ? (
                     <p className={styles.favoriteError}>{favoriteError}</p>
                 ) : favoriteProducts.length === 0 ? (
                     <p className={styles.favoriteMessage}>아직 좋아요한 제품이 없어요.</p>
                 ) : (
-                    <ProductGrid products={favoriteProducts} />
+                    <ProductGrid products={favoriteProducts} className={styles.favoriteGrid} />
                 )}
             </section>
+
+            
         </main>
     )
 }

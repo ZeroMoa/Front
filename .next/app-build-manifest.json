@@ -16,23 +16,6 @@
       "static/chunks/main-app.js",
       "static/css/app/(home)/page.css",
       "static/chunks/app/(home)/page.js"
-    ],
-    "/product/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/product/page.css",
-      "static/chunks/app/product/page.js"
-    ],
-    "/favorites/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/favorites/page.css",
-      "static/chunks/app/favorites/page.js"
-    ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

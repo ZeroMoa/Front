@@ -221,7 +221,7 @@ export default function Header() {
                                     onClick={handleNotificationIconClick}
                                 >
                                     <button className={styles.iconButton}>
-                                        <Image src={getCdnUrl('/images/bell.png')} alt="알림" width={30} height={30} className={styles.headerIcon} />
+                                        <Image src={getCdnUrl('/images/bell4.png')} alt="알림" width={30} height={30} className={styles.headerIcon} />
                                         {/* {!unreadCountLoading && unreadCount && unreadCount > 0 && (
                                             <span className={styles.unreadBadge}>{unreadCount}</span>
                                         )} */}
@@ -246,7 +246,7 @@ export default function Header() {
                                                             onClick={() => handleNotificationItemClick(notification.userNotificationNo)}
                                                         >
                                                             {/* 알림 타입에 따른 아이콘 (필요시 추가, 현재는 기본 종 모양) */}
-                                                            <Image src={getCdnUrl('/images/bell.png')} alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
+                                                            <Image src={getCdnUrl('/images/bell4.png')} alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
                                                             <div className={styles.notificationText}>
                                                                 <p className={styles.notificationMessage}>{notification.title}</p>
                                                                 <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
@@ -265,7 +265,7 @@ export default function Header() {
                                 </div>
 
                                 <button onClick={handleFavoritesClick} className={styles.iconButton} aria-label="좋아요한 상품">
-                                    <Image src={getCdnUrl('/images/favorite.png')} alt="좋아요" width={30} height={30} className={styles.headerIcon} />
+                                    <Image src={getCdnUrl('/images/heart3.png')} alt="좋아요" width={30} height={30} className={styles.headerIcon} />
                                 </button>
                             </div>
                         ) : (

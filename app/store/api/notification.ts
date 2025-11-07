@@ -1,20 +1,13 @@
-import Cookies from 'js-cookie';
 import { UserNotificationResponse } from '@/types/notification';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // 모든 사용자 알림 목록 조회
 export const getUserNotifications = async (): Promise<UserNotificationResponse[]> => {
-    const accessToken = Cookies.get('accessToken');
-    if (!accessToken) {
-        throw new Error('Access token not found.');
-    }
-
     const response = await fetch(`${API_BASE_URL}/notification/user`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
         },
         credentials: 'include',
     });
@@ -28,16 +21,10 @@ export const getUserNotifications = async (): Promise<UserNotificationResponse[]
 
 // 특정 사용자 알림 상세 조회
 export const getUserNotificationDetail = async (userNotificationNo: number): Promise<UserNotificationResponse> => {
-    const accessToken = Cookies.get('accessToken');
-    if (!accessToken) {
-        throw new Error('Access token not found.');
-    }
-
     const response = await fetch(`${API_BASE_URL}/notification/user/${userNotificationNo}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
         },
         credentials: 'include',
     });
@@ -51,16 +38,10 @@ export const getUserNotificationDetail = async (userNotificationNo: number): Pro
 
 // 사용자 알림 읽음 처리
 export const markUserNotificationAsRead = async (userNotificationNo: number): Promise<{ message: string }> => {
-    const accessToken = Cookies.get('accessToken');
-    if (!accessToken) {
-        throw new Error('Access token not found.');
-    }
-
     const response = await fetch(`${API_BASE_URL}/notification/user/${userNotificationNo}/read`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
         },
         credentials: 'include',
     });
@@ -74,16 +55,10 @@ export const markUserNotificationAsRead = async (userNotificationNo: number): Pr
 
 // 사용자 알림 삭제/숨김 처리
 export const deleteUserNotification = async (userNotificationNo: number): Promise<{ message: string }> => {
-    const accessToken = Cookies.get('accessToken');
-    if (!accessToken) {
-        throw new Error('Access token not found.');
-    }
-
     const response = await fetch(`${API_BASE_URL}/notification/user/${userNotificationNo}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
         },
         credentials: 'include',
     });
@@ -97,16 +72,10 @@ export const deleteUserNotification = async (userNotificationNo: number): Promis
 
 // 읽지 않은 알림 개수 조회
 export const getUnreadNotificationCount = async (): Promise<number> => {
-    const accessToken = Cookies.get('accessToken');
-    if (!accessToken) {
-        throw new Error('Access token not found.');
-    }
-
     const response = await fetch(`${API_BASE_URL}/notification/user/unread-count`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
         },
         credentials: 'include',
     });

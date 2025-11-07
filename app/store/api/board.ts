@@ -1,30 +1,11 @@
-import Cookies from 'js-cookie';
 import { BoardListResponse, BoardResponse } from '../../../types/board';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-const getAccessToken = () => Cookies.get('accessToken');
-
-const buildAuthHeaders = (includeJson = true) => {
-    const token = getAccessToken();
-    const headers: HeadersInit = {};
-
-    if (includeJson) {
-        headers['Content-Type'] = 'application/json';
-    }
-
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    return headers;
-};
 
 export const fetchBoards = async (params: URLSearchParams): Promise<BoardListResponse> => {
     const response = await fetch(`${API_BASE_URL}/board?${params.toString()}`, {
         method: 'GET',
         credentials: 'include',
-        headers: buildAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -39,7 +20,6 @@ export const fetchBoardDetail = async (boardNo: number): Promise<BoardResponse> 
     const response = await fetch(`${API_BASE_URL}/board/${boardNo}`, {
         method: 'GET',
         credentials: 'include',
-        headers: buildAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -54,17 +34,9 @@ export const fetchBoardDetail = async (boardNo: number): Promise<BoardResponse> 
 };
 
 export const createBoard = async (form: FormData): Promise<BoardResponse> => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('로그인이 필요합니다.');
-    }
-
     const response = await fetch(`${API_BASE_URL}/board`, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
         body: form,
     });
 
@@ -77,17 +49,9 @@ export const createBoard = async (form: FormData): Promise<BoardResponse> => {
 };
 
 export const updateBoard = async (boardNo: number, form: FormData): Promise<BoardResponse> => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('로그인이 필요합니다.');
-    }
-
     const response = await fetch(`${API_BASE_URL}/board/${boardNo}`, {
         method: 'PATCH',
         credentials: 'include',
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
         body: form,
     });
 
@@ -100,17 +64,9 @@ export const updateBoard = async (boardNo: number, form: FormData): Promise<Boar
 };
 
 export const deleteBoard = async (boardNo: number): Promise<void> => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('로그인이 필요합니다.');
-    }
-
     const response = await fetch(`${API_BASE_URL}/board/${boardNo}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
     });
 
     if (!response.ok) {
@@ -123,7 +79,6 @@ export const searchBoards = async (params: URLSearchParams): Promise<BoardListRe
     const response = await fetch(`${API_BASE_URL}/board/search?${params.toString()}`, {
         method: 'GET',
         credentials: 'include',
-        headers: buildAuthHeaders(),
     });
 
     if (!response.ok) {

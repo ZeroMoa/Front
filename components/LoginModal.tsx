@@ -9,6 +9,7 @@ import { setLoggedIn, setUser } from '../app/store/slices/authSlice'; // 로그�
 import styles from './LoginModal.module.css'
 import authSlice from './../app/store/slices/authSlice';
 import { useQueryClient } from '@tanstack/react-query'; // useQueryClient import
+import { getCdnUrl } from '@/lib/cdn'
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -172,10 +173,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <p className={styles.socialLoginTitle}>간편 로그인</p>
                 <div className={styles.socialIcons}>
                     <div className={styles.socialIconContainer} onClick={() => handleSocialLogin('Google')}>
-                        <Image src="/images/google.png" alt="Google" width={20} height={20} className={styles.socialIcon} />
+                        <Image src={getCdnUrl('/images/google.png')} alt="Google" width={20} height={20} className={styles.socialIcon} />
                     </div>
                     <div className={styles.socialIconContainer} onClick={() => handleSocialLogin('Naver')}>
-                        <Image src="/images/naver.png" alt="Naver" width={20} height={20} className={styles.socialIcon} />
+                        <Image src={getCdnUrl('/images/naver.png')} alt="Naver" width={20} height={20} className={styles.socialIcon} />
                     </div>
                 </div>
             </div>

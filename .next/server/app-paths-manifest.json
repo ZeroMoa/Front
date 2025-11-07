@@ -1,6 +1,3 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/product/page": "app/product/page.js",
-  "/favorites/page": "app/favorites/page.js",
   "/(home)/page": "app/(home)/page.js"
 }

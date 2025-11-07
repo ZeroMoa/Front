@@ -46,7 +46,21 @@ export interface NutritionPageConfig extends BasePageConfig {
     subCategories?: SubCategoryConfig[];
 }
 
-export type ProductPageConfig = CategoryPageConfig | NutritionPageConfig;
+export interface NewProductsPageConfig extends BasePageConfig {
+    kind: 'new';
+    heroItems: Array<{
+        slug: CategorySlug | 'all';
+        label: string;
+    }>;
+}
+
+export interface SearchPageConfig extends BasePageConfig {
+    kind: 'search';
+    defaultFilters?: Partial<Record<ProductFilterKey, boolean>>;
+    lockedFilters?: ProductFilterKey[];
+}
+
+export type ProductPageConfig = CategoryPageConfig | NutritionPageConfig | NewProductsPageConfig | SearchPageConfig;
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [30, 60, 90];
 
@@ -152,6 +166,28 @@ export const NUTRITION_CONFIG: Record<NutritionSlug, NutritionPageConfig> = {
         lockedFilters: ['isLowSugar'],
         subCategories: [{ slug: 'all', label: '전체', categoryNo: 0 }],
     },
+};
+
+export const NEW_PRODUCTS_PAGE_CONFIG: NewProductsPageConfig = {
+    kind: 'new',
+    title: '신제품 모아보기',
+    description: '최근 30일 이내에 등록된 따끈따끈한 제품을 만나보세요.',
+    defaultSort: 'createdDate,desc',
+    pageSizeOptions: [30, 60, 90],
+    heroItems: [
+        { slug: 'all', label: '전체 신제품' },
+        { slug: 'drinks', label: '음료 신제품' },
+        { slug: 'snacks', label: '과자 신제품' },
+        { slug: 'icecream', label: '아이스크림 신제품' },
+    ],
+};
+
+export const SEARCH_PAGE_CONFIG: SearchPageConfig = {
+    kind: 'search',
+    title: '제품 검색',
+    description: '원하는 조건으로 제품을 찾아보세요.',
+    defaultSort: 'productName,asc',
+    pageSizeOptions: DEFAULT_PAGE_SIZE_OPTIONS,
 };
 
 export const PRODUCT_FILTER_KEYS = [

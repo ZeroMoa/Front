@@ -6,6 +6,7 @@ import Image from 'next/image';
 import styles from './page.module.css';
 import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotification } from '../hooks/useNotification';
 import { UserNotificationResponse } from '../../types/notification';
+import { getCdnUrl } from '@/lib/cdn';
 
 export default function NotificationsPage() {
     const router = useRouter();
@@ -121,7 +122,7 @@ export default function NotificationsPage() {
                             className={`${styles.notificationItem} ${notification.isRead ? styles.read : ''}`}
                         >
                             {/* 알림 타입에 따른 아이콘 (필요시 추가) */}
-                            <Image src="/images/bell.png" alt="알림 아이콘" width={40} height={40} className={styles.notificationIcon} />
+                            <Image src={getCdnUrl('/images/bell.png')} alt="알림 아이콘" width={40} height={40} className={styles.notificationIcon} />
                             <div className={styles.notificationText}>
                                 <h2 className={styles.notificationTitle}>{notification.title}</h2>
                                 <p className={styles.notificationContent}>{notification.content}</p>
@@ -134,7 +135,7 @@ export default function NotificationsPage() {
                                             </button>
                                         )}
                                         <button onClick={(e) => { e.stopPropagation(); handleDeleteNotification(notification.userNotificationNo); }} className={styles.deleteButton}>
-                                            <Image src="/images/delete.png" alt="삭제" width={20} height={20} />
+                                            <Image src={getCdnUrl('/images/delete.png')} alt="삭제" width={20} height={20} />
                                         </button>
                                     </div>
                                 </div>

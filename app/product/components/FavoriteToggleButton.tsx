@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import styles from '../page.module.css';
 import { FAVORITE_TOGGLE_COOLDOWN_MS, toggleFavoriteProduct } from '@/app/store/api/favorite';
@@ -27,6 +27,14 @@ export default function FavoriteToggleButton({
     const [likesCount, setLikesCount] = useState<number>(initialLikesCount);
     const [isLoading, setIsLoading] = useState(false);
     const lastClickRef = useRef<number>(0);
+
+    useEffect(() => {
+        setIsFavorite(Boolean(initialIsFavorite));
+    }, [initialIsFavorite]);
+
+    useEffect(() => {
+        setLikesCount(initialLikesCount);
+    }, [initialLikesCount]);
 
     const combinedClassName = useMemo(() => {
         const classes = [styles.favoriteButton];
@@ -62,14 +70,20 @@ export default function FavoriteToggleButton({
             lastClickRef.current = now;
             setIsLoading(true);
 
-            try {
-                const response = await toggleFavoriteProduct(productNo);
-                const nextIsFavorite = Boolean(response.isFavorite);
-                const nextLikesCount = typeof response.likesCount === 'number' ? response.likesCount : likesCount;
+            const previousIsFavorite = isFavorite;
+            const previousLikesCount = likesCount;
 
-                setIsFavorite(nextIsFavorite);
-                setLikesCount(nextLikesCount);
-                onChange?.({ isFavorite: nextIsFavorite, likesCount: nextLikesCount });
+            try {
+                const optimisticIsFavorite = !previousIsFavorite;
+                const optimisticLikesCount = Math.max(0, previousLikesCount + (optimisticIsFavorite ? 1 : -1));
+
+                setIsFavorite(optimisticIsFavorite);
+                setLikesCount(optimisticLikesCount);
+                onChange?.({ isFavorite: optimisticIsFavorite, likesCount: optimisticLikesCount });
+
+                await toggleFavoriteProduct(productNo);
+
+                // 성공 시 별도 처리 없음 (옵티미스틱 상태 유지)
             } catch (error) {
                 const status = (error as Error & { status?: number }).status;
 
@@ -81,11 +95,15 @@ export default function FavoriteToggleButton({
                     const message = error instanceof Error ? error.message : '좋아요 처리 중 오류가 발생했습니다.';
                     alert(message);
                 }
+
+                setIsFavorite(previousIsFavorite);
+                setLikesCount(previousLikesCount);
+                onChange?.({ isFavorite: previousIsFavorite, likesCount: previousLikesCount });
             } finally {
                 setIsLoading(false);
             }
         },
-        [isLoggedIn, isLoading, likesCount, onChange, productNo],
+        [isFavorite, isLoggedIn, isLoading, likesCount, onChange, productNo],
     );
 
     return (
@@ -99,7 +117,7 @@ export default function FavoriteToggleButton({
         >
             <span className={styles.favoriteButtonInner}>
                 <Image
-                    src={getCdnUrl(isFavorite ? '/images/heart.png' : '/images/blank_heart.png')}
+                    src={getCdnUrl(isFavorite ? '/images/heart2.png' : '/images/blank_heart.png')}
                     alt="좋아요 아이콘"
                     width={20}
                     height={18}

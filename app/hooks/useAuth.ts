@@ -4,6 +4,8 @@ import { UserResponseDTO } from '../../types/auth'
 
 // 사용자 정보 조회 React Query hook
 export const useUserData = () => {
+    const shouldFetch = typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true'
+
     return useQuery<UserResponseDTO, Error>({
         queryKey: ['user'], // 캐시 키
         queryFn: getUserData, // API 호출 함수
@@ -18,6 +20,7 @@ export const useUserData = () => {
         },
         refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 비활성화
         refetchOnMount: false, // 컴포넌트 마운트 시 재요청 비활성화 (캐시 우선)
+        enabled: shouldFetch,
     })
 }
 

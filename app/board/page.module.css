@@ -2,7 +2,7 @@
 
 .container {
     max-width: 960px;
-    margin: 140px auto 60px auto;
+    margin: 40px auto 60px auto;
     padding: 36px 48px;
     background: radial-gradient(circle at top, #ffffff 0%, #f8fbff 60%, #f3f6fb 100%);
     border-radius: 18px;

@@ -1,12 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { Product, normalizeProduct } from '../../../types/product';
-import SearchHeader from '../../../components/SearchHeader';
 import { getCdnUrl } from '@/lib/cdn';
 import FavoriteToggleButton from '../components/FavoriteToggleButton';
+import ProductGrid from '../components/ProductGrid';
 
 const PRODUCT_API_BASE_URL =
     process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL ||
@@ -15,8 +15,6 @@ const PRODUCT_API_BASE_URL =
 
 const PRODUCT_ENDPOINT = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product`;
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
-const WARN_ICON = getCdnUrl('/images/warning.png');
-const CAFFEINE_ICON = getCdnUrl('/images/coffee.png');
 
 const SWEETENER_KEYWORDS = [
     '알룰로스',
@@ -35,37 +33,54 @@ const SWEETENER_KEYWORDS = [
 const CAFFEINE_KEYWORDS = ['카페인'];
 
 const hasNumberValue = (value: number) => !Number.isNaN(value);
-const hasPositiveValue = (value: number) => !Number.isNaN(value) && value > 0;
 const formatQuantity = (value: number, unit: string, emptyText = '없음') =>
     hasNumberValue(value) ? `${value}${unit}` : emptyText;
 const formatPercentage = (value: number, base: number) =>
     hasNumberValue(value) ? `${Math.round((value / base) * 100)}%` : '-';
 
+const fixUnencodedPercents = (value: string) => value.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
+
 const resolveImageUrl = (url?: string | null) => {
     if (!url) {
         return DEFAULT_IMAGE;
     }
-    return /^https?:\/\//i.test(url) ? url : getCdnUrl(url);
+    const trimmed = url.trim();
+    if (!trimmed) {
+        return DEFAULT_IMAGE;
+    }
+    if (/^https?:\/\//i.test(trimmed)) {
+        const corrected = fixUnencodedPercents(trimmed);
+        try {
+            const parsed = new URL(corrected);
+            const encodedPath = parsed.pathname
+                .split('/')
+                .map((segment) => {
+                    if (!segment) {
+                        return segment;
+                    }
+                    try {
+                        return encodeURIComponent(decodeURIComponent(segment));
+                    } catch {
+                        return encodeURIComponent(segment);
+                    }
+                })
+                .join('/');
+            return `${parsed.origin}${encodedPath}${parsed.search}${parsed.hash}`;
+        } catch {
+            return encodeURI(corrected);
+        }
+    }
+    const sanitized = fixUnencodedPercents(trimmed);
+    return getCdnUrl(sanitized.startsWith('/') ? sanitized : `/${sanitized}`);
 };
 
-const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: number, categoryNo: number }) => {
+const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: number; categoryNo: number }) => {
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-    const router = useRouter();
-
-    // 대체당 포함 여부 확인 함수 추가
-    const hasAlternativeSweeteners = (product: Product) => {
-        return (
-            hasPositiveValue(product.sugarAlcoholG) ||
-            hasPositiveValue(product.alluloseG) ||
-            hasPositiveValue(product.erythritolG)
-        );
-    };
 
     useEffect(() => {
         const fetchRelatedProducts = async () => {
             try {
-                // size를 11로 설정 (현재 제품 제외하고 10개 보여주기 위해)
-                const endpoint = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product/category/${categoryNo}?page=0&size=20&sort=productName,asc`;
+                const endpoint = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product/category/${categoryNo}?page=0&size=24&sort=productName,asc`;
 
                 const response = await fetch(endpoint, {
                     cache: 'no-store',
@@ -78,10 +93,9 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
                     ? data.content.map((item: unknown) => normalizeProduct(item as Record<string, unknown>))
                     : [];
                 
-                // 현재 제품을 제외하고 처음 10개 선택
                 const filteredProducts = normalizedContent
                     .filter((p: Product) => p.productNo !== currentProductNo)
-                    .slice(0, 10);
+                    .slice(0, 12);
                 
                 setRelatedProducts(filteredProducts);
             } catch (error) {
@@ -92,129 +106,26 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
         fetchRelatedProducts();
     }, [categoryNo, currentProductNo]);
 
-    // 제품 클릭 핸들러 추가
-    const handleProductClick = (productNo: number) => {
-        router.push(`/product/${productNo}`);
-    };
-
     if (relatedProducts.length === 0) return null;
 
     return (
         <div className={styles.relatedProducts}>
             <h3 className={styles.sectionTitle}>관련 제품</h3>
-            <div className={styles.relatedProductsGrid}>
-                 {relatedProducts.map((product) => {
-                     const hasSweeteners = hasAlternativeSweeteners(product);
-                    const hasCaffeine = hasPositiveValue(product.caffeineMg);
-                     const hasBadges = hasSweeteners || hasCaffeine;
-                    const servingSizeText = hasNumberValue(product.servingSize)
-                        ? `${product.servingSize}${product.servingUnit || ''}`
-                        : '-';
- 
-                     return (
-                    <div 
-                        key={product.productNo} 
-                        className={styles.relatedProductCard}
-                        onClick={() => handleProductClick(product.productNo)}
-                        role="button"
-                        tabIndex={0}
-                    >
-                             <div
-                                 className={`${styles.relatedBadgeRow} ${hasBadges ? styles.relatedBadgeRowVisible : ''}`.trim()}
-                             >
-                                 {hasBadges && (
-                                     <>
-                                         {hasSweeteners && (
-                                             <span className={`${styles.relatedBadge} ${styles.relatedBadgeSweetener}`}>
-                                                 <Image src={WARN_ICON} alt="대체당 경고" width={18} height={18} />
-                                                 <span>대체당</span>
-                                    </span>
-                                )}
-                                         {hasCaffeine && (
-                                             <span className={`${styles.relatedBadge} ${styles.relatedBadgeCaffeine}`}>
-                                                 <Image src={CAFFEINE_ICON} alt="카페인 경고" width={18} height={18} />
-                                                 <span>카페인</span>
-                                    </span>
-                                         )}
-                                     </>
-                                )}
-                            </div>
-                        <div className={styles.relatedProductImage}>
-                            <Image
-                                     src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
-                                alt={product.productName}
-                                width={100}
-                                height={100}
-                                className={styles.productImage}
-                                unoptimized
-                                     onError={(event) => {
-                                         const target = event.target as HTMLImageElement;
-                                         target.src = DEFAULT_IMAGE;
-                                     }}
-                            />
-                        </div>
-                        <div className={styles.relatedProductInfo}>
-                            <h4>{product.productName}</h4>
-                            <div className={styles.nutritionDivider} />
-                            <div className={styles.relatedServingSize}>
-                                    내용량: {servingSizeText}
-                            </div>
-                            <div className={styles.nutritionInfo}>
-                                    {hasNumberValue(product.energyKcal) && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>칼로리</span>
-                                            <span>{formatQuantity(product.energyKcal, 'kcal', '-')}</span>
-                                    </div>
-                                )}
-                                    {hasNumberValue(product.sugarG) && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>당류</span>
-                                            <span>{formatQuantity(product.sugarG, 'g', '-')}</span>
-                                    </div>
-                                )}
-                                    {hasPositiveValue(product.sugarAlcoholG) && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>당알코올</span>
-                                            <span>{formatQuantity(product.sugarAlcoholG, 'g', '-')}</span>
-                                    </div>
-                                )}
-                                    {hasPositiveValue(product.alluloseG) && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>알룰로스</span>
-                                            <span>{formatQuantity(product.alluloseG, 'g', '-')}</span>
-                                    </div>
-                                )}
-                                    {hasPositiveValue(product.erythritolG) && (
-                                    <div className={styles.related_nutrition}>
-                                        <span className={styles.related_nutrition_label}>에리스리톨</span>
-                                            <span>{formatQuantity(product.erythritolG, 'g', '-')}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                     );
-                 })}
-            </div>
+            <ProductGrid products={relatedProducts} className={styles.relatedGrid} />
         </div>
     );
 };
 
 export default function ProductDetail() {
-
-    // 대체당 포함 여부 확인 함수 추가
-    const hasAlternativeSweeteners = (product: Product) => {
-        return (
-            hasPositiveValue(product.sugarAlcoholG) ||
-            hasPositiveValue(product.alluloseG) ||
-            hasPositiveValue(product.erythritolG)
-        );
-    };
     
     const params = useParams();
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [favoriteState, setFavoriteState] = useState({
+        isFavorite: false,
+        likesCount: 0,
+    });
 
     useEffect(() => {
         let mounted = true;
@@ -241,9 +152,9 @@ export default function ProductDetail() {
                     setIsLoading(false);
                 }
             } catch (err: any) {
-                setError(err.message);
                 console.error('Error fetching product:', err);
                 if (mounted) {
+                    setError(err?.message ?? '제품 정보를 불러오지 못했습니다');
                     setIsLoading(false);
                 }
             }
@@ -256,6 +167,18 @@ export default function ProductDetail() {
             mounted = false;
         };
     }, [params.productNo]);
+
+    useEffect(() => {
+        if (!product) {
+            setFavoriteState({ isFavorite: false, likesCount: 0 });
+            return;
+        }
+
+        setFavoriteState({
+            isFavorite: Boolean(product.isFavorite),
+            likesCount: product.likesCount ?? 0,
+        });
+    }, [product?.productNo, product?.isFavorite, product?.likesCount]);
 
     if (isLoading) return <div className={styles.loading}>로딩 중...</div>;
     if (error) return <div className={styles.error}>오류: {error}</div>;
@@ -295,18 +218,6 @@ export default function ProductDetail() {
         return `${parentName} | ${subName}`;
     };
 
-    const [favoriteState, setFavoriteState] = useState({
-        isFavorite: Boolean(product.isFavorite),
-        likesCount: product.likesCount ?? 0,
-    });
-
-    useEffect(() => {
-        setFavoriteState({
-            isFavorite: Boolean(product.isFavorite),
-            likesCount: product.likesCount ?? 0,
-        });
-    }, [product.productNo, product.isFavorite, product.likesCount]);
-
     const totalContentLabel = product.totalContent?.trim() || undefined;
     const nutritionBasisText = product.nutritionBasisText?.trim() || undefined;
     const nutritionBasisValueLabel = hasNumberValue(product.nutritionBasisValue)
@@ -321,21 +232,12 @@ export default function ProductDetail() {
         : nutritionBasisValueLabel
         ? `영양정보 (${nutritionBasisValueLabel} 기준)`
         : '영양정보';
-    const manufacturerLabel = product.manufacturerName?.trim() || undefined;
-    const distributorLabel = product.distributorName?.trim() || undefined;
-    const foodTypeLabel = product.foodType?.trim() || undefined;
+    const allergensLabel = product.allergens?.split(',').map((item) => item.trim()).filter(Boolean).join(', ') || undefined;
     const servingHighlights = (
         [
             totalContentLabel ? { label: '총 내용량', value: totalContentLabel } : null,
             servingSizeLabel ? { label: '1회 제공량', value: servingSizeLabel } : null,
-        ].filter(Boolean) as Array<{ label: string; value: string }>
-    );
-    const likesLabel = favoriteState.likesCount > 0 ? `${favoriteState.likesCount.toLocaleString()}명` : null;
-    const metaItems = (
-        [
-            // manufacturerLabel ? { label: '제조사', value: manufacturerLabel } : null, // 제거
-            // distributorLabel ? { label: '유통사', value: distributorLabel } : null,   // 제거
-            foodTypeLabel ? { label: '식품 유형', value: foodTypeLabel } : null,
+            allergensLabel ? { label: '알레르기', value: allergensLabel } : null,
         ].filter(Boolean) as Array<{ label: string; value: string }>
     );
     const nutritionRows: Array<{ label: string; value: string; percent?: string }> = [];
@@ -380,141 +282,124 @@ export default function ProductDetail() {
     }
 
     return (
-        <>
-            <SearchHeader />
             <div className={styles.wrapper}>
                 <main className={styles.productContainer}>
-                    {/* 왼쪽: 상품 이미지 섹션 */}
                     <div className={styles.imageSection}>
+                    <div className={styles.imageFavoriteOverlay}>
+                        <span className={styles.imageFavoriteCount}>{favoriteState.likesCount.toLocaleString()}</span>
+                        <FavoriteToggleButton
+                            productNo={product.productNo}
+                            initialIsFavorite={favoriteState.isFavorite}
+                            initialLikesCount={favoriteState.likesCount}
+                            onChange={(next) => {
+                                setFavoriteState(next);
+                            }}
+                        />
+                    </div>
                             <Image
-                            src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
+                        src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
                                 alt={product?.productName || '제품 이미지'}
-                            width={300}
-                            height={300}
-                                className={styles.productImage}
+                        width={300}
+                        height={300}
+                        className={styles.detailProductImage}
                                 unoptimized
-                                onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                target.src = DEFAULT_IMAGE;
-                                }}
-                            />
+                        onError={(event) => {
+                            const target = event.target as HTMLImageElement;
+                            target.src = DEFAULT_IMAGE;
+                        }}
+                    />
                     </div>
 
-                    {/* 오른쪽: 상품 정보 섹션 */}
                     <section className={styles.infoSection}>
-                        <div className={styles.infoCard}>
+                    <div className={styles.infoCard}>
                         <div className={styles.productHeader}>
                             <div className={styles.productMeta}>
+                                <div className={styles.metaTopRow}>
                                 <span className={styles.category}>
                                         {getCategoryNames(
                                             (product as Product & { parentCategoryNo?: number }).parentCategoryNo ?? product.categoryNo,
                                             product.categoryNo,
                                         )}
                                 </span>
-                                    <div className={styles.productTitleRow}>
-                                    <h1 className={styles.productName}>
-                                        {product.productName}
-                                            {product.companyName?.trim() && (
-                                                <span className={styles.companyNameInline}>{product.companyName.trim()}</span>
-                                            )}
-                                    </h1>
-                                        <FavoriteToggleButton
-                                            productNo={product.productNo}
-                                            initialIsFavorite={favoriteState.isFavorite}
-                                            initialLikesCount={favoriteState.likesCount}
-                                            className={styles.detailFavoriteButton}
-                                            onChange={(next) => {
-                                                setFavoriteState(next);
-                                            }}
-                                        />
+                                    {product.companyName?.trim() && (
+                                        <span className={styles.companyNameInline}>{product.companyName.trim()}</span>
+                                        )}
+                                    </div>
+                                <div className={styles.productTitleRow}>
+                                    <h1 className={styles.productName}>{product.productName}</h1>
                                 </div>
                             </div>
                         </div>
 
-                            {servingHighlights.length > 0 && (
-                                <div className={styles.servingHighlights}>
-                                    {servingHighlights.map((item) => (
-                                        <div key={item.label} className={styles.servingHighlight}>
-                                            <span className={styles.servingHighlightLabel}>{item.label}</span>
-                                            <span className={styles.servingHighlightValue}>{item.value}</span>
+                        {servingHighlights.length > 0 && (
+                            <div className={styles.servingHighlights}>
+                                {servingHighlights.map((item) => (
+                                    <div key={item.label} className={styles.servingHighlight}>
+                                        <span className={styles.servingHighlightLabel}>{item.label}</span>
+                                        <span className={styles.servingHighlightValue}>{item.value}</span>
                             </div>
-                                    ))}
+                                ))}
                                         </div>
                                     )}
 
-                            {metaItems.length > 0 || likesLabel ? (
-                                <div className={styles.metaGrid}>
-                                    {metaItems.map((item) => (
-                                        <div key={item.label} className={styles.metaItem}>
-                                            <span className={styles.metaLabel}>{item.label}</span>
-                                            <span className={styles.metaValue}>{item.value}</span>
-                                        </div>
-                                    ))}
-                                    {likesLabel && (
-                                        <div className={`${styles.metaItem} ${styles.metaItemAccent}`}>
-                                            <span className={styles.metaLabel}>관심도</span>
-                                            <span className={styles.metaValue}>{likesLabel}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : null}
-
-                            {nutritionRows.length > 0 && (
-                                <div className={styles.nutritionTable}>
-                                    <h3 className={styles.sectionTitle}>{nutritionSectionTitle}</h3>
-                                    <div className={styles.nutritionContent}>
-                                        {nutritionRows.map((row) => (
-                                            <div key={row.label} className={styles.page_nutrition}>
-                                                <span>{row.label}</span>
-                                                <span>{row.value}</span>
-                                                <span>{row.percent ?? ''}</span>
-                                        </div>
-                                        ))}
+                        {nutritionRows.length > 0 && (
+                            <div className={styles.nutritionTable}>
+                                <h3 className={styles.sectionTitle}>{nutritionSectionTitle}</h3>
+                                <div className={styles.nutritionTableWrapper}>
+                                    <table className={styles.nutritionTableGrid}>
+                                        <tbody>
+                                            {nutritionRows.map((row, index) => (
+                                                <tr
+                                                    key={row.label}
+                                                    className={`${styles.nutritionRow} ${
+                                                        index % 2 === 0 ? styles.nutritionRowEven : ''
+                                                    }`.trim()}
+                                                >
+                                                    <th scope="row">{row.label}</th>
+                                                    <td>{row.value}</td>
+                                                    <td>{row.percent ?? ''}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                         </div>
                                         </div>
                                     )}
                             </div>
 
-                        {product.ingredients && product.ingredients.trim() && (
+                    {product.ingredients && product.ingredients.trim() && (
                                 <div className={styles.ingredients}>
                                     <h3 className={styles.sectionTitle}>원재료</h3>
                                     <p>
-                                    {product.ingredients
-                                        .split(',')
-                                        .map((ingredient, index) => {
-                                            const label = ingredient.trim();
-                                            if (!label) {
-                                                return null;
-                                            }
-                                            return (
-                                                <span
-                                                    key={`${label}-${index}`}
-                                                    className={`${styles.ingredient} ${
-                                                        SWEETENER_KEYWORDS.some((keyword) => label.includes(keyword))
-                                                            ? styles.ingredientHighlightSweetener
-                                                            : CAFFEINE_KEYWORDS.some((keyword) => label.includes(keyword))
-                                                            ? styles.ingredientHighlightCaffeine
-                                                            : ''
-                                                    }`.trim()}
-                                                >
-                                                    {label}
+                                {product.ingredients.split(',').map((ingredient, index) => {
+                                    const label = ingredient.trim();
+                                    if (!label) {
+                                        return null;
+                                    }
+                                    return (
+                                        <span
+                                            key={`${label}-${index}`}
+                                            className={`${styles.ingredient} ${
+                                                SWEETENER_KEYWORDS.some((keyword) => label.includes(keyword))
+                                                    ? styles.ingredientHighlightSweetener
+                                                    : CAFFEINE_KEYWORDS.some((keyword) => label.includes(keyword))
+                                                    ? styles.ingredientHighlightCaffeine
+                                                    : ''
+                                            }`.trim()}
+                                        >
+                                            {label}
                                             </span>
-                                            );
-                                        })}
+                                    );
+                                })}
                                     </p>
                                 </div>
                             )}
                         </section>
                     </main>
                     
-                    {/* 관련 제품 섹션 추가 */}
                     {product && (
-                        <RelatedProducts 
-                            currentProductNo={product.productNo} 
-                            categoryNo={product.categoryNo}
-                        />
+                <RelatedProducts currentProductNo={product.productNo} categoryNo={product.categoryNo} />
                     )}
                 </div>
-            </>
         );
     }

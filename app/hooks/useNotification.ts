@@ -17,21 +17,26 @@ const queryOptions = {
 
 // 사용자 알림 목록 조회 hook
 export const useUserNotifications = () => {
+    const shouldFetch = typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true'
+
     return useQuery<UserNotificationResponse[], Error>({
         queryKey: ['userNotifications'],
         queryFn: getUserNotifications,
         ...queryOptions,
+        enabled: shouldFetch,
         select: (data) => data.filter(notification => notification.isValid), // isValid가 true인 알림만 필터링
     });
 };
 
 // 특정 사용자 알림 상세 조회 hook
 export const useUserNotificationDetail = (userNotificationNo: number) => {
+    const shouldFetch = typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true'
+
     return useQuery<UserNotificationResponse, Error>({
         queryKey: ['userNotification', userNotificationNo],
         queryFn: () => getUserNotificationDetail(userNotificationNo),
         ...queryOptions,
-        enabled: !!userNotificationNo, // userNotificationNo가 있을 때만 쿼리 실행
+        enabled: shouldFetch && !!userNotificationNo, // 로그인되어 있고 userNotificationNo가 있을 때만 실행
     });
 };
 

@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useBoards } from '../hooks/useBoard';
 import { BOARD_TYPE_LABELS, BOARD_TYPE_OPTIONS, BOARD_SEARCH_TYPE_OPTIONS } from '../../constants/board';
 import { BoardResponse, BoardSearchType, BoardType } from '../../types/board';
+import { getCdnUrl } from '@/lib/cdn';
 
 const PAGE_SIZE = 10;
 const MAX_VISIBLE_PAGES = 7;
@@ -233,7 +234,7 @@ export default function BoardPage() {
                             onKeyDown={handleKeyDown}
                         />
                         <button className={styles.searchButton} onClick={handleSearch}>
-                            <Image src="/images/search.png" alt="검색" width={20} height={20} />
+                            <Image src={getCdnUrl('/images/search.png')} alt="검색" width={20} height={20} />
                         </button>
                     </div>
                     <div className={styles.filterSelects}>

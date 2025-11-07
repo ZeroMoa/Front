@@ -6,6 +6,37 @@ import Image from 'next/image';
 import styles from './ProductList.module.css';
 import { useRouter } from 'next/navigation';
 
+const DEFAULT_IMAGE = '/images/default-product.png';
+const fixUnencodedPercents = (value: string) => value.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
+const sanitizeImageUrl = (raw?: string | null) => {
+    if (!raw) {
+        return DEFAULT_IMAGE;
+    }
+    const trimmed = raw.trim();
+    if (!trimmed) {
+        return DEFAULT_IMAGE;
+    }
+    const corrected = fixUnencodedPercents(trimmed);
+    try {
+        const parsed = new URL(corrected);
+        const encodedPath = parsed.pathname
+            .split('/')
+            .map((segment) => {
+                if (!segment) {
+                    return segment;
+                }
+                try {
+                    return encodeURIComponent(decodeURIComponent(segment));
+                } catch {
+                    return encodeURIComponent(segment);
+                }
+            })
+            .join('/');
+        return `${parsed.origin}${encodedPath}${parsed.search}${parsed.hash}`;
+    } catch {
+        return encodeURI(corrected);
+    }
+};
 interface ProductListProps {
     products: Product[];
     pageInfo: Omit<ProductResponse, 'content'> | null;
@@ -180,21 +211,7 @@ export default function ProductList({ products, pageInfo, onPageChange, isLoadin
                             style={{ cursor: 'pointer' }}
                         >
                             <Image
-                                src={(() => {
-                                    if (!product.imageUrl) return '/images/default-product.png';
-                                    
-                                    const processedUrl = product.imageUrl.split('/')
-                                        .map((part, index, array) => {
-                                            if (index === array.length - 1) {
-                                                const [filename, ext] = part.split('.');
-                                                return `${encodeURIComponent(filename)}.${ext}`;
-                                            }
-                                            return encodeURIComponent(part);
-                                        })
-                                        .join('/');
-                                    
-                                    return processedUrl;
-                                })()}
+                                src={sanitizeImageUrl(product.imageUrl || product.imageurl)}
                                 alt={product.productName || '제품 이미지'}
                                 width={200}
                                 height={200}
@@ -202,7 +219,7 @@ export default function ProductList({ products, pageInfo, onPageChange, isLoadin
                                 unoptimized
                                 onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.src = '/images/default-product.png';
+                                    target.src = DEFAULT_IMAGE;
                                 }}
                             />
                         </div>

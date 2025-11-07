@@ -10,6 +10,8 @@ import FavoriteToggleButton from './FavoriteToggleButton';
 
 interface ProductGridProps {
     products: Product[];
+    className?: string;
+    emptyMessage?: string;
 }
 
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
@@ -51,11 +53,52 @@ const getEnergyLabel = (value?: number | null) => {
     return `${value}kcal`;
 };
 
-const prepareImageUrl = (url?: string | null) => {
+const fixUnencodedPercents = (value: string) => value.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
+
+const isDefaultImage = (url?: string | null) => {
     if (!url) {
+        return true;
+    }
+    const normalized = url.trim().toLowerCase();
+    if (!normalized) {
+        return true;
+    }
+    return (
+        normalized.endsWith('/default-product.png') ||
+        normalized.includes('/default-product.png') ||
+        normalized.includes('default-product')
+    );
+};
+
+const prepareImageUrl = (url?: string | null) => {
+    if (!url || isDefaultImage(url)) {
         return DEFAULT_IMAGE;
     }
-    return /^https?:\/\//i.test(url) ? url : getCdnUrl(url);
+    const trimmed = url.trim();
+    if (/^https?:\/\//i.test(trimmed)) {
+        const corrected = fixUnencodedPercents(trimmed);
+        try {
+            const parsed = new URL(corrected);
+            const encodedPath = parsed.pathname
+                .split('/')
+                .map((segment) => {
+                    if (!segment) {
+                        return segment;
+                    }
+                    try {
+                        return encodeURIComponent(decodeURIComponent(segment));
+                    } catch {
+                        return encodeURIComponent(segment);
+                    }
+                })
+                .join('/');
+            return `${parsed.origin}${encodedPath}${parsed.search}${parsed.hash}`;
+        } catch {
+            return encodeURI(corrected);
+        }
+    }
+    const sanitized = fixUnencodedPercents(trimmed);
+    return getCdnUrl(sanitized.startsWith('/') ? sanitized : `/${sanitized}`);
 };
 
 const hasPositiveAmount = (value?: number | null) => typeof value === 'number' && !Number.isNaN(value) && value > 0;
@@ -173,22 +216,22 @@ function ProductCard({ product }: { product: Product }) {
     );
 }
 
-export default function ProductGrid({ products }: ProductGridProps) {
+export default function ProductGrid({ products, className, emptyMessage }: ProductGridProps) {
     const visibleProducts = products.filter((product) => {
         const image = typeof product.imageUrl === 'string' ? product.imageUrl.trim() : '';
-        return image.length > 0;
+        return image.length > 0 && !isDefaultImage(image);
     });
 
     if (visibleProducts.length === 0) {
         return (
             <div className={styles.emptyState}>
-                <p>조건에 맞는 제품이 없습니다. 필터를 조정해보세요.</p>
+                <p>{emptyMessage ?? '조건에 맞는 제품이 없습니다. 필터를 조정해보세요.'}</p>
             </div>
         );
     }
 
     return (
-        <div className={styles.grid}>
+        <div className={`${styles.grid} ${className ?? ''}`.trim()}>
             {visibleProducts.map((product) => (
                 <ProductCard key={product.productNo} product={product} />
             ))}

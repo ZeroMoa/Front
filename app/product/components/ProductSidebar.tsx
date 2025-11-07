@@ -18,7 +18,7 @@ import { getCdnUrl } from '@/lib/cdn';
 const SEARCH_PLACEHOLDER = '상품명을 입력하세요';
 
 interface ProductSidebarProps {
-    mode: 'category' | 'nutrition';
+    mode: 'category' | 'nutrition' | 'new' | 'search';
     keyword: string;
     filters: Record<ProductFilterKey, boolean>;
     onKeywordSubmit: (keyword: string) => void;
@@ -122,86 +122,92 @@ export default function ProductSidebar({
 
     return (
         <aside className={styles.sidebar}>
-            <div className={styles.sidebarSection}>
-                <h3 className={styles.sidebarTitle}>검색</h3>
-                <div className={styles.searchBox}>
-                    <input
-                        type="text"
-                        value={inputValue}
-                        onChange={(event) => setInputValue(event.target.value)}
-                        onKeyDown={handleKeyPress}
-                        placeholder={SEARCH_PLACEHOLDER}
-                        className={styles.searchInput}
-                    />
-                    <button type="button" className={styles.searchButton} onClick={handleSubmit}>
-                        <Image src={getCdnUrl('/images/search.png')} alt="검색" width={18} height={18} />
-                    </button>
-                </div>
-            </div>
-
-            {mode === 'nutrition' && onCategorySelect && (
+            {mode !== 'search' && (
                 <div className={styles.sidebarSection}>
-                    <h3 className={styles.sidebarTitle}>카테고리</h3>
-                    <button
-                        type="button"
-                        className={`${styles.categoryAllButton} ${
-                            !selectedCategorySlug ? styles.categoryButtonActive : ''
-                        }`}
-                        onClick={handleAllCategoryClick}
-                    >
-                        전체
-                    </button>
-                    <ul className={styles.categoryTree}>
-                        {categoryNavItems.map((item) => {
-                            const expanded = expandedCategories.includes(item.slug);
-                            return (
-                                <li key={item.slug}>
-                                    <div className={styles.categoryRow}>
-                                        <button
-                                            type="button"
-                                            className={`${styles.categoryButton} ${
-                                                isCategoryActive(item.slug) ? styles.categoryButtonActive : ''
-                                            }`}
-                                            onClick={() => handleCategoryButtonClick(item.slug)}
-                                        >
-                                            {item.label}
-                                        </button>
-                                        {item.subCategories.length > 0 && (
+                    <h3 className={styles.sidebarTitle}>검색</h3>
+                    <div className={styles.searchBox}>
+                        <input
+                            type="text"
+                            value={inputValue}
+                            onChange={(event) => setInputValue(event.target.value)}
+                            onKeyDown={handleKeyPress}
+                            placeholder={SEARCH_PLACEHOLDER}
+                            className={styles.searchInput}
+                        />
+                        <button type="button" className={styles.searchButton} onClick={handleSubmit}>
+                            <Image src={getCdnUrl('/images/search.png')} alt="검색" width={18} height={18} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {(mode === 'nutrition' || mode === 'new' || mode === 'search') && onCategorySelect && (
+                <div className={styles.sidebarSection}>
+                    <div className={styles.categoryTreeSection}>
+                        <h3 className={styles.sidebarTitle}>카테고리</h3>
+                        <ul className={styles.categoryTreeList}>
+                            <li>
+                                <button
+                                    type="button"
+                                    className={`${styles.categoryAllButton} ${
+                                        !selectedCategorySlug ? styles.categoryButtonActive : ''
+                                    }`}
+                                    onClick={handleAllCategoryClick}
+                                >
+                                    전체
+                                </button>
+                            </li>
+                            {categoryNavItems.map((item) => {
+                                const expanded = expandedCategories.includes(item.slug);
+                                return (
+                                    <li key={item.slug}>
+                                        <div className={styles.categoryRow}>
                                             <button
                                                 type="button"
-                                                className={`${styles.categoryToggle} ${
-                                                    expanded ? styles.categoryToggleOpen : ''
+                                                className={`${styles.categoryButton} ${
+                                                    isCategoryActive(item.slug) ? styles.categoryButtonActive : ''
                                                 }`}
-                                                onClick={() => handleCategoryToggle(item.slug)}
-                                                aria-label={`${item.label} 하위 카테고리 ${expanded ? '접기' : '펼치기'}`}
+                                                onClick={() => handleCategoryButtonClick(item.slug)}
                                             >
-                                                {expanded ? '▼' : '▶'}
+                                                {item.label}
                                             </button>
+                                            {item.subCategories.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    className={`${styles.categoryToggle} ${
+                                                        expanded ? styles.categoryToggleOpen : ''
+                                                    }`}
+                                                    onClick={() => handleCategoryToggle(item.slug)}
+                                                    aria-label={`${item.label} 하위 카테고리 ${expanded ? '접기' : '펼치기'}`}
+                                                >
+                                                    {expanded ? '▼' : '▶'}
+                                                </button>
+                                            )}
+                                        </div>
+                                        {expanded && item.subCategories.length > 0 && (
+                                            <ul className={styles.subCategoryTree}>
+                                                {item.subCategories.map((sub) => (
+                                                    <li key={sub.slug}>
+                                                        <button
+                                                            type="button"
+                                                            className={`${styles.sidebarSubCategoryButton} ${
+                                                                isSubCategoryActive(item.slug, sub.slug)
+                                                                    ? styles.sidebarSubCategoryButtonActive
+                                                                    : ''
+                                                            }`}
+                                                            onClick={() => handleSubCategoryButtonClick(item.slug, sub.slug)}
+                                                        >
+                                                            {sub.label}
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         )}
-                                    </div>
-                                    {expanded && item.subCategories.length > 0 && (
-                                        <ul className={styles.subCategoryTree}>
-                                            {item.subCategories.map((sub) => (
-                                                <li key={sub.slug}>
-                                                    <button
-                                                        type="button"
-                                                        className={`${styles.sidebarSubCategoryButton} ${
-                                                            isSubCategoryActive(item.slug, sub.slug)
-                                                                ? styles.sidebarSubCategoryButtonActive
-                                                                : ''
-                                                        }`}
-                                                        onClick={() => handleSubCategoryButtonClick(item.slug, sub.slug)}
-                                                    >
-                                                        {sub.label}
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </li>
-                            );
-                        })}
-                    </ul>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
                 </div>
             )}
 

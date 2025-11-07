@@ -19,12 +19,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 // Helper function for fetching with XSRF token and Authorization header
 export const fetchWithAuth = async (url: string, options: RequestInit = {}, retried = false): Promise<Response> => {
     const xsrfToken = Cookies.get('XSRF-TOKEN');
-    const accessToken = Cookies.get('accessToken');
 
     const headers: HeadersInit = {
         'Content-Type': 'application/json',
         ...(xsrfToken && { 'X-XSRF-TOKEN': xsrfToken }),
-        ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
         ...options.headers,
     };
 
@@ -39,11 +37,13 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}, retr
         console.warn('액세스 토큰 만료 또는 유효하지 않음. 리프레시 토큰으로 재발급 시도.');
         try {
             // HttpOnly 리프레시 토큰은 브라우저가 자동으로 포함하여 백엔드로 전송합니다.
+            const refreshHeaders: HeadersInit = {
+                'Content-Type': 'application/json',
+                ...(xsrfToken && { 'X-XSRF-TOKEN': xsrfToken }),
+            };
             const refreshResponse = await fetch(`${API_BASE_URL}/jwt/refresh`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: refreshHeaders,
                 // HttpOnly 리프레시 토큰은 브라우저가 'credentials: include' 설정에 따라 자동으로 쿠키에 포함하여 전송합니다.
                 credentials: 'include',
             });

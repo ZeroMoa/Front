@@ -7,6 +7,7 @@ import {
     CategoryPageConfig,
     CategorySlug,
     DEFAULT_FILTER_STATE,
+    NewProductsPageConfig,
     NutritionPageConfig,
     NutritionSlug,
     ProductFilterKey,
@@ -20,11 +21,23 @@ import ProductSidebar from './ProductSidebar';
 import ProductGrid from './ProductGrid';
 import ProductPagination from './ProductPagination';
 
+const HERO_FILTER_MAP: Record<NutritionSlug, ProductFilterKey> = {
+    'zero-calorie': 'isZeroCalorie',
+    'zero-sugar': 'isZeroSugar',
+    'low-calorie': 'isLowCalorie',
+    'low-sugar': 'isLowSugar',
+};
+
 type FilterState = typeof DEFAULT_FILTER_STATE;
 
-type PageMode = 'category' | 'nutrition';
+type PageMode = 'category' | 'nutrition' | 'new' | 'search';
 
-type HeroAccentClass = 'heroCardZeroCalorie' | 'heroCardZeroSugar' | 'heroCardLowCalorie' | 'heroCardLowSugar';
+type HeroAccentClass =
+    | 'heroCardZeroCalorie'
+    | 'heroCardZeroSugar'
+    | 'heroCardLowCalorie'
+    | 'heroCardLowSugar'
+    | 'heroCardNeutral';
 
 interface HeroBannerItem {
     slug: NutritionSlug;
@@ -55,6 +68,11 @@ const HERO_BANNER_ITEMS: HeroBannerItem[] = [
     },
 ];
 
+const NEW_HERO_ITEMS: Array<{ slug: 'all' | NutritionSlug; label: string; accentClass: HeroAccentClass }> = [
+    { slug: 'all', label: '전체 신제품', accentClass: 'heroCardNeutral' },
+    ...HERO_BANNER_ITEMS,
+];
+
 interface ProductPageClientProps {
     mode: PageMode;
     categorySlug?: CategorySlug;
@@ -67,10 +85,13 @@ interface ProductPageClientProps {
     sort: string;
     filters: FilterState;
     keyword: string;
+    isNew?: boolean;
     lockedFilters?: ProductFilterKey[];
 }
 
-const PAGE_PARAM_KEYS: Array<ProductFilterKey | 'page' | 'size' | 'sort' | 'sub' | 'keyword' | 'type' | 'collection' | 'category'> = [
+const PAGE_PARAM_KEYS: Array<
+    ProductFilterKey | 'page' | 'size' | 'sort' | 'sub' | 'keyword' | 'type' | 'collection' | 'category' | 'isNew' | 'q'
+> = [
     'type',
     'collection',
     'category',
@@ -79,6 +100,7 @@ const PAGE_PARAM_KEYS: Array<ProductFilterKey | 'page' | 'size' | 'sort' | 'sub'
     'sort',
     'sub',
     'keyword',
+    'isNew',
     'isZeroCalorie',
     'isZeroSugar',
     'isLowCalorie',
@@ -87,6 +109,14 @@ const PAGE_PARAM_KEYS: Array<ProductFilterKey | 'page' | 'size' | 'sort' | 'sub'
 
 const ensurePositiveInteger = (value: number, fallback: number) =>
     Number.isFinite(value) && value >= 0 ? value : fallback;
+
+const SORT_OPTIONS: Array<{ value: string; label: string }> = [
+    { value: 'productName,asc', label: '제품명 오름차순' },
+    { value: 'productName,desc', label: '제품명 내림차순' },
+    { value: 'updatedDate,desc', label: '최신 업데이트순' },
+    { value: 'createdDate,desc', label: '최신 등록순' },
+    { value: 'likesCount,desc', label: '인기순' },
+];
 
 export default function ProductPageClient({
     mode,
@@ -100,6 +130,7 @@ export default function ProductPageClient({
     sort,
     filters,
     keyword,
+    isNew,
     lockedFilters,
 }: ProductPageClientProps) {
     const router = useRouter();
@@ -114,39 +145,68 @@ export default function ProductPageClient({
     const selectedPageSize = pageSizeOptions.includes(size) ? size : pageSizeOptions[0];
 
     const currentFilters = useMemo(() => filters, [filters]);
+    const isNewActive = Boolean(isNew);
+    const normalizedSort = useMemo(() => {
+        const hasMatch = SORT_OPTIONS.some((option) => option.value === sort);
+        return hasMatch ? sort : SORT_OPTIONS[0].value;
+    }, [sort]);
 
     const activeHeroSlug = useMemo(() => {
-        if (collectionSlug) {
+        if ((mode === 'nutrition' || mode === 'search') && collectionSlug) {
             return collectionSlug;
         }
-        if (currentFilters.isZeroCalorie) {
-            return 'zero-calorie';
+        if (mode === 'nutrition' || mode === 'search') {
+            if (currentFilters.isZeroCalorie) {
+                return 'zero-calorie';
+            }
+            if (currentFilters.isZeroSugar) {
+                return 'zero-sugar';
+            }
+            if (currentFilters.isLowCalorie) {
+                return 'low-calorie';
+            }
+            if (currentFilters.isLowSugar) {
+                return 'low-sugar';
+            }
         }
-        if (currentFilters.isZeroSugar) {
-            return 'zero-sugar';
-        }
-        if (currentFilters.isLowCalorie) {
-            return 'low-calorie';
-        }
-        if (currentFilters.isLowSugar) {
-            return 'low-sugar';
+        if (mode === 'new') {
+            if (currentFilters.isZeroCalorie) {
+                return 'zero-calorie';
+            }
+            if (currentFilters.isZeroSugar) {
+                return 'zero-sugar';
+            }
+            if (currentFilters.isLowCalorie) {
+                return 'low-calorie';
+            }
+            if (currentFilters.isLowSugar) {
+                return 'low-sugar';
+            }
+            return 'all';
         }
         return undefined;
-    }, [collectionSlug, currentFilters]);
+    }, [mode, collectionSlug, currentFilters]);
 
     const selectedCategoryLabel = useMemo(() => {
-        if (mode !== 'nutrition' || !activeCategorySlug) {
+        if ((mode !== 'nutrition' && mode !== 'new' && mode !== 'search') || !activeCategorySlug) {
             return null;
         }
         return CATEGORY_LABELS[activeCategorySlug] ?? null;
     }, [mode, activeCategorySlug]);
 
-    const summaryLabel = selectedCategoryLabel
-        ? `${selectedCategoryLabel} · ${selectedSubCategory.label}`
-        : selectedSubCategory.label;
+    const summaryLabel = useMemo(() => {
+        if (selectedCategoryLabel) {
+            return `${selectedCategoryLabel} · ${selectedSubCategory.label}`;
+        }
+        if (mode === 'search') {
+            return `검색 결과 · ${selectedSubCategory.label}`;
+        }
+        return selectedSubCategory.label;
+    }, [mode, selectedCategoryLabel, selectedSubCategory.label]);
 
-    const baseParamKey = mode === 'category' ? 'type' : 'collection';
-    const baseParamValue = mode === 'category' ? activeCategorySlug : collectionSlug;
+    const baseParamKey = mode === 'nutrition' || mode === 'search' ? 'collection' : 'type';
+    const baseParamValue =
+        mode === 'nutrition' || mode === 'search' ? collectionSlug : activeCategorySlug;
 
     const commitUpdates = (updates: Record<string, string | number | boolean | undefined | null>) => {
         const nextParams = new URLSearchParams(searchParams.toString());
@@ -160,16 +220,16 @@ export default function ProductPageClient({
             if (key !== baseParamKey && !updates.hasOwnProperty(key)) {
                 return;
             }
-            if (mode === 'category' && key === 'collection') {
+            if ((mode === 'category' || mode === 'new') && key === 'collection') {
                 nextParams.delete('collection');
             }
-            if (mode === 'nutrition' && key === 'type') {
+            if ((mode === 'nutrition' || mode === 'search') && key === 'type') {
                 nextParams.delete('type');
             }
         });
 
         Object.entries(updates).forEach(([key, value]) => {
-            if (value === undefined || value === null || value === '' || value === false) {
+            if (value === undefined || value === null || value === '') {
                 nextParams.delete(key);
             } else {
                 nextParams.set(key, String(value));
@@ -188,6 +248,11 @@ export default function ProductPageClient({
     const handlePageSizeChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
         const nextSize = Number(event.target.value);
         commitUpdates({ size: nextSize, page: 0 });
+    };
+
+    const handleSortChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
+        const nextSort = event.target.value;
+        commitUpdates({ sort: nextSort, page: 0 });
     };
 
     const handleSubCategoryChange = (subSlug: string) => {
@@ -216,7 +281,7 @@ export default function ProductPageClient({
     };
 
     const handleCollectionNavigate = (nextCollection: NutritionSlug) => {
-        if (collectionSlug === nextCollection && mode === 'nutrition') {
+        if (collectionSlug === nextCollection && (mode === 'nutrition' || mode === 'search')) {
             return;
         }
 
@@ -236,6 +301,34 @@ export default function ProductPageClient({
         startTransition(() => {
             router.replace(`${pathname}?${nextParams.toString()}`, { scroll: true });
         });
+    };
+
+    const handleNewHeroSelect = (slug: 'all' | NutritionSlug) => {
+        const baseUpdates: Record<string, string | null> = {
+            isZeroCalorie: null,
+            isZeroSugar: null,
+            isLowCalorie: null,
+            isLowSugar: null,
+        };
+
+        if (slug === 'all') {
+            commitUpdates({ ...baseUpdates, isNew: 'true', page: 0 });
+            return;
+        }
+
+        const filterKey = HERO_FILTER_MAP[slug];
+        const isActive = currentFilters[filterKey];
+
+        if (lockedFilters?.includes(filterKey)) {
+            return;
+        }
+
+        if (isActive) {
+            commitUpdates({ ...baseUpdates, isNew: 'true', page: 0 });
+            return;
+        }
+
+        commitUpdates({ ...baseUpdates, [filterKey]: 'true', isNew: 'true', page: 0 });
     };
 
     const handleKeywordSubmit = (nextKeyword: string) => {
@@ -277,6 +370,94 @@ export default function ProductPageClient({
         commitUpdates({ ...resetEntries, page: 0 });
     };
 
+    const handleNewToggle = () => {
+        if (mode === 'new') {
+            return;
+        }
+        if (isNewActive) {
+            commitUpdates({ isNew: null, page: 0 });
+        } else {
+            const filterReset = Object.fromEntries(
+                PRODUCT_FILTER_KEYS.map((key) => [key, null as string | null]),
+            );
+            commitUpdates({ ...filterReset, isNew: 'true', page: 0 });
+        }
+    };
+
+    const renderHeroInline = () => {
+        if (mode === 'nutrition' || mode === 'search') {
+            return (
+                <div className={styles.heroInline}>
+                    <button
+                        type="button"
+                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${
+                            isNewActive ? styles.heroCardActive : ''
+                        }`}
+                        onClick={handleNewToggle}
+                        aria-pressed={isNewActive}
+                    >
+                        신제품만 보기
+                    </button>
+                    <span className={styles.heroDivider} aria-hidden="true" />
+                    {HERO_BANNER_ITEMS.map((item) => {
+                        const isActive = activeHeroSlug === item.slug;
+                        const accentClass = styles[item.accentClass];
+                        return (
+                            <button
+                                key={item.slug}
+                                type="button"
+                                className={`${styles.heroInlineCard} ${accentClass} ${
+                                    isActive ? styles.heroCardActive : ''
+                                }`}
+                                onClick={() => handleCollectionNavigate(item.slug)}
+                                aria-pressed={isActive}
+                            >
+                                <span className={styles.heroCardLabel}>{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        if (mode === 'new' && config.kind === 'new') {
+            return (
+                <div className={styles.heroInline}>
+                    <button
+                        type="button"
+                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${
+                            isNewActive ? styles.heroCardActive : ''
+                        }`}
+                        onClick={handleNewToggle}
+                        aria-pressed={isNewActive}
+                    >
+                        신제품
+                    </button>
+                    <span className={styles.heroDivider} aria-hidden="true" />
+                    {NEW_HERO_ITEMS.map((item) => {
+                        const isActive = activeHeroSlug === item.slug;
+                        const accentClass = styles[item.accentClass];
+                        return (
+                            <button
+                                key={item.slug}
+                                type="button"
+                                className={`${styles.heroInlineCard} ${accentClass} ${
+                                    isActive ? styles.heroCardActive : ''
+                                }`}
+                                onClick={() => handleNewHeroSelect(item.slug)}
+                                aria-pressed={isActive}
+                            >
+                                <span className={styles.heroCardLabel}>{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        return null;
+    };
+
     return (
         <div className={styles.layout}>
             <ProductSidebar
@@ -287,80 +468,98 @@ export default function ProductPageClient({
                 onFilterToggle={handleFilterToggle}
                 onResetFilters={handleResetFilters}
                 lockedFilters={lockedFilters}
-                selectedCategorySlug={mode === 'nutrition' ? activeCategorySlug : undefined}
+                selectedCategorySlug={mode === 'nutrition' || mode === 'new' || mode === 'search' ? activeCategorySlug : undefined}
                 categoryConfig={mode === 'category' ? (config as CategoryPageConfig) : undefined}
                 selectedSubCategory={selectedSubCategory}
-                onCategorySelect={mode === 'nutrition' ? handleCategorySelect : undefined}
+                onCategorySelect={mode === 'nutrition' || mode === 'new' || mode === 'search' ? handleCategorySelect : undefined}
                 onSubCategoryChange={mode === 'category' ? handleSubCategoryChange : undefined}
             />
             <section className={styles.content}>
-                {mode === 'nutrition' && (
-                    <div className={styles.heroSection}>
-                        <div className={styles.heroGrid}>
-                            {HERO_BANNER_ITEMS.map((item) => {
-                                const isActive = activeHeroSlug === item.slug;
-                                return (
-                                    <button
-                                        key={item.slug}
-                                        type="button"
-                                        className={`${styles.heroCard} ${styles[item.accentClass]} ${
-                                            isActive ? styles.heroCardActive : ''
-                                        }`}
-                                        onClick={() => handleCollectionNavigate(item.slug)}
-                                        aria-pressed={isActive}
-                                    >
-                                        <span className={styles.heroCardLabel}>{item.label}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
                 <header className={styles.header}>
                     <div>
                         <h1 className={styles.title}>{config.title}</h1>
                         <p className={styles.description}>{config.description}</p>
                     </div>
-                    <div className={styles.metaControls}>
-                        <label className={styles.pageSizeLabel}>
-                            페이지 크기
-                            <select value={selectedPageSize} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-                                {pageSizeOptions.map((option) => (
-                                    <option key={option} value={option}>
-                                        {option}개씩 보기
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                    </div>
                 </header>
-                {config.subCategories && config.subCategories.length > 1 && (
-                    <div className={styles.subCategoryTabs}>
-                        {config.subCategories.map((item) => (
-                            <button
-                                key={item.slug}
-                                type="button"
-                                className={`${styles.subCategoryButton} ${
-                                    item.slug === selectedSubCategory.slug ? styles.subCategoryButtonActive : ''
-                                }`}
-                                onClick={() => handleSubCategoryChange(item.slug)}
-                            >
-                                {item.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
+                {(() => {
+                    if (mode === 'category' && 'subCategories' in config && config.subCategories && config.subCategories.length > 1) {
+                        const subCategories = config.subCategories;
+                        return (
+                            <div className={styles.subCategoryTabs}>
+                                {subCategories.map((item) => (
+                                    <button
+                                        key={item.slug}
+                                        type="button"
+                                        className={`${styles.subCategoryButton} ${
+                                            item.slug === selectedSubCategory.slug ? styles.subCategoryButtonActive : ''
+                                        }`}
+                                        onClick={() => handleSubCategoryChange(item.slug)}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    }
+                    if ('subCategories' in config && config.subCategories && config.subCategories.length > 1) {
+                        const subCategories = config.subCategories;
+                        return (
+                            <div className={styles.subCategoryTabs}>
+                                {subCategories.map((item) => (
+                                    <button
+                                        key={item.slug}
+                                        type="button"
+                                        className={`${styles.subCategoryButton} ${
+                                            item.slug === selectedSubCategory.slug ? styles.subCategoryButtonActive : ''
+                                        }`}
+                                        onClick={() => handleSubCategoryChange(item.slug)}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    }
+                    return null;
+                })()}
 
                 {totalElements > 0 && (
-                    <div className={styles.listSummary}>
-                        <span>
-                            {summaryLabel} · {totalElements}개
-                        </span>
-                    </div>
+                    <>
+                        <div className={styles.listSummary}>
+                            <span>
+                                {summaryLabel} · {totalElements}개
+                            </span>
+                            {renderHeroInline()}
+                        </div>
+                        <div className={styles.listActions}>
+                            <label className={styles.sortLabel}>
+                                정렬
+                                <select value={normalizedSort} onChange={handleSortChange} className={styles.sortSelect}>
+                                    {SORT_OPTIONS.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className={styles.pageSizeLabel}>
+                                페이지 크기
+                                <select value={selectedPageSize} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
+                                    {pageSizeOptions.map((option) => (
+                                        <option key={option} value={option}>
+                                            {option}개씩 보기
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        </div>
+                    </>
                 )}
 
-                <ProductGrid products={data.content} />
+                <ProductGrid
+                    products={data.content}
+                    emptyMessage={mode === 'search' ? '검색 결과가 없습니다.' : undefined}
+                />
 
                 <ProductPagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
             </section>

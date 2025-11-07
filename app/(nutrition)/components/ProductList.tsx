@@ -6,6 +6,37 @@ import PagingBar from '../components/PagingBar';  // PagingBar 컴포넌트 impo
 import Image from 'next/image';
 import styles from './ProductList.module.css';
 import { useRouter } from 'next/navigation';
+const DEFAULT_IMAGE = '/images/default-product.png';
+const fixUnencodedPercents = (value: string) => value.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
+const sanitizeImageUrl = (raw?: string | null) => {
+    if (!raw) {
+        return DEFAULT_IMAGE;
+    }
+    const trimmed = raw.trim();
+    if (!trimmed) {
+        return DEFAULT_IMAGE;
+    }
+    const corrected = fixUnencodedPercents(trimmed);
+    try {
+        const parsed = new URL(corrected);
+        const encodedPath = parsed.pathname
+            .split('/')
+            .map((segment) => {
+                if (!segment) {
+                    return segment;
+                }
+                try {
+                    return encodeURIComponent(decodeURIComponent(segment));
+                } catch {
+                    return encodeURIComponent(segment);
+                }
+            })
+            .join('/');
+        return `${parsed.origin}${encodedPath}${parsed.search}${parsed.hash}`;
+    } catch {
+        return encodeURI(corrected);
+    }
+};
 
 export const CATEGORY_MAPPING = {
     '음료': 1,
@@ -173,18 +204,13 @@ export default function ProductList({
                             style={{ cursor: 'pointer' }}
                         >
                             <Image
-                                src={product.imageurl 
-                                    ? product.imageurl.split('/').map(segment => 
-                                        encodeURIComponent(segment)
-                                    ).join('/')
-                                    : '/images/default-product.png'  // 기본 이미지 경로
-                                }
+                                src={sanitizeImageUrl(product.imageUrl || product.imageurl)}
                                 alt={product.productName}
                                 width={200}
                                 height={200}
                                 className={styles.productImage}
                                 onError={(e: any) => {
-                                    e.currentTarget.src = '/images/default-product.png';
+                                    e.currentTarget.src = DEFAULT_IMAGE;
                                 }}
                             />
                         </div>
