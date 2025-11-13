@@ -3,16 +3,17 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import styles from './MainHeader.module.css'
-import { useAppDispatch, useAppSelector } from '../app/store/slices/store';
-import { resetState } from '../app/store/slices/productSlice';
-import { openLoginModal, logout, setLoggedIn, setUser, selectIsLoggedIn } from '../app/store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '../app/(user)/store/slices/store';
+import { resetState } from '../app/(user)/store/slices/productSlice';
+import { openLoginModal, logout, setLoggedIn, setUser, selectIsLoggedIn } from '../app/(user)/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react'; // useState, useRef, useEffect 임포트
 import Cookies from 'js-cookie'; // Cookies 임포트
-import { useIsLoggedIn } from '../app/hooks/useAuth'; // React Query hook import
-import { useUserNotifications, useMarkNotificationAsRead } from '../app/hooks/useNotification'; // 알림 훅 import
-import type { CategorySlug } from '../app/product/config';
+import { useIsLoggedIn } from '../app/(user)/hooks/useAuth'; // React Query hook import
+import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotification, useMarkAllNotificationsAsRead } from '../app/(user)/hooks/useNotification'; // 알림 훅 import
+import type { CategorySlug } from '../app/(user)/product/config';
 import { getCdnUrl } from '../lib/cdn';
+import type { UserNotificationResponse } from '@/types/notification'
 
 const CATEGORY_NAV_ITEMS: Array<{
     slug: CategorySlug;
@@ -29,8 +30,10 @@ export default function Header() {
     const router = useRouter();
     
     const { isLoggedIn: queryIsLoggedIn, userData, isLoading: authLoading } = useIsLoggedIn();
-    const { data: notifications, isLoading: notificationsLoading } = useUserNotifications();
+    const { data: notifications, isLoading: notificationsLoading, refetch: refetchNotifications } = useUserNotifications();
     const markAsReadMutation = useMarkNotificationAsRead();
+    const deleteNotificationMutation = useDeleteUserNotification();
+    const markAllAsReadMutation = useMarkAllNotificationsAsRead(); // 모든 알림 읽음 처리 훅
 
     const [isHydrated, setIsHydrated] = useState(false);
     const isLoggedIn = useAppSelector(selectIsLoggedIn); // Redux의 isLoggedIn 상태 사용
@@ -111,16 +114,50 @@ export default function Header() {
     const handleNotificationIconClick = () => {
         setIsNotificationTooltipOpen(prev => !prev);
         setIsProfileTooltipOpen(false); // 다른 툴팁 닫기
+        // 알림 아이콘 클릭 시, 툴팁이 열리고 읽지 않은 알림이 있다면 모두 읽음 처리
+        if (!isNotificationTooltipOpen && (notifications?.some(n => !n.isRead) ?? false)) {
+            markAllAsReadMutation.mutate();
+        }
     };
 
-    const handleNotificationItemClick = (userNotificationNo: number) => {
+    const handleNotificationItemClick = (notification: UserNotificationResponse) => {
+        const { userNotificationNo, boardNo } = notification
         markAsReadMutation.mutate(userNotificationNo, {
             onSuccess: () => {
-                setIsNotificationTooltipOpen(false); // 읽음 처리 성공 후 툴팁 닫기
-                router.push(`/notifications?userNotificationNo=${userNotificationNo}`); // 특정 알림 상세 보기 페이지로 이동
-            }
-        });
+                setIsNotificationTooltipOpen(false)
+                if (boardNo) {
+                    router.push(`/board/${boardNo}`)
+                } else {
+                    router.push('/notifications')
+                }
+                refetchNotifications()
+            },
+            onError: () => {
+                setIsNotificationTooltipOpen(false)
+                if (boardNo) {
+                    router.push(`/board/${boardNo}`)
+                }
+            },
+        })
     };
+
+    const handleNotificationMarkReadOnly = (event: React.MouseEvent<HTMLButtonElement>, notification: UserNotificationResponse) => {
+        event.stopPropagation()
+        markAsReadMutation.mutate(notification.userNotificationNo, {
+            onSuccess: () => {
+                refetchNotifications()
+            },
+        })
+    }
+
+    const handleNotificationDelete = (event: React.MouseEvent<HTMLButtonElement>, notification: UserNotificationResponse) => {
+        event.stopPropagation()
+        deleteNotificationMutation.mutate(notification.userNotificationNo, {
+            onSuccess: () => {
+                refetchNotifications()
+            },
+        })
+    }
 
     const handleNotificationClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation(); // 이벤트 버블링 방지
@@ -221,7 +258,10 @@ export default function Header() {
                                     onClick={handleNotificationIconClick}
                                 >
                                     <button className={styles.iconButton}>
-                                        <Image src={getCdnUrl('/images/bell4.png')} alt="알림" width={30} height={30} className={styles.headerIcon} />
+                                        <Image
+                                            src={getCdnUrl(notifications?.some(n => !n.isRead) ? '/images/bell4.png' : '/images/bell.png')}
+                                            alt="알림" width={30} height={30} className={styles.headerIcon}
+                                        />
                                         {/* {!unreadCountLoading && unreadCount && unreadCount > 0 && (
                                             <span className={styles.unreadBadge}>{unreadCount}</span>
                                         )} */}
@@ -243,13 +283,33 @@ export default function Header() {
                                                         <div 
                                                             key={notification.userNotificationNo} 
                                                             className={`${styles.notificationItem} ${notification.isRead ? styles.read : ''}`}
-                                                            onClick={() => handleNotificationItemClick(notification.userNotificationNo)}
+                                                            onClick={() => handleNotificationItemClick(notification)}
                                                         >
                                                             {/* 알림 타입에 따른 아이콘 (필요시 추가, 현재는 기본 종 모양) */}
-                                                            <Image src={getCdnUrl('/images/bell4.png')} alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
+                                                            <Image src={getCdnUrl('/images/bell.png')} alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
                                                             <div className={styles.notificationText}>
                                                                 <p className={styles.notificationMessage}>{notification.title}</p>
-                                                                <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
+                                                                <div className={styles.notificationFooterContent}>
+                                                                    <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
+                                                                    <div className={styles.notificationActions}>
+                                                                        {!notification.isRead && (
+                                                                            <button
+                                                                                type="button"
+                                                                                className={styles.markAsReadButton}
+                                                                                onClick={(e) => handleNotificationMarkReadOnly(e, notification)}
+                                                                            >
+                                                                                읽음
+                                                                            </button>
+                                                                        )}
+                                                                        <button
+                                                                            type="button"
+                                                                            className={styles.deleteButton}
+                                                                            onClick={(e) => handleNotificationDelete(e, notification)}
+                                                                        >
+                                                                            <Image src={getCdnUrl('/images/delete.png')} alt="삭제" width={20} height={20} className={styles.deleteIcon} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     ))

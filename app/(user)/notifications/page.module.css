@@ -1,0 +1,221 @@
+/* app/notifications/page.module.css */
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 28px;
+    color: #333;
+    margin: 0;
+}
+
+.settingsButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    color: #666;
+}
+
+.tabNav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.tabButton {
+    border-radius: 999px;
+    border: 1px solid rgba(185, 201, 228, 0.55);
+    background: rgba(244, 248, 255, 0.85);
+    padding: 8px 18px;
+    font-size: 0.92rem;
+    color: #46619a;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.tabButton.active {
+    background: linear-gradient(135deg, #6988ff, #4f7cff);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 12px 18px rgba(79, 124, 255, 0.25);
+}
+
+.markAllReadButton {
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.markAllReadButton:hover {
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
+}
+
+.notificationList {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.notificationItem {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.notificationItem:hover {
+    background-color: #f0f0f0;
+}
+
+.notificationItem.read {
+    background-color: #f0f0f0;
+    color: #888;
+}
+
+.notificationIcon {
+    width: 40px;
+    height: 40px;
+    margin-right: 15px;
+    flex-shrink: 0; /* 아이콘이 줄어들지 않도록 */
+}
+
+.notificationText {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.notificationTitle {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.notificationItem.read .notificationTitle {
+    color: #888;
+}
+
+.notificationContent {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 5px;
+}
+
+.notificationItem.read .notificationContent {
+    color: #999;
+}
+
+.notificationTimestamp {
+    font-size: 12px;
+    color: #999;
+}
+
+.notificationFooterContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%; /* 부모의 전체 너비를 차지하도록 */
+    margin-top: 5px; /* 알림 내용과의 간격 */
+}
+
+.notificationActions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.markAsReadButton {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 0.9em;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+}
+
+.markAsReadButton:hover {
+    color: #555;
+}
+
+.deleteButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.deleteButton img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.deleteButton:hover img {
+    opacity: 1;
+}
+
+.loading, .noNotifications {
+    text-align: center;
+    padding: 30px;
+    color: #777;
+    font-size: 16px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 10px;
+}
+
+.pagination button {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+}
+
+.pagination button:hover:not(.active) {
+    background-color: #e0e0e0;
+}
+
+.pagination button.active {
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
+    color: #fff;
+    border-color: #4f7cff;
+}

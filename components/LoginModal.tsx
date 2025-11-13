@@ -4,10 +4,9 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAppDispatch } from '../app/store/slices/store'; // Redux dispatch 사용을 위해 import
-import { setLoggedIn, setUser } from '../app/store/slices/authSlice'; // 로그인 상태 업데이트 액션 import
+import { useAppDispatch } from '../app/(user)/store/slices/store'; // Redux dispatch 사용을 위해 import
 import styles from './LoginModal.module.css'
-import authSlice from './../app/store/slices/authSlice';
+import { setLoggedIn, setUser } from '../app/(user)/store/slices/authSlice'; // 로그인 상태 업데이트 액션 import
 import { useQueryClient } from '@tanstack/react-query'; // useQueryClient import
 import { getCdnUrl } from '@/lib/cdn'
 

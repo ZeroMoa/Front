@@ -19,8 +19,9 @@
       "@app/*": ["app/*"],
       "@components/*": ["components/*"],
       "@lib/*": ["lib/*"],
-      "@store/*": ["app/store/*"],
-      "@product/*": ["app/product/*"]
+      "@store/*": ["app/(user)/store/*"],
+      "@product/*": ["app/(user)/product/*"]
+
     },
     "esModuleInterop": true,
     "moduleResolution": "node",

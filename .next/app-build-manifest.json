@@ -6,16 +6,69 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/(home)/layout": [
+    "/(user)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(home)/layout.js"
+      "static/css/app/(user)/layout.css",
+      "static/chunks/app/(user)/layout.js"
     ],
-    "/(home)/page": [
+    "/(user)/favorites/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/(home)/page.css",
-      "static/chunks/app/(home)/page.js"
+      "static/css/app/(user)/favorites/page.css",
+      "static/chunks/app/(user)/favorites/page.js"
+    ],
+    "/admin/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/layout.css",
+      "static/chunks/app/admin/layout.js"
+    ],
+    "/admin/boards/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/boards/page.css",
+      "static/chunks/app/admin/boards/page.js"
+    ],
+    "/(user)/(home)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(user)/(home)/layout.js"
+    ],
+    "/(user)/(home)/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/(home)/page.css",
+      "static/chunks/app/(user)/(home)/page.js"
+    ],
+    "/admin/boards/write/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/boards/write/page.css",
+      "static/chunks/app/admin/boards/write/page.js"
+    ],
+    "/(user)/notifications/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/notifications/page.css",
+      "static/chunks/app/(user)/notifications/page.js"
+    ],
+    "/admin/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/page.js"
+    ],
+    "/admin/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/login/page.css",
+      "static/chunks/app/admin/login/page.js"
+    ],
+    "/admin/users/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/users/page.css",
+      "static/chunks/app/admin/users/page.js"
     ]
   }
 }

@@ -1,0 +1,203 @@
+'use client'
+
+import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { ReactNode, createContext, useContext, useMemo, useState, useCallback } from 'react'
+import styles from './layout.module.css'
+import { getCdnUrl } from '@/lib/cdn'
+
+const NAV_ITEMS = [
+  { href: '/admin/users', label: '회원관리', icon: '/images/users_white.png' },
+  { href: '/admin/boards', label: '게시판', icon: '/images/board_white.png' },
+  { href: '/admin/products', label: '제품', icon: '/images/product_white.png' },
+  { href: '/admin/notifications', label: '알림', icon: '/images/bell_white.png' },
+] as const
+
+const HEADER_CARDS: Array<{
+  title: string
+  valueKey: 'pendingProducts' | 'registeredToday' | 'deletedToday'
+  icon: string
+  color: string
+}> = [
+  { title: '확인해야 할 제품', valueKey: 'pendingProducts', icon: '/images/check2.png', color: '#9DE5FC' },
+  { title: '오늘 가입한 사람들', valueKey: 'registeredToday', icon: '/images/heart_plus.png', color: '#8EE7A2' },
+  { title: '오늘 탈퇴한 사람들', valueKey: 'deletedToday', icon: '/images/heart_minus.png', color: '#FD9B9B' },
+]
+
+type AdminLayoutProps = {
+  children: ReactNode
+}
+
+type AdminLayoutHeaderValues = {
+  pendingProducts?: number | null
+  registeredToday?: number | null
+  deletedToday?: number | null
+}
+
+type AdminHeaderContextValue = {
+  values: AdminLayoutHeaderValues
+  setValues: (nextValues: Partial<AdminLayoutHeaderValues>) => void
+}
+
+const AdminHeaderContext = createContext<AdminHeaderContextValue | null>(null)
+
+export function useAdminHeader() {
+  const context = useContext(AdminHeaderContext)
+  if (!context) {
+    throw new Error('useAdminHeader 훅은 Admin 레이아웃 내부에서만 사용할 수 있습니다.')
+  }
+  return context
+}
+
+function hexToRgba(hex: string, alpha = 0.35) {
+  const sanitized = hex.trim().replace('#', '')
+  if (sanitized.length !== 6) {
+    return `rgba(79, 124, 255, ${alpha})`
+  }
+
+  const r = Number.parseInt(sanitized.substring(0, 2), 16)
+  const g = Number.parseInt(sanitized.substring(2, 4), 16)
+  const b = Number.parseInt(sanitized.substring(4, 6), 16)
+
+  if ([r, g, b].some((channel) => Number.isNaN(channel))) {
+    return `rgba(79, 124, 255, ${alpha})`
+  }
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  const pathname = usePathname()
+
+  const [headerValues, setHeaderValues] = useState<AdminLayoutHeaderValues>({
+    pendingProducts: null,
+    registeredToday: null,
+    deletedToday: null,
+  })
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+  const updateHeaderValues = useCallback((nextValues: Partial<AdminLayoutHeaderValues>) => {
+    setHeaderValues((prev) => ({
+      ...prev,
+      ...nextValues,
+    }))
+  }, [])
+
+  const contextValue = useMemo<AdminHeaderContextValue>(
+    () => ({
+      values: headerValues,
+      setValues: updateHeaderValues,
+    }),
+    [headerValues, updateHeaderValues]
+  )
+
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => !prev)
+  }
+
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
+
+  return (
+    <AdminHeaderContext.Provider value={contextValue}>
+      <div className={`${styles.layout} ${isSidebarCollapsed ? styles.layoutCollapsed : ''}`}>
+        <aside className={styles.sidebar}>
+          <div className={styles.sidebarTop}>
+            <div className={styles.sidebarHeader}>
+              <div className={styles.sidebarControlGroup}>
+                <button
+                  type="button"
+                  className={styles.sidebarCollapseButton}
+                  onClick={handleToggleSidebar}
+                  aria-label={isSidebarCollapsed ? '사이드바 펼치기' : '사이드바 접기'}
+                >
+                  <Image
+                    src={getCdnUrl(isSidebarCollapsed ? '/images/sidebar_open.png' : '/images/sidebar_close.png')}
+                    alt={isSidebarCollapsed ? '사이드바 펼치기' : '사이드바 접기'}
+                    width={35}
+                    height={35}
+                  />
+                </button>
+                <div className={styles.sidebarLogo}>
+                  <div className={styles.sidebarLogoImageWrapper}>
+                    <Image
+                      src={getCdnUrl('/images/logo2.png')}
+                      alt="제로모아"
+                      fill
+                      priority
+                      sizes="(max-width: 1280px) 96px, 180px"
+                      className={styles.sidebarLogoImage}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className={styles.sidebarLogoSmall}>
+                <Image
+                  src={getCdnUrl('/images/logo_small.png')}
+                  alt="제로모아"
+                  width={40}
+                  height={40}
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.sidebarBottom}>
+            <nav className={styles.sidebarNav}>
+              {NAV_ITEMS.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
+                  >
+                    <Image src={getCdnUrl(item.icon)} alt={item.label} width={35} height={35} />
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              })}
+            </nav>
+          </div>
+        </aside>
+
+        <section className={styles.main}>
+          <header className={styles.header}>
+            <div className={styles.headerCards}>
+              {HEADER_CARDS.map(({ title, valueKey, icon, color }) => {
+                const value = headerValues[valueKey]
+                const displayValue =
+                  typeof value === 'number' && !Number.isNaN(value) ? value.toLocaleString() : '—'
+                const circleShadow = hexToRgba(color, 0.32)
+                const valueColor = color
+  return (
+                  <div key={valueKey} className={styles.headerCard}>
+                    <div className={styles.cardColorBar} style={{ backgroundColor: color }} />
+                    <div className={styles.cardBody}>
+                      <div className={styles.cardTextGroup}>
+                        <span className={styles.cardTitle}>{title}</span>
+                        <span className={styles.cardValue} style={{ color: valueColor }}>
+                          {displayValue}
+                        </span>
+                      </div>
+                      <div
+                        className={styles.cardCircle}
+                        style={{ backgroundColor: color, boxShadow: `0 18px 28px ${circleShadow}` }}
+                      >
+                        <Image src={getCdnUrl(icon)} alt={title} width={40} height={40} className={styles.cardIcon} />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </header>
+
+          <div className={styles.content}>{children}</div>
+        </section>
+      </div>
+    </AdminHeaderContext.Provider>
+  )
+}
