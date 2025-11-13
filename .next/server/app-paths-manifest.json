@@ -1,7 +1,4 @@
 {
-  "/admin/users/page": "app/admin/users/page.js",
-  "/(user)/notifications/page": "app/(user)/notifications/page.js",
-  "/admin/login/page": "app/admin/login/page.js",
-  "/(user)/(home)/page": "app/(user)/(home)/page.js",
+  "/admin/boards/[id]/page": "app/admin/boards/[id]/page.js",
   "/admin/boards/page": "app/admin/boards/page.js"
 }

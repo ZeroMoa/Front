@@ -15,8 +15,8 @@ function headersToRecord(headers: Headers): Record<string, string> {
 function buildHeaders(
   options: RequestInit,
   xsrfToken?: string,
-  accessToken?: string,
-  includeAuthorization = true
+  // accessToken?: string, // accessToken 파라미터 제거
+  // includeAuthorization = true // includeAuthorization 파라미터 제거
 ): HeadersInit {
   const headers = new Headers(options.headers ?? {})
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
@@ -29,9 +29,11 @@ function buildHeaders(
     headers.set('X-XSRF-TOKEN', xsrfToken)
   }
 
-  if (includeAuthorization && accessToken && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${accessToken}`)
-  }
+  // HttpOnly 쿠키의 경우 Authorization 헤더를 수동으로 추가하지 않음.
+  // 브라우저가 credentials: 'include'를 통해 자동으로 쿠키를 전송하도록 함.
+  // if (includeAuthorization && accessToken && !headers.has('Authorization')) {
+  //   headers.set('Authorization', `Bearer ${accessToken}`)
+  // }
 
   return headersToRecord(headers)
 }
@@ -64,8 +66,8 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
   }
 
   const xsrfToken = Cookies.get('XSRF-TOKEN')
-  const accessToken = Cookies.get('accessToken')
-  const headers = buildHeaders(options, xsrfToken, accessToken)
+  // const accessToken = Cookies.get('accessToken') // accessToken 쿠키 직접 읽기 제거
+  const headers = buildHeaders(options, xsrfToken) // accessToken 관련 파라미터 제거
 
   let response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -75,7 +77,7 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
 
   if (response.status === 401 && !retried) {
     try {
-      const refreshHeaders = buildHeaders({}, xsrfToken, undefined, false)
+      const refreshHeaders = buildHeaders({}, xsrfToken) // accessToken 관련 파라미터 제거
       const refreshResponse = await fetch(`${API_BASE_URL}/jwt/refresh`, {
         method: 'POST',
         headers: refreshHeaders,
@@ -83,6 +85,8 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
       })
 
       if (refreshResponse.ok) {
+        // 리프레시 성공 후, 브라우저가 새 accessToken 쿠키를 자동으로 처리하므로
+        // 다시 요청할 때 fetchWithAuth가 업데이트된 쿠키를 사용하도록 함
         response = await fetchWithAuth(path, options, true)
       } else {
         const { message } = await parseErrorResponse(refreshResponse)

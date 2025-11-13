@@ -17,7 +17,7 @@ export const useAdminBoards = (params: URLSearchParams, options?: { search?: boo
 
   return useQuery({
     queryKey,
-    queryFn: () => commonFetchBoards(params, { admin: true, search: options?.search }),
+    queryFn: () => commonFetchBoards(params, { search: options?.search }),
     placeholderData: (previousData) => previousData,
   })
 }
@@ -25,7 +25,7 @@ export const useAdminBoards = (params: URLSearchParams, options?: { search?: boo
 export const useAdminBoardDetail = (boardNo: number) => {
   return useQuery({
     queryKey: ['admin', 'board', boardNo],
-    queryFn: () => commonFetchBoardDetail(boardNo, { admin: true }),
+    queryFn: () => commonFetchBoardDetail(boardNo),
     enabled: Number.isFinite(boardNo) && boardNo > 0,
   })
 }
@@ -34,7 +34,7 @@ export const useCreateAdminBoard = () => {
   const queryClient = useQueryClient()
 
   return useMutation<BoardResponse, Error, FormData>({
-    mutationFn: (form: FormData) => commonCreateBoard(form, { admin: true }),
+    mutationFn: (form: FormData) => commonCreateBoard(form),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'boards'] })
     },
@@ -45,7 +45,7 @@ export const useUpdateAdminBoard = () => {
   const queryClient = useQueryClient()
 
   return useMutation<BoardResponse, Error, { boardNo: number; form: FormData }>({
-    mutationFn: ({ boardNo, form }) => commonUpdateBoard(boardNo, form, { admin: true }),
+    mutationFn: ({ boardNo, form }) => commonUpdateBoard(boardNo, form),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'board', variables.boardNo] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'boards'] })
@@ -57,7 +57,7 @@ export const useDeleteAdminBoard = () => {
   const queryClient = useQueryClient()
 
   return useMutation<void, Error, number>({
-    mutationFn: (boardNo: number) => commonDeleteBoard(boardNo, { admin: true }),
+    mutationFn: (boardNo: number) => commonDeleteBoard(boardNo),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'boards'] })
     },

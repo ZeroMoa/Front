@@ -3,71 +3,59 @@ import { fetchWithAuth } from '@/lib/api/fetchWithAuth'
 
 export const BOARD_PUBLIC_PATH = '/board'
 export const BOARD_SEARCH_PATH = '/board/search'
-export const ADMIN_BOARD_BASE_PATH = '/admin/boards'
+export const ADMIN_BOARD_BASE_PATH = '/admin/boards' // 관리자 전용 생성/수정/삭제 경로
 
 function buildListUrl(params: URLSearchParams, basePath: string): string {
   const query = params.toString()
   return query ? `${basePath}?${query}` : basePath
 }
 
-// 사용자 및 관리자 공통 게시글 목록 조회
+// 게시글 목록 조회 (사용자 및 관리자 공통)
 export async function commonFetchBoards(
   params: URLSearchParams,
-  options?: { search?: boolean; admin?: boolean }
+  options?: { search?: boolean }
 ): Promise<BoardListResponse> {
-  const basePath = options?.admin
-    ? ADMIN_BOARD_BASE_PATH
-    : options?.search
-      ? BOARD_SEARCH_PATH
-      : BOARD_PUBLIC_PATH
+  const basePath = options?.search ? BOARD_SEARCH_PATH : BOARD_PUBLIC_PATH
   const response = await fetchWithAuth(buildListUrl(params, basePath))
   return response.json()
 }
 
-// 사용자 및 관리자 공통 게시글 상세 조회
+// 게시글 상세 조회 (사용자 및 관리자 공통)
 export async function commonFetchBoardDetail(
-  boardNo: number,
-  options?: { admin?: boolean }
+  boardNo: number
 ): Promise<BoardResponse> {
-  const basePath = options?.admin ? ADMIN_BOARD_BASE_PATH : BOARD_PUBLIC_PATH
-  const response = await fetchWithAuth(`${basePath}/${boardNo}`)
+  const response = await fetchWithAuth(`${BOARD_PUBLIC_PATH}/${boardNo}`)
   return response.json()
 }
 
-// 사용자 및 관리자 공통 게시글 생성
+// 게시글 생성 (관리자 전용)
 export async function commonCreateBoard(
-  form: FormData,
-  options?: { admin?: boolean }
+  form: FormData
 ): Promise<BoardResponse> {
-  const basePath = options?.admin ? ADMIN_BOARD_BASE_PATH : BOARD_PUBLIC_PATH
-  const response = await fetchWithAuth(basePath, {
+  const response = await fetchWithAuth(ADMIN_BOARD_BASE_PATH, {
     method: 'POST',
     body: form,
   })
   return response.json()
 }
 
-// 사용자 및 관리자 공통 게시글 수정
+// 게시글 수정 (관리자 전용)
 export async function commonUpdateBoard(
   boardNo: number,
-  form: FormData,
-  options?: { admin?: boolean }
+  form: FormData
 ): Promise<BoardResponse> {
-  const basePath = options?.admin ? ADMIN_BOARD_BASE_PATH : BOARD_PUBLIC_PATH
-  const response = await fetchWithAuth(`${basePath}/${boardNo}`, {
+  const response = await fetchWithAuth(`${ADMIN_BOARD_BASE_PATH}/${boardNo}`, {
     method: 'PATCH',
     body: form,
   })
   return response.json()
 }
 
-// 사용자 및 관리자 공통 게시글 삭제
+// 게시글 삭제 (관리자 전용)
 export async function commonDeleteBoard(
-  boardNo: number,
-  options?: { admin?: boolean }
+  boardNo: number
 ): Promise<void> {
-  const basePath = options?.admin ? ADMIN_BOARD_BASE_PATH : BOARD_PUBLIC_PATH
-  await fetchWithAuth(`${basePath}/${boardNo}`, {
+  await fetchWithAuth(`${ADMIN_BOARD_BASE_PATH}/${boardNo}`, {
     method: 'DELETE',
   })
 }
