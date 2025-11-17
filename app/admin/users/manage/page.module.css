@@ -1,0 +1,406 @@
+.pageWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .headerSection {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  
+  .titleGroup {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  
+  .pageTitle {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1f2f5c;
+    margin: 0;
+  }
+  
+  .totalInfo {
+    font-size: 15px;
+    font-weight: 600;
+    color: #4a5884;
+  }
+  
+  .pageSizeControl {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #435181;
+  }
+
+  .pageSizeSelect {
+    border-radius: 12px;
+    border: 1px solid rgba(155, 174, 220, 0.6);
+    padding: 8px 14px;
+    font-size: 14px;
+    color: #2f3f69;
+    background: rgba(248, 250, 255, 0.96);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+  
+  .tableWrapper {
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 22px;
+    box-shadow: 0 24px 48px rgba(45, 64, 119, 0.12);
+    overflow: hidden;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .filtersBar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px 22px;
+    border-radius: 20px;
+    background: rgba(247, 249, 255, 0.96);
+    border: 1px solid rgba(180, 197, 236, 0.45);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+  
+  .filtersRow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    align-items: end;
+  }
+  
+  .filterField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+    color: #435181;
+  }
+  
+  .filterField input,
+  .filterField select {
+    border-radius: 12px;
+    border: 1px solid rgba(155, 174, 220, 0.6);
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #2f3f69;
+    background: rgba(248, 250, 255, 0.95);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+  
+  .resetButton {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    min-height: 44px;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+  
+  .resetButton:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  
+  .resetButton:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+  
+.tableHead {
+    background: linear-gradient(135deg, #e3ecff, #c7d8ff);
+    color: #1a2c6b;
+  }
+  
+  .tableHead th {
+    padding: 18px 22px;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+    border-bottom: 1px solid rgba(210, 220, 245, 0.6);
+  }
+  
+  .headerButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  
+  .tableBody tr {
+    background: rgba(247, 249, 255, 0.95);
+    color: #2a3e70;
+    transition: background-color 0.2s ease;
+  }
+  
+  .tableBody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.97);
+  }
+  
+  .tableBody tr:hover {
+    background: rgba(214, 226, 255, 0.32);
+  }
+  
+  .tableBody td {
+    padding: 18px 22px;
+    font-size: 14px;
+    color: #2a3e70;
+    border-bottom: 1px solid rgba(210, 220, 245, 0.5);
+    vertical-align: middle;
+  }
+  
+  .actionCell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .toggleSwitch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+  
+  .toggleSwitch input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  .toggleTrack {
+    position: relative;
+    display: block;
+    width: 83px;
+    height: 40px;
+    border-radius: 999px;
+    --toggle-off-color: #bdc1c8;
+    --toggle-active-color: #4cd964;
+    background: var(--toggle-off-color);
+    transition: background-color 0.25s ease;
+    overflow: hidden;
+  }
+  
+  .toggleTrack::after,
+  .toggleTrack::before {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+  
+  .toggleTrack::after {
+    content: attr(data-off-label);
+    right: 18px;
+    opacity: 1;
+  }
+  
+  .toggleTrack::before {
+    content: attr(data-on-label);
+    left: 18px;
+    opacity: 0;
+  }
+  
+  .toggleHandle {
+    position: absolute;
+    top: 50%;
+    left: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+    transform: translateY(-50%);
+    transition: left 0.25s ease;
+  }
+  
+  .toggleSwitch input:checked + .toggleTrack {
+    background: var(--toggle-active-color);
+  }
+  
+  .toggleSwitch input:checked + .toggleTrack::after {
+    opacity: 0;
+  }
+  
+  .toggleSwitch input:checked + .toggleTrack::before {
+    opacity: 1;
+  }
+  
+  .toggleSwitch input:checked + .toggleTrack .toggleHandle {
+    left: calc(100% - 34px);
+  }
+  
+  .toggleStateLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5fa8;
+    pointer-events: none;
+  }
+  
+  .sortIndicator {
+    margin-left: 6px;
+    font-size: 12px;
+    color: rgba(79, 124, 255, 0.9);
+  }
+  
+  .deleteButton,
+  .editButton,
+  .submitButton,
+  .cancelButton {
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+  }
+  
+  .deleteButton {
+    background: #f15b6c;
+    color: #fff;
+  }
+  
+  .deleteButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(192, 57, 43, 0.18);
+  }
+  
+  .editButton {
+    background: linear-gradient(135deg, #5a7bff, #7f53ff);
+    color: #fff;
+  }
+  
+  .editButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(91, 118, 255, 0.2);
+  }
+  
+  .submitButton {
+    background: linear-gradient(135deg, #5a7bff, #7f53ff);
+    color: #fff;
+  }
+  
+  .submitButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(91, 118, 255, 0.28);   
+    filter: brightness(1.03);
+  }
+  
+  .cancelButton {
+    background: rgba(229, 235, 255, 0.9);
+    color: #4a63a8;
+  }
+  
+  .cancelButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(87, 109, 190, 0.22);
+  }
+  
+  .expandedRow {
+    background: rgba(247, 249, 255, 0.75);
+  }
+  
+  .editForm {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px 22px;
+    padding: 18px 18px 22px;
+  }
+  
+  .formField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .formLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a5884;
+  }
+  
+  .formInput {
+    border: 1px solid rgba(155, 174, 220, 0.6);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #2f3f69;
+    background: rgba(250, 252, 255, 0.95);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .formInput:focus {
+    border-color: #5c7bff;
+    box-shadow: 0 0 0 3px rgba(92, 123, 255, 0.16);
+    outline: none;
+  }
+  
+  .formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    grid-column: 1 / -1;
+  }
+  
+  .statusMessage {
+    padding: 16px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .errorMessage {
+    background: rgba(255, 222, 224, 0.92);
+    color: #b3261e;
+    border: 1px solid rgba(255, 145, 150, 0.6);
+  }
+  
+  .successMessage {
+    background: rgba(218, 244, 226, 0.94);
+    color: #2d7a3d;
+    border: 1px solid rgba(135, 208, 155, 0.55);
+  }
+  
+  .paginationWrapper {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .loadingState,
+  .emptyState {
+    padding: 40px 20px;
+    text-align: center;
+    color: #4a5884;
+    font-size: 15px;
+  }
+  
+  .emptyState {
+    color: rgba(74, 88, 132, 0.75);
+  }
+  
+  

@@ -1,0 +1,361 @@
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-bottom: 48px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pageTitle {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2f5c;
+  margin: 0;
+}
+
+.pageSubtitle {
+  font-size: 16px;
+  color: #4a5884;
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 24px;
+  box-shadow: 0 18px 40px rgba(46, 66, 125, 0.08);
+  padding: 26px 32px 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2f5c;
+  margin: 0;
+}
+
+.sectionDescription {
+  font-size: 14px;
+  color: rgba(79, 96, 133, 0.9);
+  margin: 0;
+}
+
+.fieldGrid {
+  display: grid;
+  gap: 18px 22px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5884;
+  letter-spacing: 0.02em;
+}
+
+.textInput,
+.numberInput,
+.selectInput,
+.textArea {
+  border: 1px solid rgba(155, 174, 220, 0.5);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: #26335c;
+  background: rgba(250, 252, 255, 0.9);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.textInput:focus,
+.numberInput:focus,
+.selectInput:focus,
+.textArea:focus {
+  border-color: #5674ff;
+  box-shadow: 0 0 0 3px rgba(86, 116, 255, 0.18);
+  outline: none;
+}
+
+.numberInput::-webkit-inner-spin-button,
+.numberInput::-webkit-outer-spin-button {
+  margin: 0;
+}
+
+.textArea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.imageDropzone {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dropzone {
+  border: 2px dashed rgba(153, 176, 214, 0.7);
+  border-radius: 14px;
+  padding: 28px 26px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(241, 245, 252, 0.85);
+  color: #566689;
+  font-size: 15px;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.dropzoneTitle {
+  display: block;
+  font-weight: 700;
+  color: #384769;
+  font-size: 16px;
+}
+
+.dropzoneHint {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(78, 96, 135, 0.85);
+}
+
+.dropzoneActive {
+  border-color: #6a5cff;
+  background: rgba(106, 92, 255, 0.12);
+  transform: scale(1.01);
+}
+
+.dropzoneFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.previewContainer {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.previewBox {
+  width: 190px;
+  height: 190px;
+  border-radius: 20px;
+  border: 1px dashed rgba(124, 146, 204, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(242, 245, 255, 0.6);
+}
+
+.imagePreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+.categoryRow {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.categorySummary {
+  font-size: 13px;
+  color: #5f6ea5;
+  margin: 0;
+}
+
+.helperText {
+  font-size: 13px;
+  color: rgba(70, 88, 140, 0.85);
+  line-height: 1.5;
+}
+
+.previewMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #3f4f7a;
+}
+
+.previewName {
+  font-weight: 600;
+  color: #26335c;
+  max-width: 260px;
+  word-break: break-all;
+}
+
+.previewSize {
+  font-size: 13px;
+  color: rgba(78, 96, 135, 0.8);
+}
+
+.removeButton {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(220, 98, 98, 0.5);
+  background: rgba(255, 241, 241, 0.8);
+  color: #ba3c3c;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.removeButton:hover {
+  background: rgba(255, 225, 225, 0.95);
+  transform: translateY(-1px);
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2e3f6f;
+}
+
+.checkboxField input {
+  width: 18px;
+  height: 18px;
+  accent-color: #5b76ff;
+}
+
+.healthGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.secondaryButton {
+  align-self: flex-start;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(91, 118, 255, 0.4);
+  background: rgba(91, 118, 255, 0.1);
+  color: #3c4da2;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.secondaryButton:hover {
+  background: rgba(91, 118, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.submitBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(247, 249, 255, 0.92);
+  border: 1px solid rgba(169, 188, 240, 0.4);
+  border-radius: 18px;
+  padding: 18px 24px;
+}
+
+.submitButton {
+  min-width: 150px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #5a7bff, #7f53ff);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.submitButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(87, 118, 255, 0.24);
+  filter: brightness(1.03);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.errorBanner,
+.successBanner {
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.errorBanner {
+  background: rgba(255, 222, 224, 0.92);
+  color: #b3261e;
+  border: 1px solid rgba(255, 145, 150, 0.6);
+}
+
+.successBanner {
+  background: rgba(218, 244, 226, 0.94);
+  color: #2d7a3d;
+  border: 1px solid rgba(135, 208, 155, 0.55);
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.suggestionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestionButton {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(95, 118, 210, 0.35);
+  background: rgba(237, 242, 255, 0.8);
+  font-size: 13px;
+  color: #4b5fb1;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+}
+
+.suggestionButton:hover {
+  background: rgba(95, 118, 210, 0.16);
+  color: #3c4da2;
+  transform: translateY(-1px);
+}
+

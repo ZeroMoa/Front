@@ -2,6 +2,38 @@
 
 import Cookies from 'js-cookie'
 
+let sessionRedirectScheduled = false
+
+function handleSessionExpiry(originPathname: string, loginTarget: string) {
+  if (typeof window === 'undefined' || sessionRedirectScheduled) {
+    return
+  }
+
+  sessionRedirectScheduled = true
+  window.stop()
+
+  const isAdminScope = originPathname.startsWith('/admin')
+  const alertMessage = '로그인이 풀렸습니다! 다시 로그인 부탁드립니다~'
+
+  const logoutEndpoint = isAdminScope ? '/admin/logout' : '/logout'
+
+  // 시도만 하고 실패해도 무시
+  void fetch(`${API_BASE_URL}${logoutEndpoint}`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+    .catch(() => {
+      // ignore logout failure
+    })
+    .finally(() => {
+      window.alert(alertMessage)
+
+      setTimeout(() => {
+        window.location.replace(loginTarget)
+      }, 0)
+    })
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? ''
 
 function headersToRecord(headers: Headers): Record<string, string> {
@@ -65,6 +97,10 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
     throw new Error('API 기본 경로가 설정되지 않았습니다.')
   }
 
+  const originPathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  const isAdminScope = originPathname.startsWith('/admin')
+  const loginRedirectTarget = isAdminScope ? '/admin/login' : '/'
+
   const xsrfToken = Cookies.get('XSRF-TOKEN')
   // const accessToken = Cookies.get('accessToken') // accessToken 쿠키 직접 읽기 제거
   const headers = buildHeaders(options, xsrfToken) // accessToken 관련 파라미터 제거
@@ -90,10 +126,13 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
         response = await fetchWithAuth(path, options, true)
       } else {
         const { message } = await parseErrorResponse(refreshResponse)
-        throw new Error(message || '리프레시 토큰이 만료되었거나 유효하지 않습니다. 다시 로그인하십시오.')
+        const errorMessage = message || '리프레시 토큰이 만료되었거나 유효하지 않습니다. 다시 로그인하십시오.'
+        handleSessionExpiry(originPathname, loginRedirectTarget)
+        throw new Error(errorMessage)
       }
     } catch (error) {
       console.error('토큰 재발급 중 오류 발생:', error)
+      handleSessionExpiry(originPathname, loginRedirectTarget)
       throw error instanceof Error ? error : new Error('토큰 재발급 중 알 수 없는 오류가 발생했습니다.')
     }
   } else if (response.status === 401 && retried) {

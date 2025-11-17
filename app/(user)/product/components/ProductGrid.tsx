@@ -12,12 +12,16 @@ interface ProductGridProps {
     products: Product[];
     className?: string;
     emptyMessage?: string;
+    variant?: 'default' | 'admin';
+    onDeleteProduct?: (product: Product) => Promise<void>;
+    getProductHref?: (product: Product) => string;
 }
 
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
 
 const WARN_ICON = getCdnUrl('/images/warning.png');
 const CAFFEINE_ICON = getCdnUrl('/images/coffee.png');
+const DELETE_ICON = getCdnUrl('/images/delete.png');
 
 const ALT_SWEETENER_TOOLTIP = '대체당은 과다복용시 복통과 설사를 유발할 수 있어요! 조심!';
 const CAFFEINE_TOOLTIP = '카페인이 포함돼있어요! 불면증을 조심하세요~';
@@ -108,7 +112,17 @@ const hasAlternativeSweeteners = (product: Product) =>
     hasPositiveAmount(product.alluloseG) ||
     hasPositiveAmount(product.erythritolG);
 
-function ProductCard({ product }: { product: Product }) {
+function ProductCard({
+    product,
+    variant = 'default',
+    onDeleteProduct,
+    getProductHref,
+}: {
+    product: Product;
+    variant?: 'default' | 'admin';
+    onDeleteProduct?: (product: Product) => Promise<void>;
+    getProductHref?: (product: Product) => string;
+}) {
     const router = useRouter();
 
     const imageSrc = prepareImageUrl(product.imageUrl);
@@ -133,8 +147,9 @@ function ProductCard({ product }: { product: Product }) {
     );
 
     const handleNavigate = useCallback(() => {
-        router.push(`/product/${product.productNo}`);
-    }, [router, product.productNo]);
+        const target = getProductHref ? getProductHref(product) : `/product/${product.productNo}`;
+        router.push(target);
+    }, [router, product, getProductHref]);
 
     const handleKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -146,6 +161,27 @@ function ProductCard({ product }: { product: Product }) {
         [handleNavigate],
     );
 
+    const handleDelete = useCallback(
+        async (event: React.MouseEvent<HTMLButtonElement>) => {
+            event.stopPropagation();
+            event.preventDefault();
+            if (!onDeleteProduct) {
+                return;
+            }
+            const confirmed = window.confirm('정말로 삭제하시겠습니까?');
+            if (!confirmed) {
+                return;
+            }
+            try {
+                await onDeleteProduct(product);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : '제품 삭제 중 오류가 발생했습니다.';
+                alert(message);
+            }
+        },
+        [onDeleteProduct, product],
+    );
+
     return (
         <div
             className={styles.card}
@@ -154,12 +190,20 @@ function ProductCard({ product }: { product: Product }) {
             onClick={handleNavigate}
             onKeyDown={handleKeyDown}
         >
+            {variant === 'admin' ? (
+                <div className={styles.cardFavoriteButton}>
+                    <button type="button" className={styles.deleteButton} onClick={handleDelete}>
+                        <Image src={DELETE_ICON} alt="삭제" width={20} height={20} className={styles.deleteButtonIcon} />
+                    </button>
+                </div>
+            ) : (
             <FavoriteToggleButton
                 productNo={product.productNo}
                 initialIsFavorite={product.isFavorite}
                 initialLikesCount={product.likesCount ?? 0}
                 className={styles.cardFavoriteButton}
             />
+            )}
             <div className={styles.badgeRow}>
                 {(hasAlternativeSweeteners(product) || product.caffeineMg > 0) && (
                     <>
@@ -216,7 +260,14 @@ function ProductCard({ product }: { product: Product }) {
     );
 }
 
-export default function ProductGrid({ products, className, emptyMessage }: ProductGridProps) {
+export default function ProductGrid({
+    products,
+    className,
+    emptyMessage,
+    variant = 'default',
+    onDeleteProduct,
+    getProductHref,
+}: ProductGridProps) {
     const visibleProducts = products.filter((product) => {
         const image = typeof product.imageUrl === 'string' ? product.imageUrl.trim() : '';
         return image.length > 0 && !isDefaultImage(image);
@@ -233,7 +284,13 @@ export default function ProductGrid({ products, className, emptyMessage }: Produ
     return (
         <div className={`${styles.grid} ${className ?? ''}`.trim()}>
             {visibleProducts.map((product) => (
-                <ProductCard key={product.productNo} product={product} />
+                <ProductCard
+                    key={product.productNo}
+                    product={product}
+                    variant={variant}
+                    onDeleteProduct={onDeleteProduct}
+                    getProductHref={getProductHref}
+                />
             ))}
         </div>
     );

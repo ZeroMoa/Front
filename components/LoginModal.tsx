@@ -98,12 +98,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 
                 <div className={styles.logoContainer}>
                     <Image 
-                        src="/images/logo.png" 
-                        alt="YANGPA 로고" 
+                        src={getCdnUrl('/images/logo.png')} 
+                        alt="제로모아 로고" 
                         width={486} 
                         height={171} 
                         priority
-                        className={styles.logo}
+                         className={styles.logo}
                     />
                 </div>
 

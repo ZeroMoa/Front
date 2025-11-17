@@ -3,16 +3,43 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ReactNode, createContext, useContext, useMemo, useState, useCallback } from 'react'
+import { ReactNode, createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react'
 import styles from './layout.module.css'
 import { getCdnUrl } from '@/lib/cdn'
 
-const NAV_ITEMS = [
-  { href: '/admin/users', label: '회원관리', icon: '/images/users_white.png' },
-  { href: '/admin/boards', label: '게시판', icon: '/images/board_white.png' },
-  { href: '/admin/products', label: '제품', icon: '/images/product_white.png' },
+type NavChildItem = {
+  href: string
+  label: string
+}
+
+type NavItem = {
+  href?: string
+  label: string
+  icon: string
+  children?: NavChildItem[]
+}
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    label: '회원',
+    icon: '/images/users_white.png',
+    children: [
+      { href: '/admin/users', label: '회원 조회' },
+      { href: '/admin/users/manage', label: '회원 관리' },
+    ],
+  },
+  {
+    label: '제품',
+    icon: '/images/product_white.png',
+    children: [
+      { href: '/admin/products', label: '제품 조회/삭제' },
+      { href: '/admin/products/register', label: '제품 등록' },
+    ],
+  },
+  { href: '/admin/boards', label: '게시판', icon: '/images/notice_white.png' },
   { href: '/admin/notifications', label: '알림', icon: '/images/bell_white.png' },
-] as const
+  { href: '/admin/survey/withdraw', label: '설문조사', icon: '/images/board_white.png' }
+]
 
 const HEADER_CARDS: Array<{
   title: string
@@ -76,6 +103,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     deletedToday: null,
   })
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [openMenu, setOpenMenu] = useState<string | null>(null)
+
+  useEffect(() => {
+    const parentWithChild = NAV_ITEMS.find((item) =>
+      item.children?.some((child) => pathname === child.href || pathname.startsWith(`${child.href}/`))
+    )
+    if (parentWithChild) {
+      setOpenMenu(parentWithChild.label)
+    }
+  }, [pathname])
 
   const updateHeaderValues = useCallback((nextValues: Partial<AdminLayoutHeaderValues>) => {
     setHeaderValues((prev) => ({
@@ -147,6 +184,64 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className={styles.sidebarBottom}>
             <nav className={styles.sidebarNav}>
               {NAV_ITEMS.map((item) => {
+                const hasChildren = item.children && item.children.length > 0
+                if (hasChildren) {
+                  const activeChildHref =
+                    item.children?.reduce<string | null>((match, child) => {
+                      const childHref = child.href
+                      const isChildMatch =
+                        pathname === childHref || pathname.startsWith(`${childHref}/`)
+                      if (!isChildMatch) {
+                        return match
+                      }
+                      if (!match || childHref.length > match.length) {
+                        return childHref
+                      }
+                      return match
+                    }, null) ?? null
+                  const isExpanded = openMenu === item.label
+                  const isActive = Boolean(activeChildHref)
+                  return (
+                    <div key={item.label} className={`${styles.navGroup} ${isActive ? styles.navGroupActive : ''}`}>
+                      <button
+                        type="button"
+                        className={`${styles.navItemButton} ${isActive ? styles.navItemActive : ''}`}
+                        onClick={() => setOpenMenu((prev) => (prev === item.label ? null : item.label))}
+                        aria-expanded={isExpanded}
+                      >
+                        <Image src={getCdnUrl(item.icon)} alt={item.label} width={35} height={35} />
+                        <span>{item.label}</span>
+                        <span
+                          className={`${styles.navItemArrow} ${isExpanded ? styles.navItemArrowOpen : ''}`}
+                          aria-hidden="true"
+                        >
+                          ▾
+                        </span>
+                      </button>
+                      <div className={`${styles.navSubmenu} ${isExpanded ? styles.navSubmenuOpen : ''}`}>
+                        {item.children!.map((child) => {
+                          const childActive = activeChildHref === child.href
+                          return (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              className={`${styles.navSubmenuItem} ${
+                                childActive ? styles.navSubmenuItemActive : ''
+                              }`}
+                            >
+                              {child.label}
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                }
+
+                if (!item.href) {
+                  return null
+                }
+
                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
                 return (
                   <Link

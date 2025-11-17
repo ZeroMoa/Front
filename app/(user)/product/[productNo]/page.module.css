@@ -200,6 +200,19 @@
     border-collapse: collapse;
 }
 
+.nutritionHeaderRow {
+    background: linear-gradient(135deg, #dfe9ff, #c8d6ff);
+    color: #2a3670;
+    font-size: 14px;
+}
+
+.nutritionHeaderRow th {
+    padding: 14px 22px;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(210, 220, 245, 0.9);
+}
+
 .nutritionRow {
     background: rgba(245, 248, 255, 0.75);
     color: #23325a;
@@ -220,21 +233,21 @@
     text-align: left;
     font-weight: 600;
     color: #1f2f5c;
-    width: 50%;
+    width: 34%;
 }
 
 .nutritionRow td:nth-child(2) {
-    text-align: center;
+    text-align: left;
     font-weight: 600;
     color: #1f2f5c;
-    width: 25%;
+    width: 33%;
 }
 
 .nutritionRow td:last-child {
-    text-align: right;
+    text-align: left;
     font-size: 12px;
     color: #7080a7;
-    width: 25%;
+    width: 33%;
 }
 
 .nutritionRow:last-child th,

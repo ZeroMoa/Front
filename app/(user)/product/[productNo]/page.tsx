@@ -347,6 +347,13 @@ export default function ProductDetail() {
                                 <h3 className={styles.sectionTitle}>{nutritionSectionTitle}</h3>
                                 <div className={styles.nutritionTableWrapper}>
                                     <table className={styles.nutritionTableGrid}>
+                                        <thead>
+                                            <tr className={styles.nutritionHeaderRow}>
+                                                <th>영양 성분</th>
+                                                <th>함량</th>
+                                                <th>1일 기준치 %</th>
+                                            </tr>
+                                        </thead>
                                         <tbody>
                                             {nutritionRows.map((row, index) => (
                                                 <tr

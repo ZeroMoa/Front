@@ -1,0 +1,203 @@
+import styles from '@/app/(user)/product/page.module.css'
+import {
+  CATEGORY_CONFIG,
+  DEFAULT_FILTER_STATE,
+  NUTRITION_CONFIG,
+  PRODUCT_FILTER_KEYS,
+  type ProductFilterKey,
+  getSubCategorySlug,
+  isCategorySlug,
+  isNutritionSlug,
+} from '@/app/(user)/product/config'
+import type { NutritionPageConfig, NutritionSlug } from '@/app/(user)/product/config'
+import { fetchCategoryProducts, fetchNutritionProducts, fetchProductSearch } from '@/app/(user)/store/api/product'
+import AdminProductPageClient from './components/AdminProductPageClient'
+
+type ProductSearchParams = {
+  type?: string | string[]
+  collection?: string | string[]
+  category?: string | string[]
+  sub?: string | string[]
+  page?: string | string[]
+  size?: string | string[]
+  sort?: string | string[]
+  keyword?: string | string[]
+  isZeroCalorie?: string | string[]
+  isZeroSugar?: string | string[]
+  isLowCalorie?: string | string[]
+  isLowSugar?: string | string[]
+  isNew?: string | string[]
+}
+
+const parseSingleValue = (value: string | string[] | undefined) => {
+  if (Array.isArray(value)) {
+    return value[0]
+  }
+  return value
+}
+
+const parseNumberParam = (value: string | undefined, fallback: number, min = 0) => {
+  const parsed = Number(value)
+  if (Number.isNaN(parsed) || parsed < min) {
+    return fallback
+  }
+  return parsed
+}
+
+const parseBooleanParam = (value: string | undefined) => {
+  if (value === undefined) {
+    return undefined
+  }
+  if (value === 'true') {
+    return true
+  }
+  if (value === 'false') {
+    return false
+  }
+  return undefined
+}
+
+const parseFilters = (searchParams: ProductSearchParams) => {
+  return PRODUCT_FILTER_KEYS.reduce<Record<ProductFilterKey, boolean>>((accumulator, key) => {
+    const raw = parseSingleValue(searchParams[key])
+    accumulator[key] = raw === 'true'
+    return accumulator
+  }, { ...DEFAULT_FILTER_STATE })
+}
+
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<ProductSearchParams>
+}) {
+  const params = await searchParams
+
+  const collectionParam = parseSingleValue(params.collection)
+  const activeCollection: NutritionSlug | 'all' =
+    collectionParam && collectionParam !== 'all' && isNutritionSlug(collectionParam)
+      ? collectionParam
+      : 'all'
+
+  const baseConfig: NutritionPageConfig =
+    activeCollection === 'all'
+      ? {
+          ...NUTRITION_CONFIG['zero-calorie'],
+          title: '제품 조회',
+          description: '전체 제품을 조회하고 삭제할 수 있습니다.',
+          defaultFilters: {},
+          lockedFilters: [],
+        }
+      : NUTRITION_CONFIG[activeCollection]
+
+  const page = parseNumberParam(parseSingleValue(params.page), 0, 0)
+  const size = parseNumberParam(parseSingleValue(params.size), baseConfig.pageSizeOptions[0] ?? 30, 1)
+  const sort = parseSingleValue(params.sort) ?? baseConfig.defaultSort
+  const keyword = parseSingleValue(params.keyword) ?? ''
+  const isNewParam = parseBooleanParam(parseSingleValue(params.isNew))
+
+  const categoryParam = parseSingleValue(params.category)
+  const categorySlug = categoryParam && isCategorySlug(categoryParam) ? categoryParam : undefined
+  const categoryConfig = categorySlug ? CATEGORY_CONFIG[categorySlug] : undefined
+  const subParam = parseSingleValue(params.sub)
+
+  const filtersFromQuery = parseFilters(params)
+  const filters: Record<ProductFilterKey, boolean> = {
+    ...DEFAULT_FILTER_STATE,
+    ...baseConfig.defaultFilters,
+    ...filtersFromQuery,
+  } as Record<ProductFilterKey, boolean>
+
+  baseConfig.lockedFilters.forEach((filterKey) => {
+    filters[filterKey] = true
+  })
+
+  const selectedSubCategory = categoryConfig
+    ? getSubCategorySlug(categoryConfig, subParam)
+    : baseConfig.subCategories?.[0] ?? { slug: 'all', label: '전체', categoryNo: 0 }
+
+  const activeFilters = Object.entries(filters).reduce<
+    NonNullable<Parameters<typeof fetchCategoryProducts>[0]['filters']>
+  >((accumulator, [filterKey, isActive]) => {
+    if (isActive) {
+      accumulator[filterKey as ProductFilterKey] = true
+    }
+    return accumulator
+  }, {})
+
+  const hasKeyword = Boolean(keyword)
+
+  const searchCategoryNo =
+    selectedSubCategory.categoryNo && selectedSubCategory.categoryNo > 0
+      ? selectedSubCategory.categoryNo
+      : undefined
+
+  const productResponse = hasKeyword
+    ? await fetchProductSearch(
+        {
+          query: keyword,
+          categoryNo: searchCategoryNo,
+          page,
+          size,
+          sort,
+          isNew: isNewParam,
+          filters,
+        },
+        { cache: 'no-store' }
+      )
+    : categoryConfig
+    ? await fetchCategoryProducts(
+        {
+          categoryNo: selectedSubCategory.categoryNo,
+          page,
+          size,
+          sort,
+          isNew: isNewParam,
+          filters: activeFilters,
+        },
+        { cache: 'no-store' }
+      )
+    : activeCollection === 'all'
+    ? await fetchProductSearch(
+        {
+          page,
+          size,
+          sort,
+          keyword: keyword || undefined,
+          isNew: isNewParam,
+          filters,
+        },
+        { cache: 'no-store' }
+      )
+    : await fetchNutritionProducts(
+        baseConfig.slug,
+        {
+          page,
+          size,
+          sort,
+          keyword: keyword || undefined,
+          isNew: isNewParam,
+        },
+        { cache: 'no-store' }
+      )
+
+  return (
+    <div className={styles.pageWrapper}>
+      <AdminProductPageClient
+        mode="nutrition"
+        categorySlug={categorySlug}
+        collectionSlug={activeCollection}
+        config={baseConfig}
+        data={productResponse}
+        selectedSubCategory={selectedSubCategory}
+        page={page}
+        size={size}
+        sort={sort}
+        filters={filters}
+        keyword={keyword}
+        isNew={Boolean(isNewParam)}
+        lockedFilters={baseConfig.lockedFilters}
+      />
+    </div>
+  )
+}
+

@@ -388,7 +388,15 @@ export default function AdminUsersPage() {
   return (
     <div className={styles.container}>
       <div className={styles.summarySection}>
-        <h1 className={styles.pageTitle}>회원관리</h1>
+        <div className={styles.titleRow}>
+          <h1 className={styles.pageTitle}>회원 조회</h1>
+          <span className={styles.resultInfo}>
+            총
+            {' '}
+            {(loading && totalElements === 0 ? '—' : totalElements.toLocaleString())}
+            명
+          </span>
+        </div>
       </div>
 
       <div className={styles.toolbar}>
@@ -406,12 +414,7 @@ export default function AdminUsersPage() {
             </button>
           </form>
 
-          <span className={styles.resultInfo}>
-            총
-            {' '}
-            {(loading && totalElements === 0 ? '—' : totalElements.toLocaleString())}
-            명 
-          </span>
+          
         </div>
 
         <div className={styles.controlsGroup}>

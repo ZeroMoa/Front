@@ -20,6 +20,7 @@ import type { ProductResponse } from '@/types/product';
 import ProductSidebar from './ProductSidebar';
 import ProductGrid from './ProductGrid';
 import ProductPagination from './ProductPagination';
+import type { Product } from '@/types/product';
 
 const HERO_FILTER_MAP: Record<NutritionSlug, ProductFilterKey> = {
     'zero-calorie': 'isZeroCalorie',
@@ -76,7 +77,7 @@ const NEW_HERO_ITEMS: Array<{ slug: 'all' | NutritionSlug; label: string; accent
 interface ProductPageClientProps {
     mode: PageMode;
     categorySlug?: CategorySlug;
-    collectionSlug?: NutritionSlug;
+    collectionSlug?: NutritionSlug | 'all';
     config: ProductPageConfig;
     data: ProductResponse;
     selectedSubCategory: SubCategoryConfig;
@@ -87,6 +88,9 @@ interface ProductPageClientProps {
     keyword: string;
     isNew?: boolean;
     lockedFilters?: ProductFilterKey[];
+    productCardVariant?: 'default' | 'admin';
+    onDeleteProduct?: (product: Product) => Promise<void>;
+    getProductHref?: (product: Product) => string;
 }
 
 const PAGE_PARAM_KEYS: Array<
@@ -132,6 +136,9 @@ export default function ProductPageClient({
     keyword,
     isNew,
     lockedFilters,
+    productCardVariant = 'default',
+    onDeleteProduct,
+    getProductHref,
 }: ProductPageClientProps) {
     const router = useRouter();
     const pathname = usePathname();
@@ -168,6 +175,7 @@ export default function ProductPageClient({
             if (currentFilters.isLowSugar) {
                 return 'low-sugar';
             }
+            return 'all';
         }
         if (mode === 'new') {
             if (currentFilters.isZeroCalorie) {
@@ -280,14 +288,18 @@ export default function ProductPageClient({
         commitUpdates({ category: nextCategory, sub: targetSub, page: 0 });
     };
 
-    const handleCollectionNavigate = (nextCollection: NutritionSlug) => {
+    const handleCollectionNavigate = (nextCollection: NutritionSlug | 'all') => {
         if (collectionSlug === nextCollection && (mode === 'nutrition' || mode === 'search')) {
             return;
         }
 
         const nextParams = new URLSearchParams(searchParams.toString());
 
+        if (nextCollection === 'all') {
+            nextParams.set('collection', 'all');
+        } else {
         nextParams.set('collection', nextCollection);
+        }
         nextParams.set('page', '0');
 
         nextParams.delete('type');
@@ -386,13 +398,20 @@ export default function ProductPageClient({
 
     const renderHeroInline = () => {
         if (mode === 'nutrition' || mode === 'search') {
+            const isAllActive = activeHeroSlug === 'all';
             return (
                 <div className={styles.heroInline}>
                     <button
                         type="button"
-                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${
-                            isNewActive ? styles.heroCardActive : ''
-                        }`}
+                        className={`${styles.heroInlineCard} ${styles.heroCardNeutral} ${isAllActive ? styles.heroCardActive : ''}`}
+                        onClick={() => handleCollectionNavigate('all')}
+                        aria-pressed={isAllActive}
+                    >
+                        <span className={styles.heroCardLabel}>전체</span>
+                    </button>
+                    <button
+                        type="button"
+                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${isNewActive ? styles.heroCardActive : ''}`}
                         onClick={handleNewToggle}
                         aria-pressed={isNewActive}
                     >
@@ -406,9 +425,7 @@ export default function ProductPageClient({
                             <button
                                 key={item.slug}
                                 type="button"
-                                className={`${styles.heroInlineCard} ${accentClass} ${
-                                    isActive ? styles.heroCardActive : ''
-                                }`}
+                                className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
                                 onClick={() => handleCollectionNavigate(item.slug)}
                                 aria-pressed={isActive}
                             >
@@ -523,11 +540,9 @@ export default function ProductPageClient({
                     return null;
                 })()}
 
-                {totalElements > 0 && (
-                    <>
                         <div className={styles.listSummary}>
                             <span>
-                                {summaryLabel} · {totalElements}개
+                        {summaryLabel} · {totalElements.toLocaleString()}개
                             </span>
                             {renderHeroInline()}
                         </div>
@@ -553,12 +568,13 @@ export default function ProductPageClient({
                                 </select>
                             </label>
                         </div>
-                    </>
-                )}
 
                 <ProductGrid
                     products={data.content}
                     emptyMessage={mode === 'search' ? '검색 결과가 없습니다.' : undefined}
+                    variant={productCardVariant}
+                    onDeleteProduct={onDeleteProduct}
+                    getProductHref={getProductHref}
                 />
 
                 <ProductPagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
