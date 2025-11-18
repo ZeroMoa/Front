@@ -5,6 +5,16 @@ import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { submitWithdrawSurvey, withdrawUser } from '../../../store/api/auth';
 
+const REASON_ORDER = [
+    '정보가 적음',
+    '정보가 정확하지 않음',
+    '사이트의 기능이 적음',
+    '방문 빈도가 낮음',
+] as const;
+
+const sortReasons = (reasons: string[]) =>
+    REASON_ORDER.filter((reason) => reasons.includes(reason as string));
+
 
 export default function WithdrawPage() {
     const router = useRouter();
@@ -15,11 +25,14 @@ export default function WithdrawPage() {
 
     const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value, checked } = e.target;
-        if (checked) {
-            setReasonCodes(prev => [...prev, value]);
-        } else {
-            setReasonCodes(prev => prev.filter(reason => reason !== value));
-        }
+        setReasonCodes((prev) => {
+            if (checked) {
+                const next = prev.includes(value) ? prev : [...prev, value];
+                return sortReasons(next);
+            }
+            const filtered = prev.filter((reason) => reason !== value);
+            return sortReasons(filtered);
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -112,18 +125,13 @@ export default function WithdrawPage() {
                         </div>
                         <div className={styles.checkboxContainer}>
                             <div className={styles.checkboxWrapper}>
-                                {[
-                                    '정보가 적음',
-                                    '정보가 정확하지 않음',
-                                    '사이트의 기능이 적음',
-                                    '방문 빈도가 낮음',
-                                ].map((reason, index) => (
-                                    <label key={index} className={styles.checkboxLabel}>
+                                {REASON_ORDER.map((reason) => (
+                                    <label key={reason} className={styles.checkboxLabel}>
                                         <input
                                             name="reasonCodes"
                                             type="checkbox"
                                             value={reason}
-                                            className={styles.checkboxInput} // 클래스 유지
+                                            className={styles.checkboxInput}
                                             onChange={handleCheckboxChange}
                                         />
                                         <span>{reason}</span>

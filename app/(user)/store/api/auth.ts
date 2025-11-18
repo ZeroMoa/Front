@@ -12,7 +12,7 @@ import {
     LoginRequest,
     LoginResponse
 } from '../../../types/auth';
-import { fetchWithAuth } from '../../../../lib/api/fetchWithAuth';
+import { fetchWithAuth } from '../../../../lib/common/api/fetchWithAuth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 

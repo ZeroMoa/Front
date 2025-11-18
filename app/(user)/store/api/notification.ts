@@ -1,4 +1,4 @@
-import { fetchWithAuth } from '../../../../lib/api/fetchWithAuth';
+import { fetchWithAuth } from '../../../../lib/common/api/fetchWithAuth';
 import { UserNotificationResponse } from '@/types/notification';
 
 const NOTIFICATION_BASE_PATH = '/notification/user';

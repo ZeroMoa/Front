@@ -5,7 +5,7 @@ import {
   commonCreateBoard,
   commonUpdateBoard,
   commonDeleteBoard,
-} from '@/lib/api/common/boardApi'
+} from '@/lib/common/api/boardApi'
 
 export async function fetchAdminBoards(
   params: URLSearchParams,

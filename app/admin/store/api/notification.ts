@@ -1,4 +1,4 @@
-import { fetchWithAuth } from '@/lib/api/fetchWithAuth'
+import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
 import { AdminNotificationResponse } from '@/types/notification'
 
 const ADMIN_NOTIFICATION_PATH = '/admin/notifications'

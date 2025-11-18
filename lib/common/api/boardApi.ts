@@ -1,5 +1,5 @@
 import { BoardListResponse, BoardResponse } from '@/types/board'
-import { fetchWithAuth } from '@/lib/api/fetchWithAuth'
+import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
 
 export const BOARD_PUBLIC_PATH = '/board'
 export const BOARD_SEARCH_PATH = '/board/search'

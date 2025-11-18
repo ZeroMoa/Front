@@ -6,7 +6,7 @@ import { getCdnUrl } from '@/lib/cdn'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import styles from './page.module.css'
 import { useAdminHeader } from '../layout'
-import { fetchWithAuth } from '@/lib/api/fetchWithAuth'
+import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
 import Pagination from '@/components/pagination/Pagination'
 
 type SortDirection = 'asc' | 'desc' | null

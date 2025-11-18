@@ -1,6 +1,6 @@
 'use client'
 
-import { fetchWithAuth } from '@/lib/api/fetchWithAuth'
+import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
 import { normalizeProduct, type Product } from '@/types/product'
 
 const ADMIN_PRODUCT_PATH = '/admin/products'

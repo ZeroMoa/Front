@@ -13,7 +13,7 @@ import {
 } from 'react'
 import styles from './page.module.css'
 import Pagination from '@/components/pagination/Pagination'
-import { fetchWithAuth } from '@/lib/api/fetchWithAuth'
+import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
 
 type ManageUser = {
   username: string

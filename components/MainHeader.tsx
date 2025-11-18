@@ -6,7 +6,7 @@ import styles from './MainHeader.module.css'
 import { useAppDispatch, useAppSelector } from '../app/(user)/store/slices/store';
 import { resetState } from '../app/(user)/store/slices/productSlice';
 import { openLoginModal, logout, setLoggedIn, setUser, selectIsLoggedIn } from '../app/(user)/store/slices/authSlice';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react'; // useState, useRef, useEffect 임포트
 import Cookies from 'js-cookie'; // Cookies 임포트
 import { useIsLoggedIn } from '../app/(user)/hooks/useAuth'; // React Query hook import
@@ -14,6 +14,7 @@ import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotificat
 import type { CategorySlug } from '../app/(user)/product/config';
 import { getCdnUrl } from '../lib/cdn';
 import type { UserNotificationResponse } from '@/types/notification'
+import { useQueryClient } from '@tanstack/react-query';
 
 const CATEGORY_NAV_ITEMS: Array<{
     slug: CategorySlug;
@@ -28,6 +29,8 @@ const CATEGORY_NAV_ITEMS: Array<{
 export default function Header() {
     const dispatch = useAppDispatch();
     const router = useRouter();
+    const pathname = usePathname();
+    const queryClient = useQueryClient();
     
     const { isLoggedIn: queryIsLoggedIn, userData, isLoading: authLoading } = useIsLoggedIn();
     const { data: notifications, isLoading: notificationsLoading, refetch: refetchNotifications } = useUserNotifications();
@@ -174,6 +177,7 @@ export default function Header() {
     };
 
     const handleLogoutClick = async () => {
+        const protectedPrefixes = ['/mypage/profile', '/notifications', '/favorites'];
         try {
             const xsrfToken = Cookies.get('XSRF-TOKEN');
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/logout`, {
@@ -209,7 +213,14 @@ export default function Header() {
             alert(`로그아웃 처리 중 오류 발생: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
         } finally {
             dispatch(logout()); // Redux 상태에서 로그아웃 처리
+            queryClient.removeQueries({ queryKey: ['user'], exact: true });
             setIsProfileTooltipOpen(false); // 툴팁 닫기
+            const requiresAuth = protectedPrefixes.some(
+                (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+            );
+            if (requiresAuth) {
+                router.replace('/');
+            }
         }
     };
 

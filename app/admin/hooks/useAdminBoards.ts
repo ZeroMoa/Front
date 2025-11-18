@@ -6,7 +6,7 @@ import {
   commonFetchBoardDetail,
   commonFetchBoards,
   commonUpdateBoard,
-} from '@/lib/api/common/boardApi'
+} from '@/lib/common/api/boardApi'
 import { BoardResponse } from '@/types/board'
 
 export const useAdminBoards = (params: URLSearchParams, options?: { search?: boolean }) => {

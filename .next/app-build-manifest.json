@@ -12,47 +12,17 @@
       "static/css/app/admin/layout.css",
       "static/chunks/app/admin/layout.js"
     ],
-    "/admin/users/manage/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/users/manage/page.css",
-      "static/chunks/app/admin/users/manage/page.js"
-    ],
     "/admin/users/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/admin/users/page.css",
       "static/chunks/app/admin/users/page.js"
     ],
-    "/admin/notifications/page": [
+    "/admin/users/manage/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/admin/notifications/page.css",
-      "static/chunks/app/admin/notifications/page.js"
-    ],
-    "/admin/products/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/products/page.css",
-      "static/chunks/app/admin/products/page.js"
-    ],
-    "/admin/boards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/boards/page.css",
-      "static/chunks/app/admin/boards/page.js"
-    ],
-    "/admin/survey/withdraw/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/survey/withdraw/page.css",
-      "static/chunks/app/admin/survey/withdraw/page.js"
-    ],
-    "/admin/products/register/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/products/register/page.css",
-      "static/chunks/app/admin/products/register/page.js"
+      "static/css/app/admin/users/manage/page.css",
+      "static/chunks/app/admin/users/manage/page.js"
     ]
   }
 }

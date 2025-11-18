@@ -5,7 +5,7 @@ import {
   commonCreateBoard,
   commonUpdateBoard,
   commonDeleteBoard,
-} from '@/lib/api/common/boardApi'
+} from '@/lib/common/api/boardApi'
 
 export const fetchBoards = async (params: URLSearchParams): Promise<BoardListResponse> => {
   return commonFetchBoards(params, { admin: false, search: false })

@@ -1,4 +1,4 @@
-import { fetchWithAuth } from '../../../../lib/api/fetchWithAuth';
+import { fetchWithAuth } from '../../../../lib/common/api/fetchWithAuth';
 import { ProductResponse, normalizeProduct } from '@/types/product';
 
 const API_BASE_URL =

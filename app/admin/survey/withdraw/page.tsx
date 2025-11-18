@@ -2,14 +2,35 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import AdminProductGrid from '@/app/admin/products/AdminProductGrid'
 import styles from './page.module.css'
-import { fetchWithAuth } from '@/lib/api/fetchWithAuth'
-import Pagination from '@/components/pagination/Pagination'
+import AdminSummaryCard from '@/components/AdminSummaryCard'
+import AdminPagination from '@/components/AdminPagination'
+import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+} from 'chart.js'
+import { Pie } from 'react-chartjs-2'
 
-type SortKey = 'id' | 'createdDate' | 'updatedDate'
-type SortDirection = 'asc' | 'desc'
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+)
 
-type WithdrawSurvey = {
+interface WithdrawSurvey {
   id: number
   userId: number
   username: string
@@ -19,50 +40,76 @@ type WithdrawSurvey = {
   updatedDate: string
 }
 
-type PageResponse<T> = {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
+interface Pageable {
+  sort: {
+    empty: boolean
+    sorted: boolean
+    unsorted: boolean
+  }
+  offset: number
+  pageNumber: number
+  pageSize: number
+  paged: boolean
+  unpaged: boolean
 }
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50]
-const COLUMN_HEADERS: Array<{ key: keyof WithdrawSurvey | 'reasons' | 'comment'; label: string; width?: string }> = [
-  { key: 'id', label: 'ID', width: '80px' },
-  { key: 'username', label: '회원명 / ID', width: '160px' },
-  { key: 'reasons', label: '이유 코드' },
-  { key: 'comment', label: '추가 의견', width: '260px' },
-  { key: 'createdDate', label: '작성일', width: '170px' }
+interface WithdrawSurveyResponse {
+  content: WithdrawSurvey[]
+  pageable: Pageable
+  last: boolean
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+  sort: {
+    empty: boolean
+    sorted: boolean
+    unsorted: boolean
+  }
+  first: boolean
+  numberOfElements: number
+  empty: boolean
+}
+
+interface FilterState {
+  reasonCodes: string[]
+  username: string
+  from: string
+  to: string
+}
+
+type SortKey = 'id' | 'username' | 'createdDate' | 'updatedDate' | null
+type SortOrder = 'asc' | 'desc' | null
+
+interface SortState {
+  key: SortKey
+  order: SortOrder
+}
+
+const PRIORITY_REASON_LABELS: Array<{ code: string; label: string }> = [
+  { code: 'NOT_ENOUGH_INFO', label: '정보가 적음' },
+  { code: 'INACCURATE_INFO', label: '정보가 정확하지 않음' },
+  { code: 'FEW_FEATURES', label: '사이트의 기능이 적음' },
+  { code: 'LOW_VISIT_FREQUENCY', label: '방문 빈도가 낮음' },
 ]
 
 const REASON_LABEL_MAP: Record<string, string> = {
+  ...PRIORITY_REASON_LABELS.reduce((acc, { code, label }) => ({ ...acc, [code]: label }), {}),
   TOO_COSTLY: '가격이 비쌈',
   POOR_TASTE: '맛이 별로임',
   NOT_EFFECTIVE: '효과가 적음',
-  NOT_ENOUGH_INFO: '정보가 적음',
-  FEW_FEATURES: '사이트 기능이 적음',
-  INACCURATE_INFO: '정보가 정확하지 않음',
-  LOW_VISIT_FREQUENCY: '방문 빈도가 낮음',
 }
 
-const REASON_OPTIONS = Object.entries(REASON_LABEL_MAP).map(([code, label]) => ({
-  code,
-  label,
-}))
+const REASON_LABEL_ORDER = [
+  ...PRIORITY_REASON_LABELS,
+  { code: 'TOO_COSTLY', label: '가격이 비쌈' },
+  { code: 'POOR_TASTE', label: '맛이 별로임' },
+  { code: 'NOT_EFFECTIVE', label: '효과가 적음' },
+]
 
-function formatDateTime(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
+function sortReasonCodes(codes: string[]): string[] {
+  const orderMap = new Map(REASON_LABEL_ORDER.map((item, index) => [item.code, index]))
+  return [...codes].sort((a, b) => (orderMap.get(a) ?? Infinity) - (orderMap.get(b) ?? Infinity))
 }
 
 function normalizeSurvey(raw: any): WithdrawSurvey {
@@ -71,401 +118,374 @@ function normalizeSurvey(raw: any): WithdrawSurvey {
     : typeof raw.reasonCodes === 'string'
     ? raw.reasonCodes.split(',').map((item: string) => item.trim())
     : []
+  const orderedReasonCodes = sortReasonCodes(reasonCodes) // Apply sorting here
 
   return {
-    id: Number(raw.id ?? raw.withdrawSurveyId ?? 0),
-    userId: Number(raw.userId ?? raw.user_id ?? 0),
-    username: raw.username ?? raw.userName ?? `user-${raw.userId ?? '—'}`,
-    reasonCodes,
-    reasonComment: raw.reasonComment ?? raw.reason_comment ?? null,
-    createdDate: raw.createdDate ?? raw.created_date ?? '',
-    updatedDate: raw.updatedDate ?? raw.updated_date ?? '',
+    id: raw.id,
+    userId: raw.userId,
+    username: raw.username,
+    reasonCodes: orderedReasonCodes, // Use ordered reason codes
+    reasonComment: raw.reasonComment,
+    createdDate: raw.createdDate,
+    updatedDate: raw.updatedDate,
   }
 }
 
-const PIE_COLORS = ['#5A7BFF', '#7F53FF', '#58D3FF', '#FF8F6B', '#FFCD6B', '#8DD38C', '#A081FF', '#FF6FAE']
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString)
+  const optionsDate: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }
+  const optionsTime: Intl.DateTimeFormatOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }
 
-type PieSegment = {
-  code: string
-  label: string
-  count: number
-  color: string
-  start: number
-  end: number
-  percent: number
+  const formattedDate = date.toLocaleDateString('ko-KR', optionsDate).replace(/\s/g, '') // Remove spaces
+  const formattedTime = date.toLocaleTimeString('ko-KR', optionsTime)
+
+  return (
+    <>
+      <span className={styles.dateLine}>{formattedDate.slice(0, -1)}</span>
+      <span className={styles.timeLine}>{formattedTime}</span>
+    </>
+  )
 }
 
-export default function WithdrawSurveyPage() {
-  const [viewMode, setViewMode] = useState<'table' | 'chart'>('table')
-  const [page, setPage] = useState(0)
-  const [size, setSize] = useState(PAGE_SIZE_OPTIONS[0])
-  const [sortField, setSortField] = useState<SortKey | null>(null)
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+export default function AdminWithdrawSurveyPage() {
+  const [data, setData] = useState<WithdrawSurveyResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [data, setData] = useState<PageResponse<WithdrawSurvey> | null>(null)
-  const [selectedReasons, setSelectedReasons] = useState<string[]>([])
-  const [usernameFilter, setUsernameFilter] = useState('')
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
+  const [currentPage, setCurrentPage] = useState(0)
+  const [viewMode, setViewMode] = useState<'table' | 'chart'>('table') // 'table' or 'chart'
+  const [sort, setSort] = useState<SortState>({ key: null, order: null })
+  const searchParams = useSearchParams()
+
+  const [filters, setFilters] = useState<FilterState>({
+    reasonCodes: [],
+    username: '',
+    from: '',
+    to: '',
+  })
 
   const fetchSurveys = useCallback(async () => {
     setLoading(true)
     setError(null)
-
-    const params = new URLSearchParams()
-    params.set('page', page.toString())
-    params.set('size', size.toString())
-    if (sortField) {
-      params.set('sort', `${sortField},${sortDirection}`)
-    }
-    if (selectedReasons.length > 0) {
-      params.set('reasonCodes', selectedReasons.join(','))
-    }
-    if (usernameFilter.trim()) {
-      params.set('username', usernameFilter.trim())
-    }
-    if (fromDate) {
-      params.set('from', `${fromDate}T00:00:00`)
-    }
-    if (toDate) {
-      params.set('to', `${toDate}T23:59:59`)
-    }
-
     try {
-      const response = await fetchWithAuth(`/survey/withdraw?${params.toString()}`)
-      const json = await response.json()
-      const pageResponse: PageResponse<WithdrawSurvey> = {
-        content: Array.isArray(json.content) ? json.content.map(normalizeSurvey) : [],
-        totalElements: typeof json.totalElements === 'number' ? json.totalElements : 0,
-        totalPages: typeof json.totalPages === 'number' ? json.totalPages : 0,
-        number: typeof json.number === 'number' ? json.number : page,
-        size: typeof json.size === 'number' ? json.size : size,
+      const params = new URLSearchParams()
+      params.append('page', currentPage.toString())
+      params.append('size', '20')
+
+      if (sort.key && sort.order) {
+        params.append('sort', `${sort.key},${sort.order}`)
       }
-      setData(pageResponse)
-    } catch (requestError) {
-      console.error('Failed to fetch withdraw surveys', requestError)
-      setError(requestError instanceof Error ? requestError.message : '데이터를 불러오지 못했습니다.')
+
+      if (filters.reasonCodes.length > 0) {
+        filters.reasonCodes.forEach((code) => params.append('reasonCodes', code))
+      }
+      if (filters.username) {
+        params.append('username', filters.username)
+      }
+      if (filters.from) {
+        params.append('from', filters.from)
+      }
+      if (filters.to) {
+        params.append('to', filters.to)
+      }
+
+      const response = await fetchWithAuth(`/admin/survey/withdraw?${params.toString()}`, {
+        method: 'GET',
+      })
+      const result = await response.json()
+      setData({
+        ...result,
+        content: result.content.map(normalizeSurvey),
+      })
+    } catch (err) {
+      console.error('Failed to fetch withdraw surveys:', err)
+      setError('설문조사 데이터를 불러오지 못했습니다.')
     } finally {
       setLoading(false)
     }
-  }, [fromDate, page, selectedReasons, size, sortDirection, sortField, toDate, usernameFilter])
+  }, [currentPage, sort, filters])
 
   useEffect(() => {
     fetchSurveys()
   }, [fetchSurveys])
 
-  const handlePageChange = (nextPage: number) => {
-    setPage(nextPage)
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
-  const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSize(Number(event.target.value))
-    setPage(0)
-  }
+  const handleSortChange = (key: SortKey) => {
+    if (!key) return // Should not happen with current setup
 
-  const handleSortChange = (field: SortKey) => {
-    if (sortField === field) {
-      if (sortDirection === 'asc') {
-        setSortDirection('desc')
-      } else {
-        setSortField(null)
-        setSortDirection('asc')
+    setSort((prev) => {
+      if (prev.key === key) {
+        if (prev.order === 'asc') return { key, order: 'desc' }
+        if (prev.order === 'desc') return { key: null, order: null } // Reset
+        return { key, order: 'asc' } // Default to asc if no sort
       }
-    } else {
-      setSortField(field)
-      setSortDirection(field === 'id' ? 'desc' : 'asc')
-    }
-    setPage(0)
+      return { key, order: 'asc' }
+    })
   }
 
-  const totalElements = data?.totalElements ?? 0
-  const totalPages = data?.totalPages ?? 0
-  const surveys = data?.content ?? []
+  const getSortIndicator = (key: SortKey) => {
+    if (sort.key === key) {
+      if (sort.order === 'asc') return ' ▲'
+      if (sort.order === 'desc') return ' ▼'
+    }
+    return ' ↕'
+  }
 
-  const reasonCounts = useMemo(() => {
-    const counter = new Map<string, number>()
-    surveys.forEach((survey) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFilters((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleReasonCodeFilterChange = (code: string) => {
+    setFilters((prev) => {
+      const currentReasons = prev.reasonCodes
+      if (currentReasons.includes(code)) {
+        return { ...prev, reasonCodes: currentReasons.filter((r) => r !== code) }
+      } else {
+        return { ...prev, reasonCodes: sortReasonCodes([...currentReasons, code]) }
+      }
+    })
+  }
+
+  const handleFilterReset = () => {
+    setFilters({
+      reasonCodes: [],
+      username: '',
+      from: '',
+      to: '',
+    })
+    setSort({ key: null, order: null })
+    setCurrentPage(0) // Reset to first page on filter reset
+  }
+
+  const reasonCodeDistribution = useMemo(() => {
+    const counts: Record<string, number> = {}
+    data?.content.forEach((survey) => {
       survey.reasonCodes.forEach((code) => {
-        const normalized = code.trim()
-        if (!normalized) return
-        counter.set(normalized, (counter.get(normalized) ?? 0) + 1)
+        counts[code] = (counts[code] || 0) + 1
       })
     })
-    return Array.from(counter.entries())
-      .map(([code, count]) => ({
-        code,
-        label: REASON_LABEL_MAP[code] ?? code,
-        count,
-      }))
-      .sort((a, b) => b.count - a.count)
-  }, [surveys])
 
-  const pieSegments = useMemo<PieSegment[]>(() => {
-    const total = reasonCounts.reduce((sum, item) => sum + item.count, 0)
-    if (total === 0) {
-      return []
+    const labels = REASON_LABEL_ORDER.filter(item => counts[item.code]).map(item => item.label);
+    const backgroundColors = labels.map((_, index) =>
+      `hsl(${index * (360 / labels.length)}, 70%, 50%)`
+    );
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: '탈퇴 이유',
+          data: labels.map(label => counts[REASON_LABEL_ORDER.find(item => item.label === label)?.code || ''] || 0),
+          backgroundColor: backgroundColors,
+          borderColor: backgroundColors.map(color => color.replace('70%', '50%')),
+          borderWidth: 1,
+        },
+      ],
     }
+  }, [data])
 
-    let cumulative = 0
-    return reasonCounts.map((item, index) => {
-      const percent = total > 0 ? (item.count / total) * 100 : 0
-      const start = cumulative
-      cumulative += percent
-      return {
-        ...item,
-        color: PIE_COLORS[index % PIE_COLORS.length],
-        start,
-        end: cumulative,
-        percent,
-      }
-    })
-  }, [reasonCounts])
-
-  const pieGradient = useMemo(() => {
-    if (pieSegments.length === 0) {
-      return ''
-    }
-    return pieSegments.map((segment) => `${segment.color} ${segment.start}% ${segment.end}%`).join(', ')
-  }, [pieSegments])
-
-  const handleViewToggleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setViewMode(event.target.checked ? 'chart' : 'table')
+  if (loading) {
+    return <div className={styles.loading}>데이터를 불러오는 중...</div>
   }
 
-  const handleReasonToggle = (code: string) => {
-    setSelectedReasons((prev) => {
-      if (prev.includes(code)) {
-        return prev.filter((item) => item !== code)
-      }
-      return [...prev, code]
-    })
-    setPage(0)
+  if (error) {
+    return <div className={styles.error}>오류: {error}</div>
   }
-
-  const handleResetFilters = () => {
-    setSelectedReasons([])
-    setUsernameFilter('')
-    setFromDate('')
-    setToDate('')
-    setSortField(null)
-    setSortDirection('asc')
-    setPage(0)
-  }
-
-  const hasSort = sortField !== null
-  const isFiltered =
-    selectedReasons.length > 0 || usernameFilter.trim() || fromDate || toDate || hasSort
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.headerSection}>
-        <div className={styles.titleGroup}>
-          <h1 className={styles.pageTitle}>탈퇴 설문 조사를 확인하세요</h1>
-          <span className={styles.totalCount}>총 {totalElements.toLocaleString()}건</span>
-        </div>
+    <div className={styles.pageContainer}>
+      <h1 className={styles.pageTitle}>설문조사 확인</h1>
+
+      <div className={styles.summaryCards}>
+        <AdminSummaryCard title="총 설문 수" value={data?.totalElements ?? 0} />
+        {/* Add more summary cards if needed */}
       </div>
 
       <div className={styles.controlsRow}>
-        <div className={styles.pageSizeControl}>
-          페이지 크기
-          <select className={styles.pageSizeSelect} value={size} onChange={handlePageSizeChange}>
-            {PAGE_SIZE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}개씩 보기
-              </option>
-            ))}
-          </select>
-        </div>
-        <label className={styles.toggleSwitch}>
-          <input
-            type="checkbox"
-            checked={viewMode === 'chart'}
-            onChange={handleViewToggleChange}
-            aria-label={viewMode === 'chart' ? '표 보기로 전환' : '그래프 보기로 전환'}
-          />
-          <span
-            className={styles.toggleTrack}
-            data-on-label="그래프"
-            data-off-label="표"
-            aria-hidden="true"
-          >
-            <span className={styles.toggleHandle} />
-          </span>
-        </label>
-      </div>
-
-      <div className={styles.filterPanel}>
-        <div className={styles.filterGroup}>
-          <span className={styles.filterLabel}>이유 코드</span>
-          <div className={styles.reasonChips}>
-            {REASON_OPTIONS.map(({ code, label }) => {
-              const active = selectedReasons.includes(code)
-              return (
-                <button
-                  key={code}
-                  type="button"
-                  className={`${styles.reasonChip} ${active ? styles.reasonChipActive : ''}`}
-                  onClick={() => handleReasonToggle(code)}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-        <div className={styles.filterRow}>
-          <label className={styles.filterField}>
-            <span>사용자명</span>
+        <div className={styles.filterSection}>
+          <div className={styles.filterGroup}>
+            <label htmlFor="usernameFilter" className={styles.filterLabel}>
+              사용자명
+            </label>
             <input
               type="text"
-              value={usernameFilter}
-              onChange={(event) => {
-                setUsernameFilter(event.target.value)
-                setPage(0)
-              }}
-              placeholder="사용자명 또는 ID"
+              id="usernameFilter"
+              name="username"
+              value={filters.username}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
             />
-          </label>
-          <label className={styles.filterField}>
-            <span>시작일</span>
+          </div>
+          <div className={styles.filterGroup}>
+            <label htmlFor="fromFilter" className={styles.filterLabel}>
+              기간 (시작)
+            </label>
             <input
-              type="date"
-              value={fromDate}
-              onChange={(event) => {
-                setFromDate(event.target.value)
-                setPage(0)
-              }}
-              max={toDate || undefined}
+              type="datetime-local"
+              id="fromFilter"
+              name="from"
+              value={filters.from}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
             />
-          </label>
-          <label className={styles.filterField}>
-            <span>종료일</span>
+          </div>
+          <div className={styles.filterGroup}>
+            <label htmlFor="toFilter" className={styles.filterLabel}>
+              기간 (끝)
+            </label>
             <input
-              type="date"
-              value={toDate}
-              onChange={(event) => {
-                setToDate(event.target.value)
-                setPage(0)
-              }}
-              min={fromDate || undefined}
+              type="datetime-local"
+              id="toFilter"
+              name="to"
+              value={filters.to}
+              onChange={handleFilterChange}
+              className={styles.filterInput}
             />
+          </div>
+        </div>
+
+        <div className={styles.toggleButtonGroup}>
+          <label className={styles.switch}>
+            <input
+              type="checkbox"
+              checked={viewMode === 'chart'}
+              onChange={() => setViewMode(viewMode === 'table' ? 'chart' : 'table')}
+            />
+            <span className={styles.slider}>
+              <span
+                className={`${styles.toggleText} ${viewMode === 'table' ? styles.activeText : ''}`}
+                data-on-label="그래프 보기"
+                data-off-label="표 보기"
+              ></span>
+            </span>
           </label>
-          <button
-            type="button"
-            className={styles.resetButton}
-            onClick={handleResetFilters}
-            disabled={!isFiltered}
-          >
-            필터 초기화
-          </button>
         </div>
       </div>
 
-      {loading && <div className={styles.loadingState}>설문 데이터를 불러오는 중입니다…</div>}
-      {error && !loading && <div className={styles.errorState}>{error}</div>}
+      <div className={styles.reasonCodeFilters}>
+        {REASON_LABEL_ORDER.map((reason) => (
+          <div
+            key={reason.code}
+            className={`${styles.reasonChip} ${
+              filters.reasonCodes.includes(reason.code) ? styles.reasonChipActive : ''
+            }`}
+            onClick={() => handleReasonCodeFilterChange(reason.code)}
+          >
+            {reason.label}
+          </div>
+        ))}
+        <button onClick={handleFilterReset} className={styles.resetButton}>
+          필터 초기화
+        </button>
+      </div>
 
-      {!loading && !error && surveys.length === 0 && (
-        <div className={styles.emptyState}>설문 결과가 없습니다.</div>
-      )}
-
-      {!loading && !error && surveys.length > 0 && viewMode === 'table' && (
-        <div className={styles.tableContainer}>
+      {viewMode === 'table' ? (
+        <div className={styles.tableWrapper}>
           <table className={styles.table}>
-            <thead className={styles.tableHead}>
+            <thead>
               <tr>
-                {COLUMN_HEADERS.map(({ key, label, width }) => {
-                  const sortable = key === 'id' || key === 'createdDate' || key === 'updatedDate'
-                  return (
-                    <th key={key} style={width ? { width } : undefined}>
-                      {sortable ? (
-                        <button
-                          type="button"
-                          className={styles.headerButton}
-                          onClick={() => handleSortChange(key as SortKey)}
-                        >
-                          <span>{label}</span>
-                          <span className={styles.sortSymbol}>
-                            {sortField === key ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                          </span>
-                        </button>
-                      ) : (
-                        label
-                      )}
-                    </th>
-                  )
-                })}
+                <th>
+                  <button onClick={() => handleSortChange('id')}>
+                    ID {getSortIndicator('id')}
+                  </button>
+                </th>
+                <th>사용자명</th>
+                <th>
+                  <button onClick={() => handleSortChange('reasonCodes')}>
+                    탈퇴 이유 {getSortIndicator('reasonCodes')}
+                  </button>
+                </th>
+                <th>상세 의견</th>
+                <th>
+                  <button onClick={() => handleSortChange('createdDate')}>
+                    생성일 {getSortIndicator('createdDate')}
+                  </button>
+                </th>
+                <th>
+                  <button onClick={() => handleSortChange('updatedDate')}>
+                    수정일 {getSortIndicator('updatedDate')}
+                  </button>
+                </th>
               </tr>
             </thead>
-            <tbody className={styles.tableBody}>
-              {surveys.map((survey) => (
-                <tr key={survey.id} className={styles.tableRow}>
-                  <td className={styles.tableCell}>{survey.id}</td>
-                  <td className={styles.tableCell}>
-                    <div>
-                      <strong>{survey.username || '—'}</strong>
-                    </div>
-                    <div className={styles.helperText}>ID: {survey.userId || '—'}</div>
+            <tbody>
+              {data?.content.map((survey) => (
+                <tr key={survey.id}>
+                  <td>{survey.id}</td>
+                  <td>{survey.username}</td>
+                  <td>
+                    {survey.reasonCodes
+                      .map((code) => REASON_LABEL_MAP[code] || code)
+                      .join(', ')}
                   </td>
-                  <td className={styles.tableCell}>
-                    <div className={styles.reasonList}>
-                      {survey.reasonCodes.length > 0
-                        ? survey.reasonCodes.map((code) => (
-                            <span key={`${survey.id}-${code}`} className={styles.reasonBadge}>
-                              {REASON_LABEL_MAP[code] ?? code}
-                            </span>
-                          ))
-                        : '—'}
-                    </div>
-                  </td>
-                  <td className={`${styles.tableCell} ${styles.commentCell}`}>{survey.reasonComment || '—'}</td>
-                  <td className={styles.tableCell}>
-                    <div className={styles.dateCell}>
-                      <span>{formatDateTime(survey.createdDate)}</span>
-                    </div>
-                  </td>
+                  <td>{survey.reasonComment || '-'}</td>
+                  <td>{formatDateTime(survey.createdDate)}</td>
+                  <td>{formatDateTime(survey.updatedDate)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      )}
-
-      {!loading && !error && surveys.length > 0 && viewMode === 'chart' && (
+      ) : (
         <div className={styles.chartContainer}>
-          <div className={styles.chartHeader}>이유 코드 분포 (현재 페이지)</div>
-          {pieSegments.length === 0 ? (
-            <div className={styles.emptyState}>그래프로 표시할 설문 이유가 없습니다.</div>
-          ) : (
-            <div className={styles.chartContent}>
-              <div
-                className={styles.chartPie}
-                style={pieGradient ? { backgroundImage: `conic-gradient(${pieGradient})` } : undefined}
-                aria-hidden="true"
-              >
-                {!pieGradient && <span className={styles.chartPieEmpty}>데이터 없음</span>}
-              </div>
-              <ul className={styles.chartLegend}>
-                {pieSegments.map((segment) => (
-                  <li key={segment.code} className={styles.legendItem}>
-                    <span className={styles.legendColor} style={{ backgroundColor: segment.color }} />
-                    <span className={styles.legendLabel}>{segment.label}</span>
-                    <span className={styles.legendCount}>{segment.count.toLocaleString()}건</span>
-                    <span className={styles.legendPercent}>{segment.percent.toFixed(1)}%</span>
-                  </li>
-                ))}
-              </ul>
+          {reasonCodeDistribution.labels.length > 0 ? (
+            <div className={styles.pieChartWrapper}>
+              <Pie
+                data={reasonCodeDistribution}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'right',
+                      labels: {
+                        color: 'black',
+                      },
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: function (context) {
+                          let label = context.label || ''
+                          if (label) {
+                            label += ': '
+                          }
+                          if (context.parsed !== null) {
+                            label += context.parsed
+                          }
+                          return label
+                        },
+                      },
+                    },
+                  },
+                }}
+              />
             </div>
+          ) : (
+            <p className={styles.noDataMessage}>
+              필터 조건에 맞는 설문 데이터가 없어 그래프를 표시할 수 없습니다.
+            </p>
           )}
         </div>
       )}
 
-      {!loading && !error && totalPages > 1 && (
-        <div className={styles.paginationWrapper}>
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
-        </div>
+      {data && data.totalPages > 1 && (
+        <AdminPagination
+          currentPage={data.number}
+          totalPages={data.totalPages}
+          onPageChange={handlePageChange}
+        />
       )}
     </div>
   )
 }
-

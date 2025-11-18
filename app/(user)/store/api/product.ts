@@ -203,7 +203,7 @@ export async function fetchNutritionProducts(
 
     if (response.status === 401) {
         try {
-            const { fetchWithAuth } = await import('../../../../lib/api/fetchWithAuth');
+            const { fetchWithAuth } = await import('../../../../lib/common/api/fetchWithAuth');
             response = await fetchWithAuth(`/product/search?${query.toString()}`, {
                 method: init?.method ?? 'GET',
                 cache: init?.cache ?? 'no-store',
@@ -338,7 +338,7 @@ export async function fetchProductSearch(
     };
 
     const performClientRequest = async () => {
-        const { fetchWithAuth } = await import('../../../../lib/api/fetchWithAuth');
+        const { fetchWithAuth } = await import('../../../../lib/common/api/fetchWithAuth');
         return fetchWithAuth(`/product/search?${query.toString()}`, {
             method: init?.method ?? 'GET',
             cache: init?.cache ?? 'no-store',
