@@ -12,7 +12,7 @@ import {
     isNutritionSlug,
 } from './config';
 import type { CategorySlug, NutritionSlug } from './config';
-import { fetchCategoryProducts, fetchNutritionProducts, fetchProductSearch } from '../store/api/product';
+import { fetchCategoryProducts, fetchNutritionProducts, fetchProductSearch } from '../store/api/userProductApi';
 import ProductPageClient from './components/ProductPageClient';
 
 interface ProductSearchParams {

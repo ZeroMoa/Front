@@ -4,9 +4,9 @@ import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import styles from './page.module.css';
 import { useBoardDetail } from '../../hooks/useBoard';
-import { BOARD_TYPE_LABELS } from '@/constants/board';
+import { BOARD_TYPE_LABELS } from '@/constants/boardConstants';
 import Link from 'next/link';
-import { BoardType } from '@/types/board';
+import { BoardType } from '@/types/boardTypes';
 
 const tabClassMap: Record<BoardType, string> = {
     NOTICE: styles.tabNOTICE,

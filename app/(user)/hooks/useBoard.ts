@@ -7,7 +7,7 @@ import {
   updateBoard,
   deleteBoard,
   searchBoards,
-} from '../store/api/board'
+} from '../store/api/userBoardApi'
 
 export const useBoards = (params: URLSearchParams, options?: { search?: boolean }) => {
   const queryKey = useMemo(

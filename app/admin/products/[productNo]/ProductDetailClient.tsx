@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation'
 import baseStyles from '@/app/(user)/product/[productNo]/page.module.css'
 import styles from './adminDetail.module.css'
 import { getCdnUrl } from '@/lib/cdn'
-import type { Product } from '@/types/product'
-import { updateAdminProduct, type AdminProductUpdatePayload } from '@/app/admin/store/api/product'
+import type { Product } from '@/types/productTypes'
+import { updateAdminProduct, type AdminProductUpdatePayload } from '@/app/admin/store/api/adminProductApi'
 
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png')
 

@@ -1,4 +1,4 @@
-import { BoardListResponse, BoardResponse } from '@/types/board'
+import { BoardListResponse, BoardResponse } from '@/types/boardTypes'
 import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
 
 export const BOARD_PUBLIC_PATH = '/board'

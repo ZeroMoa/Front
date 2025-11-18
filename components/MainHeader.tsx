@@ -13,7 +13,7 @@ import { useIsLoggedIn } from '../app/(user)/hooks/useAuth'; // React Query hook
 import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotification, useMarkAllNotificationsAsRead } from '../app/(user)/hooks/useNotification'; // 알림 훅 import
 import type { CategorySlug } from '../app/(user)/product/config';
 import { getCdnUrl } from '../lib/cdn';
-import type { UserNotificationResponse } from '@/types/notification'
+import type { UserNotificationResponse } from '@/types/notificationTypes'
 import { useQueryClient } from '@tanstack/react-query';
 
 const CATEGORY_NAV_ITEMS: Array<{

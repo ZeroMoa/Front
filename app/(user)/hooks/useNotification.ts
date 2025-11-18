@@ -6,8 +6,8 @@ import {
     deleteUserNotification,
     markAllUserNotificationsAsRead,
     // getUnreadNotificationCount, // 제거
-} from '../store/api/notification';
-import { UserNotificationResponse } from '@/types/notification';
+} from '../store/api/userNotificationApi';
+import { UserNotificationResponse } from '@/types/notificationTypes';
 
 const queryOptions = {
     staleTime: 60 * 1000, // 1분 동안 캐시 유효

@@ -5,8 +5,8 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import Image from 'next/image';
 import { useBoards } from '../hooks/useBoard';
-import { BOARD_TYPE_LABELS, BOARD_TYPE_OPTIONS, BOARD_SEARCH_TYPE_OPTIONS } from '@/constants/board';
-import { BoardResponse, BoardSearchType, BoardType } from '@/types/board';
+import { BOARD_TYPE_LABELS, BOARD_TYPE_OPTIONS, BOARD_SEARCH_TYPE_OPTIONS } from '@/constants/boardConstants';
+import { BoardResponse, BoardSearchType, BoardType } from '@/types/boardTypes';
 import { getCdnUrl } from '@/lib/cdn';
 import Pagination from '@/components/pagination/Pagination';
 

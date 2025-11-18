@@ -8,10 +8,10 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import { useDropzone } from 'react-dropzone';
-import { useCreateAdminBoard } from '@/app/admin/hooks/useAdminBoards';
-import { useCreateAdminNotification } from '@/app/admin/hooks/useAdminNotifications';
-import { BoardType } from '@/types/board';
-import { BOARD_TYPE_LABELS, BOARD_TYPE_OPTIONS } from '@/constants/board';
+import { useCreateAdminBoard } from '@/app/admin/hooks/boardHooks';
+import { useCreateAdminNotification } from '@/app/admin/hooks/notificationHooks';
+import { BoardType } from '@/types/boardTypes';
+import { BOARD_TYPE_LABELS, BOARD_TYPE_OPTIONS } from '@/constants/boardConstants';
 
 interface UploadedImage {
     id: string;

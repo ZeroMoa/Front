@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import ProductGrid from '../product/components/ProductGrid';
 import ProductPagination from '../product/components/ProductPagination';
-import { fetchFavoriteProducts } from '../store/api/favorite';
-import { ProductResponse } from '@/types/product';
+import { fetchFavoriteProducts } from '../store/api/userFavoriteApi';
+import { ProductResponse } from '@/types/productTypes';
 import { useIsLoggedIn } from '../hooks/useAuth';
 
 const DEFAULT_PAGE_SIZE = 20;

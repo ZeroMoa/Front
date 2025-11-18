@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { getUserData } from '../store/api/auth'
-import { UserResponseDTO } from '@/types/auth'
+import { getUserData } from '../store/api/userAuthApi'
+import { UserResponseDTO } from '@/types/authTypes'
 
 // 사용자 정보 조회 React Query hook
 export const useUserData = () => {

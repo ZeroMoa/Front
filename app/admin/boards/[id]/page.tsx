@@ -3,10 +3,10 @@
 import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import styles from './page.module.css';
-import { useAdminBoardDetail } from '@/app/admin/hooks/useAdminBoards';
-import { BOARD_TYPE_LABELS } from '@/constants/board';
+import { useAdminBoardDetail } from '@/app/admin/hooks/boardHooks';
+import { BOARD_TYPE_LABELS } from '@/constants/boardConstants';
 import Link from 'next/link';
-import { BoardType } from '@/types/board';
+import { BoardType } from '@/types/boardTypes';
 
 const tabClassMap: Record<BoardType, string> = {
     NOTICE: styles.tabNOTICE,

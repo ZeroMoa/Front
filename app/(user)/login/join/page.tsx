@@ -8,7 +8,7 @@ import { useAppDispatch } from '../../store/slices/store';
 import { openLoginModal } from '../../store/slices/authSlice';
 import styles from './page.module.css';
 import { UserRequestDTO } from '../../../types/auth';
-import { checkExistence, joinUser } from '../../store/api/auth';
+import { checkExistence, joinUser } from '../../store/api/userAuthApi';
 
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);

@@ -3,67 +3,23 @@ import {
   CATEGORY_CONFIG,
   DEFAULT_FILTER_STATE,
   NUTRITION_CONFIG,
-  PRODUCT_FILTER_KEYS,
-  type ProductFilterKey,
   getSubCategorySlug,
   isCategorySlug,
   isNutritionSlug,
-} from '@/app/(user)/product/config'
-import type { NutritionPageConfig, NutritionSlug } from '@/app/(user)/product/config'
-import { fetchCategoryProducts, fetchNutritionProducts, fetchProductSearch } from '@/app/(user)/store/api/product'
+  type ProductFilterKey,
+  type NutritionPageConfig,
+  type NutritionSlug,
+} from '@/constants/adminProductConstants'
+import { fetchCategoryProducts, fetchNutritionProducts, fetchProductSearch } from '@/app/(user)/store/api/userProductApi'
 import AdminProductPageClient from './components/AdminProductPageClient'
-
-type ProductSearchParams = {
-  type?: string | string[]
-  collection?: string | string[]
-  category?: string | string[]
-  sub?: string | string[]
-  page?: string | string[]
-  size?: string | string[]
-  sort?: string | string[]
-  keyword?: string | string[]
-  isZeroCalorie?: string | string[]
-  isZeroSugar?: string | string[]
-  isLowCalorie?: string | string[]
-  isLowSugar?: string | string[]
-  isNew?: string | string[]
-}
-
-const parseSingleValue = (value: string | string[] | undefined) => {
-  if (Array.isArray(value)) {
-    return value[0]
-  }
-  return value
-}
-
-const parseNumberParam = (value: string | undefined, fallback: number, min = 0) => {
-  const parsed = Number(value)
-  if (Number.isNaN(parsed) || parsed < min) {
-    return fallback
-  }
-  return parsed
-}
-
-const parseBooleanParam = (value: string | undefined) => {
-  if (value === undefined) {
-    return undefined
-  }
-  if (value === 'true') {
-    return true
-  }
-  if (value === 'false') {
-    return false
-  }
-  return undefined
-}
-
-const parseFilters = (searchParams: ProductSearchParams) => {
-  return PRODUCT_FILTER_KEYS.reduce<Record<ProductFilterKey, boolean>>((accumulator, key) => {
-    const raw = parseSingleValue(searchParams[key])
-    accumulator[key] = raw === 'true'
-    return accumulator
-  }, { ...DEFAULT_FILTER_STATE })
-}
+import {
+  ProductSearchParams,
+  getActiveFilters,
+  parseBooleanParam,
+  parseFilters,
+  parseNumberParam,
+  parseSingleValue,
+} from '@/lib/utils/productUtils'
 
 export default async function AdminProductsPage({
   searchParams,
@@ -115,14 +71,7 @@ export default async function AdminProductsPage({
     ? getSubCategorySlug(categoryConfig, subParam)
     : baseConfig.subCategories?.[0] ?? { slug: 'all', label: '전체', categoryNo: 0 }
 
-  const activeFilters = Object.entries(filters).reduce<
-    NonNullable<Parameters<typeof fetchCategoryProducts>[0]['filters']>
-  >((accumulator, [filterKey, isActive]) => {
-    if (isActive) {
-      accumulator[filterKey as ProductFilterKey] = true
-    }
-    return accumulator
-  }, {})
+  const activeFilters = getActiveFilters(filters)
 
   const hasKeyword = Boolean(keyword)
 

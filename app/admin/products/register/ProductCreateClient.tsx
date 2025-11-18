@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import styles from './page.module.css'
-import { createAdminProduct } from '@/app/admin/store/api/product'
+import { createAdminProduct } from '@/app/admin/store/api/adminProductApi'
 
 export interface CategoryGroup {
   parent: { id: number; name: string }

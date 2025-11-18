@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useTransition, type ComponentProps } from 'react'
 import ProductPageClient from '@/app/(user)/product/components/ProductPageClient'
-import { deleteAdminProduct } from '@/app/admin/store/api/product'
-import type { Product } from '@/types/product'
+import { deleteAdminProduct } from '@/app/admin/store/api/adminProductApi'
+import type { Product } from '@/types/productTypes'
 
 type AdminProductPageClientProps = ComponentProps<typeof ProductPageClient>
 

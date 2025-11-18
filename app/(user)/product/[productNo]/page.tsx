@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import styles from './page.module.css';
-import { Product, normalizeProduct } from '../../../../types/product';
+import { Product, normalizeProduct } from '../../../../types/productTypes';
 import { getCdnUrl } from '@/lib/cdn';
 import FavoriteToggleButton from '../components/FavoriteToggleButton';
 import ProductGrid from '../components/ProductGrid';

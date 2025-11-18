@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../page.module.css';
-import { Product } from '@/types/product';
+import { Product } from '@/types/productTypes';
 import Image from 'next/image';
 import { getCdnUrl } from '@/lib/cdn';
 import FavoriteToggleButton from './FavoriteToggleButton';

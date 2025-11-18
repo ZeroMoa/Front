@@ -16,11 +16,11 @@ import {
     CATEGORY_LABELS,
     PRODUCT_FILTER_KEYS,
 } from '../config';
-import type { ProductResponse } from '@/types/product';
+import type { ProductResponse } from '@/types/productTypes';
 import ProductSidebar from './ProductSidebar';
 import ProductGrid from './ProductGrid';
 import ProductPagination from './ProductPagination';
-import type { Product } from '@/types/product';
+import type { Product } from '@/types/productTypes';
 
 const HERO_FILTER_MAP: Record<NutritionSlug, ProductFilterKey> = {
     'zero-calorie': 'isZeroCalorie',

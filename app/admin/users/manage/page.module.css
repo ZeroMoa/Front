@@ -109,6 +109,9 @@
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.18s ease, opacity 0.18s ease;
+    align-self: auto;
+    width: fit-content;
+    justify-self: end;
   }
   
   .resetButton:disabled {

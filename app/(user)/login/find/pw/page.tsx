@@ -10,7 +10,7 @@ import {
     InitiatePasswordResetResponse,
     ResetPasswordRequest,
 } from '../../../../types/auth';
-import { initiatePasswordReset, resetUserPassword } from '../../../store/api/auth';
+import { initiatePasswordReset, resetUserPassword } from '../../../store/api/userAuthApi';
 
 export default function FindPasswordPage() {
     const router = useRouter();

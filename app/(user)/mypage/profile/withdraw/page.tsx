@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
-import { submitWithdrawSurvey, withdrawUser } from '../../../store/api/auth';
+import { submitWithdrawSurvey, withdrawUser } from '../../../store/api/userAuthApi';
 
 const REASON_ORDER = [
     '정보가 적음',

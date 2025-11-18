@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css'; // 이 페이지 전용 CSS
 import ErrorModal from '../../find/component/ErrorModal'; // 공통 모달 임포트 경로 수정
-import { findUserId } from '../../../store/api/auth';
+import { findUserId } from '../../../store/api/userAuthApi';
 import { FindIdRequest, FindIdResponse } from '../../../../types/auth';
 
 export default function FindIdPage() {

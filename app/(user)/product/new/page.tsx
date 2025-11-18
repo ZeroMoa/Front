@@ -9,7 +9,7 @@ import {
     isCategorySlug,
 } from '../config';
 import type { CategorySlug } from '../config';
-import { fetchCategoryProducts, fetchProductSearch } from '../../store/api/product';
+import { fetchCategoryProducts, fetchProductSearch } from '../../store/api/userProductApi';
 import ProductPageClient from '../components/ProductPageClient';
 
 interface NewProductsSearchParams {

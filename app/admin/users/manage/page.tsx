@@ -1,11 +1,10 @@
-
 'use client'
 
 import {
   ChangeEvent,
+  CSSProperties,
   FormEvent,
   Fragment,
-  type CSSProperties,
   useCallback,
   useEffect,
   useMemo,
@@ -13,124 +12,77 @@ import {
 } from 'react'
 import styles from './page.module.css'
 import Pagination from '@/components/pagination/Pagination'
-import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
-
-type ManageUser = {
-  username: string
-  email: string
-  nickname: string
-  isLock: boolean
-  roleType: string
-}
-
-type PageResponse<T> = {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
-
-type EditFormState = {
-  email: string
-  nickname: string
-}
-
-type UserFilters = {
-  username: string
-  email: string
-  roleType: 'ALL' | 'USER' | 'ADMIN'
-  isLock: 'ALL' | 'true' | 'false'
-}
+import {
+  deleteAdminUser,
+  fetchAdminUserManagement,
+  patchAdminUserInfo,
+  patchAdminUserLock,
+  patchAdminUserRole,
+} from '@/app/admin/store/api/adminUserApi'
+import {
+  MANAGE_USER_FILTER_OPTIONS,
+  MANAGE_USER_TABLE_COLUMNS,
+  PAGE_SIZE_OPTIONS,
+  USER_TOGGLE_LABELS,
+} from '@/constants/userConstants'
+import type {
+  EditFormState,
+  ManageUser,
+  ManageUserSortKey,
+  PageResponse,
+  UserFilters,
+} from '@/types/userTypes'
 
 type SortState = {
-  field: 'username' | 'email' | 'nickname' | 'createdDate' | 'updatedDate' | 'roleType' | 'isLock' | null
+  field: ManageUserSortKey | null
   direction: 'asc' | 'desc'
 }
 
-const PAGE_SIZE_OPTIONS = [20, 40, 60]
-
-function normalizeUser(raw: any): ManageUser {
-  const rawRole = raw.roleType ?? raw.role ?? raw.role_type ?? 'ROLE_USER'
-  const normalizedRole =
-    typeof rawRole === 'string' && !rawRole.startsWith('ROLE_') ? `ROLE_${rawRole}` : rawRole ?? 'ROLE_USER'
-  return {
-    username: raw.username ?? '',
-    email: raw.email ?? '',
-    nickname: raw.nickname ?? '',
-    isLock: Boolean(raw.isLock ?? raw.is_lock ?? false),
-    roleType: normalizedRole,
-  }
+const INITIAL_FILTERS: UserFilters = {
+  username: '',
+  email: '',
+  roleType: 'ALL',
+  isLock: 'ALL',
 }
+
+const INITIAL_SORT_STATE: SortState = {
+  field: null,
+  direction: 'asc',
+}
+
+const PAGE_SIZE_OPTIONS_LIST = PAGE_SIZE_OPTIONS
 
 export default function AdminUserManagePage() {
   const [page, setPage] = useState(0)
-  const [size, setSize] = useState(PAGE_SIZE_OPTIONS[0])
+  const [size, setSize] = useState(PAGE_SIZE_OPTIONS_LIST[0])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [data, setData] = useState<PageResponse<ManageUser> | null>(null)
   const [editingUser, setEditingUser] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<EditFormState>({ email: '', nickname: '' })
-  const [filters, setFilters] = useState<UserFilters>({
-    username: '',
-    email: '',
-    roleType: 'ALL',
-    isLock: 'ALL',
-  })
-  const [sortState, setSortState] = useState<SortState>({
-    field: null,
-    direction: 'asc',
-  })
+  const [filters, setFilters] = useState<UserFilters>(INITIAL_FILTERS)
+  const [sortState, setSortState] = useState<SortState>(INITIAL_SORT_STATE)
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const params = new URLSearchParams()
-      params.set('page', page.toString())
-      params.set('size', size.toString())
-      if (sortState.field) {
-        params.append('sort', `${sortState.field},${sortState.direction}`)
-      }
-      if (filters.username.trim()) {
-        params.set('username', filters.username.trim())
-      }
-      if (filters.email.trim()) {
-        params.set('email', filters.email.trim())
-      }
-      if (filters.roleType !== 'ALL') {
-        params.set('roleType', filters.roleType)
-      }
-      if (filters.isLock !== 'ALL') {
-        params.set('isLock', filters.isLock)
-      }
-
-      const hasFilters =
-        filters.username.trim() ||
-        filters.email.trim() ||
-        filters.roleType !== 'ALL' ||
-        filters.isLock !== 'ALL'
-
-      const endpoint = hasFilters ? '/admin/users/search' : '/admin/users'
-
-      const response = await fetchWithAuth(`${endpoint}?${params.toString()}`)
-      const json = await response.json()
-      const pageResponse: PageResponse<ManageUser> = {
-        content: Array.isArray(json.content) ? json.content.map(normalizeUser) : [],
-        totalElements: typeof json.totalElements === 'number' ? json.totalElements : 0,
-        totalPages: typeof json.totalPages === 'number' ? json.totalPages : 0,
-        number: typeof json.number === 'number' ? json.number : page,
-        size: typeof json.size === 'number' ? json.size : size,
-      }
-      setData(pageResponse)
-    } catch (fetchError) {
+    const nextData = await fetchAdminUserManagement({
+      page,
+      size,
+      sortField: sortState.field ?? undefined,
+      sortDirection: sortState.field ? sortState.direction : undefined,
+      filters,
+    })
+      setData(nextData)
+    } catch (fetchError: unknown) {
       console.error('Failed to fetch admin users', fetchError)
       setError(fetchError instanceof Error ? fetchError.message : '회원 정보를 불러오지 못했습니다.')
     } finally {
       setLoading(false)
     }
-  }, [filters.email, filters.isLock, filters.roleType, filters.username, page, size, sortState.direction, sortState.field])
+  }, [filters, page, size, sortState.direction, sortState.field])
 
   useEffect(() => {
     fetchUsers()
@@ -139,10 +91,7 @@ export default function AdminUserManagePage() {
   const handleLockToggle = async (user: ManageUser) => {
     try {
       const nextLock = !user.isLock
-      await fetchWithAuth(`/admin/users/${encodeURIComponent(user.username)}/lock`, {
-        method: 'PATCH',
-        body: JSON.stringify({ isLock: nextLock }),
-      })
+      await patchAdminUserLock(user.username, nextLock)
       setData((prev) =>
         prev
           ? {
@@ -163,10 +112,7 @@ export default function AdminUserManagePage() {
     const nextRole = user.roleType === 'ROLE_ADMIN' ? 'ROLE_USER' : 'ROLE_ADMIN'
     const payloadRole = nextRole === 'ROLE_ADMIN' ? 'ADMIN' : 'USER'
     try {
-      await fetchWithAuth(`/admin/users/${encodeURIComponent(user.username)}/role`, {
-        method: 'PATCH',
-        body: JSON.stringify({ roleType: payloadRole }),
-      })
+      await patchAdminUserRole(user.username, payloadRole)
       setData((prev) =>
         prev
           ? {
@@ -187,9 +133,7 @@ export default function AdminUserManagePage() {
     const confirmed = window.confirm(`${user.username} 계정을 삭제하시겠습니까?`)
     if (!confirmed) return
     try {
-      await fetchWithAuth(`/admin/users/${encodeURIComponent(user.username)}`, {
-        method: 'DELETE',
-      })
+      await deleteAdminUser(user.username)
       setData((prev) =>
         prev
           ? {
@@ -225,21 +169,26 @@ export default function AdminUserManagePage() {
 
   const handleEditSubmit = async (event: FormEvent<HTMLFormElement>, user: ManageUser) => {
     event.preventDefault()
+    const payload: Record<string, string> = {}
+    if (editForm.email !== user.email && editForm.email.trim()) {
+      payload.email = editForm.email.trim()
+    }
+    if (editForm.nickname !== user.nickname && editForm.nickname.trim()) {
+      payload.nickname = editForm.nickname.trim()
+    }
+    if (Object.keys(payload).length === 0) {
+      setEditingUser(null)
+      return
+    }
     try {
-      await fetchWithAuth(`/admin/users/${encodeURIComponent(user.username)}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          email: editForm.email !== user.email ? editForm.email : undefined,
-          nickname: editForm.nickname !== user.nickname ? editForm.nickname : undefined,
-        }),
-      })
+      await patchAdminUserInfo(user.username, payload)
       setData((prev) =>
         prev
           ? {
               ...prev,
               content: prev.content.map((item) =>
                 item.username === user.username
-                  ? { ...item, email: editForm.email, nickname: editForm.nickname }
+                  ? { ...item, email: payload.email ?? item.email, nickname: payload.nickname ?? item.nickname }
                   : item
               ),
             }
@@ -264,25 +213,13 @@ export default function AdminUserManagePage() {
     setPage(0)
   }
 
-  const totalElements = data?.totalElements ?? 0
-  const totalPages = data?.totalPages ?? 0
-  const users = data?.content ?? []
-
   const hasActiveFilters = useMemo(
     () =>
       filters.username.trim() !== '' ||
       filters.email.trim() !== '' ||
       filters.roleType !== 'ALL' ||
       filters.isLock !== 'ALL',
-    [filters.email, filters.isLock, filters.roleType, filters.username]
-  )
-
-  const toggleLabel = useMemo(
-    () => ({
-      lock: ['활성', '정지'] as const,
-      role: ['유저', '어드민'] as const,
-    }),
-    []
+    [filters]
   )
 
   const handleFilterInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -304,39 +241,21 @@ export default function AdminUserManagePage() {
   }
 
   const handleResetFilters = () => {
-    setFilters({
-      username: '',
-      email: '',
-      roleType: 'ALL',
-      isLock: 'ALL',
-    })
-    setSortState({
-      field: null,
-      direction: 'asc',
-    })
+    setFilters({ ...INITIAL_FILTERS })
+    setSortState({ ...INITIAL_SORT_STATE })
     setPage(0)
   }
 
-  const handleSortChange = (field: SortState['field']) => {
-    if (!field) return
+  const handleSortChange = (field: ManageUserSortKey) => {
     setSortState((prev) => {
       if (prev.field === field) {
         if (prev.direction === 'asc') {
-          return {
-            field,
-            direction: 'desc',
-          }
+          return { field, direction: 'desc' }
         }
-        return {
-          field: null,
-          direction: 'asc',
-        }
+        return { field: null, direction: 'asc' }
       }
       const defaultDirection = field === 'createdDate' || field === 'updatedDate' ? 'desc' : 'asc'
-      return {
-        field,
-        direction: defaultDirection,
-      }
+      return { field, direction: defaultDirection }
     })
     setPage(0)
   }
@@ -344,7 +263,9 @@ export default function AdminUserManagePage() {
   const renderSortSymbol = (field: Exclude<SortState['field'], null>) =>
     sortState.field === field ? (sortState.direction === 'asc' ? '▲' : '▼') : '↕'
 
-  const canReset = hasActiveFilters || sortState.field !== null
+  const users = data?.content ?? []
+  const totalElements = data?.totalElements ?? 0
+  const totalPages = data?.totalPages ?? 0
 
   return (
     <div className={styles.pageWrapper}>
@@ -356,7 +277,7 @@ export default function AdminUserManagePage() {
         <div className={styles.pageSizeControl}>
           페이지 크기
           <select value={size} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-            {PAGE_SIZE_OPTIONS.map((option) => (
+            {PAGE_SIZE_OPTIONS_LIST.map((option) => (
               <option key={option} value={option}>
                 {option}명씩 보기
               </option>
@@ -386,26 +307,25 @@ export default function AdminUserManagePage() {
           <label className={styles.filterField}>
             <span>역할</span>
             <select name="roleType" value={filters.roleType} onChange={handleFilterSelectChange}>
-              <option value="ALL">전체</option>
-              <option value="USER">ROLE_USER</option>
-              <option value="ADMIN">ROLE_ADMIN</option>
+              {MANAGE_USER_FILTER_OPTIONS.role.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
           <label className={styles.filterField}>
             <span>정지 여부</span>
             <select name="isLock" value={filters.isLock} onChange={handleFilterSelectChange}>
-              <option value="ALL">전체</option>
-              <option value="false">활성</option>
-              <option value="true">정지</option>
+              {MANAGE_USER_FILTER_OPTIONS.lock.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
-          <button
-            type="button"
-            className={styles.resetButton}
-            onClick={handleResetFilters}
-            disabled={!canReset}
-          >
-            초기화
+          <button type="button" className={styles.resetButton} onClick={handleResetFilters} disabled={!hasActiveFilters}>
+            필터 초기화
           </button>
         </div>
       </div>
@@ -414,50 +334,33 @@ export default function AdminUserManagePage() {
         <table className={styles.table}>
           <thead className={styles.tableHead}>
             <tr>
-              <th>
-                <button type="button" className={styles.headerButton} onClick={() => handleSortChange('username')}>
-                  회원명
-                  <span className={styles.sortIndicator}>{renderSortSymbol('username')}</span>
-                </button>
-              </th>
-              <th>
-                <button type="button" className={styles.headerButton} onClick={() => handleSortChange('email')}>
-                  이메일
-                  <span className={styles.sortIndicator}>{renderSortSymbol('email')}</span>
-                </button>
-              </th>
-              <th>
-                <button type="button" className={styles.headerButton} onClick={() => handleSortChange('nickname')}>
-                  닉네임
-                  <span className={styles.sortIndicator}>{renderSortSymbol('nickname')}</span>
-                </button>
-              </th>
-              <th>
-                <button type="button" className={styles.headerButton} onClick={() => handleSortChange('isLock')}>
-                  정지
-                  <span className={styles.sortIndicator}>{renderSortSymbol('isLock')}</span>
-                </button>
-              </th>
-              <th>
-                <button type="button" className={styles.headerButton} onClick={() => handleSortChange('roleType')}>
-                  역할
-                  <span className={styles.sortIndicator}>{renderSortSymbol('roleType')}</span>
-                </button>
-              </th>
+              {MANAGE_USER_TABLE_COLUMNS.map(({ key, label }) => (
+                <th key={key}>
+                  <button type="button" className={styles.headerButton} onClick={() => handleSortChange(key)}>
+                    {label}
+                    {sortState.field && key === sortState.field && (
+                      <span className={styles.sortIndicator}>{renderSortSymbol(key)}</span>
+                    )}
+                    {!(sortState.field && key === sortState.field) && (
+                      <span className={styles.sortIndicator}>↕</span>
+                    )}
+                  </button>
+                </th>
+              ))}
               <th>관리</th>
             </tr>
           </thead>
           <tbody className={styles.tableBody}>
             {loading && (
               <tr>
-                <td colSpan={6} className={styles.loadingState}>
+                <td colSpan={MANAGE_USER_TABLE_COLUMNS.length + 1} className={styles.loadingState}>
                   회원 정보를 불러오는 중입니다…
                 </td>
               </tr>
             )}
             {!loading && users.length === 0 && (
               <tr>
-                <td colSpan={6} className={styles.emptyState}>
+                <td colSpan={MANAGE_USER_TABLE_COLUMNS.length + 1} className={styles.emptyState}>
                   표시할 회원이 없습니다.
                 </td>
               </tr>
@@ -476,13 +379,13 @@ export default function AdminUserManagePage() {
                           checked={!user.isLock}
                           onChange={() => handleLockToggle(user)}
                           aria-label={`${user.username} 계정 ${
-                            user.isLock ? toggleLabel.lock[0] : toggleLabel.lock[1]
+                            user.isLock ? USER_TOGGLE_LABELS.lock[0] : USER_TOGGLE_LABELS.lock[1]
                           } 상태로 전환`}
                         />
                         <span
                           className={styles.toggleTrack}
-                          data-on-label={toggleLabel.lock[0]}
-                          data-off-label={toggleLabel.lock[1]}
+                          data-on-label={USER_TOGGLE_LABELS.lock[0]}
+                          data-off-label={USER_TOGGLE_LABELS.lock[1]}
                           style={{ '--toggle-active-color': '#4cd964' } as CSSProperties}
                           aria-hidden="true"
                         >
@@ -497,13 +400,13 @@ export default function AdminUserManagePage() {
                           checked={user.roleType === 'ROLE_ADMIN'}
                           onChange={() => handleRoleToggle(user)}
                           aria-label={`${user.username} 역할을 ${
-                            user.roleType === 'ROLE_ADMIN' ? toggleLabel.role[0] : toggleLabel.role[1]
+                            user.roleType === 'ROLE_ADMIN' ? USER_TOGGLE_LABELS.role[0] : USER_TOGGLE_LABELS.role[1]
                           }로 전환`}
                         />
                         <span
                           className={styles.toggleTrack}
-                          data-on-label={toggleLabel.role[1]}
-                          data-off-label={toggleLabel.role[0]}
+                          data-on-label={USER_TOGGLE_LABELS.role[1]}
+                          data-off-label={USER_TOGGLE_LABELS.role[0]}
                           style={{ '--toggle-active-color': '#6c5cff' } as CSSProperties}
                           aria-hidden="true"
                         >
@@ -524,7 +427,7 @@ export default function AdminUserManagePage() {
                   </tr>
                   {editingUser === user.username && (
                     <tr className={styles.expandedRow}>
-                      <td colSpan={6}>
+                      <td colSpan={MANAGE_USER_TABLE_COLUMNS.length + 1}>
                         <form className={styles.editForm} onSubmit={(event) => handleEditSubmit(event, user)}>
                           <div className={styles.formField}>
                             <label htmlFor={`nickname-${user.username}`} className={styles.formLabel}>

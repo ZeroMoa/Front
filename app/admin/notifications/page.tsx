@@ -11,8 +11,8 @@ import {
   useDeleteAdminNotification,
   useUpdateAdminNotification,
   useUpdateAdminNotificationStatus,
-} from '@/app/admin/hooks/useAdminNotifications'
-import type { AdminNotificationResponse } from '@/types/notification'
+} from '@/app/admin/hooks/notificationHooks'
+import type { AdminNotificationResponse } from '@/types/notificationTypes'
 import {
   formatDateTime,
   INITIAL_FILTERS,
@@ -23,7 +23,8 @@ import {
   type FiltersState,
   type SortKey,
   type SortState,
-} from '@/constants/adminNotifications'
+} from '@/constants/adminNotificationsConstants'
+import { createNotificationQueryParams } from '@/lib/utils/notificationUtils'
 
 function nextSortState(current: SortState, field: SortKey): SortState {
   if (current.field !== field) {
@@ -45,21 +46,19 @@ export default function AdminNotificationsPage() {
   const [editingTarget, setEditingTarget] = useState<AdminNotificationResponse | null>(null)
   const [editForm, setEditForm] = useState({ title: '', content: '', boardNo: '' })
 
-  const params = useMemo(() => {
-    const searchParams = new URLSearchParams()
-    searchParams.set('page', String(page))
-    searchParams.set('size', String(pageSize))
+  const sortParam =
+    sortState.field && sortState.direction ? `${SORT_FIELD_MAP[sortState.field]},${sortState.direction}` : undefined
 
-    if (sortState.field && sortState.direction) {
-      searchParams.set('sort', `${SORT_FIELD_MAP[sortState.field]},${sortState.direction}`)
-    }
-
-    if (filters.isActive !== 'all') {
-      searchParams.set('isActive', filters.isActive)
-    }
-
-    return searchParams
-  }, [filters.isActive, page, pageSize, sortState.direction, sortState.field])
+  const params = useMemo(
+    () =>
+      createNotificationQueryParams({
+        page,
+        size: pageSize,
+        sort: sortParam,
+        isActive: filters.isActive !== 'all' ? filters.isActive : undefined,
+      }),
+    [filters.isActive, page, pageSize, sortParam]
+  )
 
   const { data, isLoading, isError, error, refetch } = useAdminNotifications(params)
   const updateMutation = useUpdateAdminNotification()
@@ -319,9 +318,9 @@ export default function AdminNotificationsPage() {
                   <div className={styles.tableCell}>
                     {notification.title ? (
                       notification.boardNo ? (
-                      <Link href={`/board/${notification.boardNo}`} className={styles.boardLink}>
-                        {notification.title}
-                      </Link>
+                        <Link href={`/admin/boards/${notification.boardNo}`} className={styles.boardLink}>
+                          {notification.title}
+                        </Link>
                       ) : (
                         notification.title
                       )

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotification } from '../hooks/useNotification';
-import { UserNotificationResponse } from '@/types/notification';
+import { UserNotificationResponse } from '@/types/notificationTypes';
 import { getCdnUrl } from '@/lib/cdn';
 
 export default function NotificationsPage() {

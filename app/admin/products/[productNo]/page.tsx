@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { fetchAdminProductDetail } from '@/app/admin/store/api/product'
+import { fetchAdminProductDetail } from '@/app/admin/store/api/adminProductApi'
 import ProductDetailClient from './ProductDetailClient'
 
 type PageParams = {
