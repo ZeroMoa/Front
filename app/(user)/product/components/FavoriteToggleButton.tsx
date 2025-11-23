@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import styles from '../page.module.css';
 import { FAVORITE_TOGGLE_COOLDOWN_MS, toggleFavoriteProduct } from '@/app/(user)/store/api/userFavoriteApi';
@@ -30,11 +30,8 @@ export default function FavoriteToggleButton({
 
     useEffect(() => {
         setIsFavorite(Boolean(initialIsFavorite));
-    }, [initialIsFavorite]);
-
-    useEffect(() => {
         setLikesCount(initialLikesCount);
-    }, [initialLikesCount]);
+    }, [initialIsFavorite, initialLikesCount]);
 
     const combinedClassName = useMemo(() => {
         const classes = [styles.favoriteButton];
@@ -47,64 +44,87 @@ export default function FavoriteToggleButton({
         return classes.join(' ');
     }, [className, isFavorite]);
 
-    const handleClick = useCallback(
-        async (event: React.MouseEvent<HTMLButtonElement>) => {
-            event.preventDefault();
-            event.stopPropagation();
+    const persistFavoriteState = (payload: { productNo: number; isFavorite: boolean; likesCount: number }) => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        try {
+            window.dispatchEvent(new CustomEvent('favorite-updated', { detail: payload }));
+            window.sessionStorage.setItem('favorite:lastUpdate', JSON.stringify({ ...payload, timestamp: Date.now() }));
+        } catch (error) {
+            console.warn('[FavoriteToggleButton] 상태 동기화 실패', error);
+        }
+    };
 
-            if (!isLoggedIn) {
-                alert('로그인 후 이용해주세요');
-                return;
-            }
+    const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
 
-            const now = Date.now();
-            if (now - lastClickRef.current < FAVORITE_TOGGLE_COOLDOWN_MS) {
+        if (!isLoggedIn) {
+            alert('로그인 후 이용해주세요~.~');
+            return;
+        }
+
+        const now = Date.now();
+        if (now - lastClickRef.current < FAVORITE_TOGGLE_COOLDOWN_MS) {
+            alert('너무 빠르게 누르고 있어요. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+
+        if (isLoading) {
+            return;
+        }
+
+        lastClickRef.current = now;
+        setIsLoading(true);
+
+        const previousIsFavorite = isFavorite;
+        const previousLikesCount = likesCount;
+
+        // Optimistic UI Update
+        const optimisticIsFavorite = !previousIsFavorite;
+        const optimisticLikesCount = Math.max(0, previousLikesCount + (optimisticIsFavorite ? 1 : -1));
+
+        setIsFavorite(optimisticIsFavorite);
+        setLikesCount(optimisticLikesCount);
+        onChange?.({ isFavorite: optimisticIsFavorite, likesCount: optimisticLikesCount });
+        persistFavoriteState({ productNo, isFavorite: optimisticIsFavorite, likesCount: optimisticLikesCount });
+
+        try {
+            const result = await toggleFavoriteProduct(productNo);
+            const resolvedIsFavorite =
+                typeof result.isFavorite === 'boolean' ? result.isFavorite : optimisticIsFavorite;
+            const resolvedLikesCount =
+                typeof result.likesCount === 'number' && !Number.isNaN(result.likesCount)
+                    ? result.likesCount
+                    : optimisticLikesCount;
+
+            // Sync with actual response (with fallbacks)
+            setIsFavorite(resolvedIsFavorite);
+            setLikesCount(resolvedLikesCount);
+            onChange?.({ isFavorite: resolvedIsFavorite, likesCount: resolvedLikesCount });
+            persistFavoriteState({ productNo, isFavorite: resolvedIsFavorite, likesCount: resolvedLikesCount });
+        } catch (error) {
+            const status = (error as Error & { status?: number }).status;
+
+            if (status === 401) {
+                alert('로그인 후 이용해주세요~.~');
+            } else if (status === 429) {
                 alert('너무 빠르게 누르고 있어요. 잠시 후 다시 시도해주세요.');
-                return;
+            } else {
+                const message = error instanceof Error ? error.message : '좋아요 처리 중 오류가 발생했습니다.';
+                alert(message);
             }
 
-            if (isLoading) {
-                return;
-            }
-
-            lastClickRef.current = now;
-            setIsLoading(true);
-
-            const previousIsFavorite = isFavorite;
-            const previousLikesCount = likesCount;
-
-            try {
-                const optimisticIsFavorite = !previousIsFavorite;
-                const optimisticLikesCount = Math.max(0, previousLikesCount + (optimisticIsFavorite ? 1 : -1));
-
-                setIsFavorite(optimisticIsFavorite);
-                setLikesCount(optimisticLikesCount);
-                onChange?.({ isFavorite: optimisticIsFavorite, likesCount: optimisticLikesCount });
-
-                await toggleFavoriteProduct(productNo);
-
-                // 성공 시 별도 처리 없음 (옵티미스틱 상태 유지)
-            } catch (error) {
-                const status = (error as Error & { status?: number }).status;
-
-                if (status === 401) {
-                    alert('로그인 후 이용해주세요');
-                } else if (status === 429) {
-                    alert('너무 빠르게 누르고 있어요. 잠시 후 다시 시도해주세요.');
-                } else {
-                    const message = error instanceof Error ? error.message : '좋아요 처리 중 오류가 발생했습니다.';
-                    alert(message);
-                }
-
-                setIsFavorite(previousIsFavorite);
-                setLikesCount(previousLikesCount);
-                onChange?.({ isFavorite: previousIsFavorite, likesCount: previousLikesCount });
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [isFavorite, isLoggedIn, isLoading, likesCount, onChange, productNo],
-    );
+            // Rollback on error
+            setIsFavorite(previousIsFavorite);
+            setLikesCount(previousLikesCount);
+            onChange?.({ isFavorite: previousIsFavorite, likesCount: previousLikesCount });
+            persistFavoriteState({ productNo, isFavorite: previousIsFavorite, likesCount: previousLikesCount });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <button

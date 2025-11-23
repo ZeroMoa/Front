@@ -9,8 +9,9 @@ import Image from 'next/image'; // Image 컴포넌트 사용을 위해 import
 import {
     UserResponseDTO,
     UserRequestDTO,
-} from '../../../types/auth';
+} from '@/types/authTypes';
 import { getUserData, checkCurrentPassword as apiCheckCurrentPassword, updateUserProfile, checkExistence } from '../../store/api/userAuthApi';
+import CircularProgress from '@mui/material/CircularProgress';
 
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -51,6 +52,7 @@ export default function ProfilePage() {
     // 이메일 도메인 선택 박스 표시 여부 및 직접 입력 여부 상태 추가
     const [showEmailDomainSelect, setShowEmailDomainSelect] = useState(false); // 이메일 도메인 선택 박스 표시 여부
     const [isDirectInput, setIsDirectInput] = useState(false); // 이메일 도메인 직접 입력 여부
+    const emailDropdownRef = useRef<HTMLDivElement | null>(null);
 
     // 비밀번호 가시성 상태 추가
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -65,12 +67,31 @@ export default function ProfilePage() {
 
     const availableDomains = ['naver.com', 'gmail.com', 'hanmail.net', 'nate.com', 'hotmail.com', 'daum.net', 'outlook.com', 'kakao.com', '직접입력'];
 
+    const [emailDirty, setEmailDirty] = useState(false);
+
     // 디바운스된 이메일 값
     const debouncedEmailFront = useDebounce(emailFront, 500); // 500ms debounce
     const debouncedEmailBack = useDebounce(emailBack, 500); // 500ms debounce
     const debouncedFullEmail = `${debouncedEmailFront}@${debouncedEmailBack}`;
 
     const fetchedOnce = useRef(false); // API 호출이 한 번 발생했는지 추적하는 useRef 추가
+
+    useEffect(() => {
+        if (!showEmailDomainSelect) {
+            return;
+        }
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (emailDropdownRef.current && !emailDropdownRef.current.contains(event.target as Node)) {
+                setShowEmailDomainSelect(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showEmailDomainSelect]);
 
     useEffect(() => {
         // 로그인 상태이고, userData가 아직 로드되지 않았으며, 이전에 API 호출을 시도하지 않았을 경우에만 fetchData 호출
@@ -90,6 +111,7 @@ export default function ProfilePage() {
                         if (!availableDomains.includes(domain)) {
                             setIsDirectInput(true);
                         }
+                        setEmailDirty(false);
                     } 
                 } catch (err: any) {
                     setError(err.message);
@@ -124,6 +146,12 @@ export default function ProfilePage() {
         }
     }, [isLoggedIn, router, userData, dispatch]); // dispatch를 의존성 배열에 추가
 
+    const clearSuccessMessage = () => {
+        if (generalUpdateError && generalUpdateError.includes('성공적으로')) {
+            setGeneralUpdateError(null);
+        }
+    };
+
     // 현재 비밀번호 확인 함수
     const checkCurrentPassword = async (password: string): Promise<boolean> => {
         if (!password) {
@@ -150,29 +178,37 @@ export default function ProfilePage() {
 
     // 디바운스된 이메일 값이 변경될 때마다 중복 확인
     useEffect(() => {
-        if (!isSocialUser && debouncedEmailFront && debouncedEmailBack && debouncedFullEmail !== '@') {
-            // 현재 이메일과 변경된 이메일이 다를 때만 중복 확인 호출
-            if (userData && userData.email !== debouncedFullEmail) {
-                handleEmailDuplicationCheck(debouncedFullEmail);
-            } else if (!userData) { // userData가 아직 로드되지 않은 경우 초기 중복 확인 방지
-                // 아무것도 하지 않음
-            } else { // 이메일이 변경되지 않았거나, 직접입력 상태일 때 오류 메시지 초기화
+        const normalizedEmail = `${debouncedEmailFront}@${debouncedEmailBack}`;
+
+        if (!emailDirty) {
                 setEmailError(null);
                 setEmailSuccess(null);
-            }
+            return;
+        }
+
+        if (
+            !isSocialUser &&
+            debouncedEmailFront &&
+            debouncedEmailBack &&
+            debouncedFullEmail !== '@'
+        ) {
+            handleEmailDuplicationCheck(debouncedFullEmail);
         } else {
             setEmailError(null);
             setEmailSuccess(null);
         }
-    }, [debouncedFullEmail, userData, isSocialUser, debouncedEmailFront, debouncedEmailBack]);
+    }, [debouncedFullEmail, userData, isSocialUser, debouncedEmailFront, debouncedEmailBack, emailDirty]);
 
     const handleEmailDomainChange = (domain: string) => {
+        clearSuccessMessage();
         if (domain === '직접입력') {
             setEmailBack(''); // 직접입력 선택 시 도메인 값 초기화
             setIsDirectInput(true);
+            setEmailDirty(false);
         } else {
             setEmailBack(domain);
             setIsDirectInput(false);
+            setEmailDirty(Boolean(emailFront));
         }
         setShowEmailDomainSelect(false);
         setEmailError(null);
@@ -193,7 +229,7 @@ export default function ProfilePage() {
         // 이메일 변경이 없고 기존 이메일과 동일하면 중복 검사 건너뛰기
         if (userData && userData.email === email) {
             setEmailError(null);
-            setEmailSuccess('현재 이메일입니다.');
+            setEmailSuccess(null);
             return true;
         }
 
@@ -250,6 +286,7 @@ export default function ProfilePage() {
             if (newPassword) {
                 if (newPassword !== newPasswordConfirm) {
                     setPasswordMismatchError(true);
+                    alert('새 비밀번호를 확인해주세요!');
                     return;
                 }
                 // 현재 비밀번호 유효성 검사
@@ -285,6 +322,8 @@ export default function ProfilePage() {
             const data = await updateUserProfile(updatedData);
             setGeneralUpdateError('회원 정보가 성공적으로 수정되었습니다.'); // 성공 메시지 표시
             setUserData(prevData => ({ ...prevData!, nickname: data.nickname || prevData!.nickname, email: data.email || prevData!.email }));
+            setEmailDirty(false);
+            setEmailSuccess('현재 이메일입니다.');
             // 비밀번호 변경 성공 시 비밀번호 필드 초기화 (보안상 좋음)
             setCurrentPassword('');
             setNewPassword('');
@@ -295,7 +334,14 @@ export default function ProfilePage() {
         }
     };
 
-    if (loading) return <div className={styles.loading}>Loading...</div>;
+    if (loading) {
+        return (
+            <div className={styles.loadingState}>
+                <CircularProgress size={32} />
+                <span className={styles.loadingMessage}>회원 정보 불러오는 중…</span>
+            </div>
+        );
+    }
     if (error) return <div className={styles.error}>Error: {error}</div>;
     if (!userData) return <div className={styles.noData}>사용자 정보를 찾을 수 없습니다.</div>;
 
@@ -337,6 +383,7 @@ export default function ProfilePage() {
                                             className={`${styles.input} ${currentPasswordError || currentPasswordMismatchError ? styles.errorBorder : ''}`}
                                             value={currentPassword}
                                             onChange={(e) => {
+                                                clearSuccessMessage();
                                                 setCurrentPassword(e.target.value);
                                                 setCurrentPasswordError(null); // 입력 시작 시 에러 메시지 초기화
                                                 setCurrentPasswordMismatchError(null); // 입력 시작 시 불일치 에러 초기화
@@ -380,6 +427,7 @@ export default function ProfilePage() {
                                             className={`${styles.inputField} ${passwordMismatchError ? styles.errorBorder : ''} ${newPassword ? styles.hasValue : ''}`}
                                             value={newPassword}
                                             onChange={(e) => {
+                                                clearSuccessMessage();
                                                 setNewPassword(e.target.value);
                                                 if (newPasswordConfirm && e.target.value !== newPasswordConfirm) {
                                                     setPasswordMismatchError(true);
@@ -417,6 +465,7 @@ export default function ProfilePage() {
                                             className={`${styles.inputField} ${passwordMismatchError ? styles.errorBorder : ''} ${newPasswordConfirm ? styles.hasValue : ''}`}
                                             value={newPasswordConfirm}
                                             onChange={(e) => {
+                                                clearSuccessMessage();
                                                 setNewPasswordConfirm(e.target.value);
                                                 if (newPassword && e.target.value !== newPassword) {
                                                     setPasswordMismatchError(true);
@@ -454,7 +503,10 @@ export default function ProfilePage() {
                                     type="text"
                                     className={styles.input}
                                     value={nickname}
-                                    onChange={(e) => setNickname(e.target.value)}
+                                    onChange={(e) => {
+                                        clearSuccessMessage();
+                                        setNickname(e.target.value);
+                                    }}
                                 />
                             </div>
                         </div>
@@ -470,12 +522,17 @@ export default function ProfilePage() {
                                             className={`${styles.inputInfo} ${styles.emailInput}`}
                                             placeholder="이메일 주소 입력"
                                             value={emailFront}
-                                            onChange={(e) => setEmailFront(e.target.value)}
+                                            onChange={(e) => {
+                                                clearSuccessMessage();
+                                                setEmailFront(e.target.value);
+                                                setEmailDirty(true);
+                                            }}
                                             required
                                         />
                                     </div>
                                     <div className={styles.textAt}>@</div>
                                     <div
+                                        ref={emailDropdownRef}
                                         className={`${styles.boxSelect} ${showEmailDomainSelect ? styles.on : ''}`}
                                     >
                                         {isDirectInput ? (
@@ -485,7 +542,11 @@ export default function ProfilePage() {
                                                 className={`${styles.inputInfo} ${styles.emailInput} ${styles.domainInputField} ${emailBack ? styles.hasValue : ''}`}
                                                 placeholder="직접 입력"
                                                 value={emailBack}
-                                                onChange={(e) => setEmailBack(e.target.value)}
+                                                onChange={(e) => {
+                                                    clearSuccessMessage();
+                                                    setEmailBack(e.target.value);
+                                                    setEmailDirty(true);
+                                                }}
                                                 onClick={(e) => e.stopPropagation()} // 입력 필드를 클릭했을 때 상위 이벤트 방지
                                                 required={!emailError}
                                             />

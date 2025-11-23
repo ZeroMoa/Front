@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import styles from '../page.module.css';
 import {
@@ -144,6 +144,7 @@ export default function ProductPageClient({
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const [, startTransition] = useTransition();
+    const [clientContent, setClientContent] = useState<Product[]>(data.content);
 
     const pageSizeOptions = config.pageSizeOptions ?? [30, 60, 90];
     const totalPages = data.totalPages ?? 0;
@@ -343,8 +344,23 @@ export default function ProductPageClient({
         commitUpdates({ ...baseUpdates, [filterKey]: 'true', isNew: 'true', page: 0 });
     };
 
-    const handleKeywordSubmit = (nextKeyword: string) => {
-        commitUpdates({ keyword: nextKeyword || null, page: 0 });
+    const handleKeywordSubmit = (rawKeyword: string) => {
+        const trimmed = rawKeyword.trim();
+        if (!trimmed) {
+            commitUpdates({ keyword: null, page: 0 });
+            return;
+        }
+
+        const resetEntries = PRODUCT_FILTER_KEYS.reduce<Record<string, string | null>>((accumulator, filterKey) => {
+            if (lockedFilters?.includes(filterKey)) {
+                accumulator[filterKey] = 'true';
+            } else {
+                accumulator[filterKey] = null;
+            }
+            return accumulator;
+        }, {});
+
+        commitUpdates({ ...resetEntries, keyword: trimmed, page: 0, isNew: null });
     };
 
     const handleFilterToggle = (filterKey: ProductFilterKey) => {
@@ -392,30 +408,29 @@ export default function ProductPageClient({
             const filterReset = Object.fromEntries(
                 PRODUCT_FILTER_KEYS.map((key) => [key, null as string | null]),
             );
-            commitUpdates({ ...filterReset, isNew: 'true', page: 0 });
+            const newParams: Record<string, string | null> = {
+                ...filterReset,
+                isNew: 'true',
+                page: 0,
+            };
+            if (mode === 'category') {
+                newParams.sub = 'all';
+            }
+            commitUpdates(newParams);
         }
     };
 
     const renderHeroInline = () => {
         if (mode === 'nutrition' || mode === 'search') {
-            const isAllActive = activeHeroSlug === 'all';
             return (
                 <div className={styles.heroInline}>
-                    <button
-                        type="button"
-                        className={`${styles.heroInlineCard} ${styles.heroCardNeutral} ${isAllActive ? styles.heroCardActive : ''}`}
-                        onClick={() => handleCollectionNavigate('all')}
-                        aria-pressed={isAllActive}
-                    >
-                        <span className={styles.heroCardLabel}>전체</span>
-                    </button>
                     <button
                         type="button"
                         className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${isNewActive ? styles.heroCardActive : ''}`}
                         onClick={handleNewToggle}
                         aria-pressed={isNewActive}
                     >
-                        신제품만 보기
+                        신제품
                     </button>
                     <span className={styles.heroDivider} aria-hidden="true" />
                     {HERO_BANNER_ITEMS.map((item) => {
@@ -475,6 +490,133 @@ export default function ProductPageClient({
         return null;
     };
 
+    const hasSubCategories =
+        'subCategories' in config && Array.isArray(config.subCategories) && config.subCategories.length > 1;
+
+    const renderSubCategoryButtons = (includeNewButton: boolean) => {
+        if (!hasSubCategories) {
+            return null;
+        }
+
+        const subCategories = config.subCategories;
+
+        return (
+            <div className={styles.subCategoryTabs}>
+                {includeNewButton && (
+                    <>
+                        <button
+                            type="button"
+                            className={`${styles.subCategoryButton} ${styles.subCategoryNewButton} ${
+                                isNewActive ? styles.subCategoryButtonActive : ''
+                            }`}
+                            onClick={handleNewToggle}
+                            aria-pressed={isNewActive}
+                        >
+                            신제품
+                        </button>
+                        <span className={styles.subCategoryDivider} aria-hidden="true" />
+                    </>
+                )}
+                {subCategories.map((item) => (
+                    <button
+                        key={item.slug}
+                        type="button"
+                        className={`${styles.subCategoryButton} ${
+                            item.slug === selectedSubCategory.slug ? styles.subCategoryButtonActive : ''
+                        }`}
+                        onClick={() => handleSubCategoryChange(item.slug)}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+        );
+    };
+
+    const renderSubCategorySection = () => {
+        if (!hasSubCategories) {
+            return null;
+        }
+
+        if (mode === 'category') {
+            return (
+                <div className={styles.subCategoryHeader}>
+                    <div className={styles.categoryCount}>{totalElements.toLocaleString()}개</div>
+                    {renderSubCategoryButtons(true)}
+                </div>
+            );
+        }
+
+        return renderSubCategoryButtons(false);
+    };
+
+    useEffect(() => {
+        setClientContent(data.content);
+    }, [data.content]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        const applyUpdate = (detail: unknown) => {
+            if (
+                !detail ||
+                typeof detail !== 'object' ||
+                !('productNo' in detail) ||
+                typeof (detail as { productNo: unknown }).productNo !== 'number'
+            ) {
+                return;
+            }
+
+            const { productNo, isFavorite, likesCount } = detail as {
+                productNo: number;
+                isFavorite: boolean;
+                likesCount: number;
+            };
+
+            setClientContent((prev) => {
+                let updated = false;
+                const next = prev.map((product) => {
+                    if (product.productNo !== productNo) {
+                        return product;
+                    }
+                    updated = true;
+                    const resolvedLikesCount =
+                        typeof likesCount === 'number' && !Number.isNaN(likesCount)
+                            ? likesCount
+                            : product.likesCount ?? 0;
+                    return {
+                        ...product,
+                        isFavorite: Boolean(isFavorite),
+                        likesCount: resolvedLikesCount,
+                    };
+                });
+                return updated ? next : prev;
+            });
+        };
+
+        const handleFavoriteUpdated = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            applyUpdate(customEvent.detail);
+        };
+
+        window.addEventListener('favorite-updated', handleFavoriteUpdated);
+
+        const lastUpdate = window.sessionStorage.getItem('favorite:lastUpdate');
+        if (lastUpdate) {
+            try {
+                applyUpdate(JSON.parse(lastUpdate));
+            } catch (error) {
+                console.warn('[ProductPageClient] 좋아요 동기화 파싱 실패', error);
+            }
+        }
+
+        return () => {
+            window.removeEventListener('favorite-updated', handleFavoriteUpdated);
+        };
+    }, []);
+
     return (
         <div className={styles.layout}>
             <ProductSidebar
@@ -498,54 +640,16 @@ export default function ProductPageClient({
                         <p className={styles.description}>{config.description}</p>
                     </div>
                 </header>
-                {(() => {
-                    if (mode === 'category' && 'subCategories' in config && config.subCategories && config.subCategories.length > 1) {
-                        const subCategories = config.subCategories;
-                        return (
-                            <div className={styles.subCategoryTabs}>
-                                {subCategories.map((item) => (
-                                    <button
-                                        key={item.slug}
-                                        type="button"
-                                        className={`${styles.subCategoryButton} ${
-                                            item.slug === selectedSubCategory.slug ? styles.subCategoryButtonActive : ''
-                                        }`}
-                                        onClick={() => handleSubCategoryChange(item.slug)}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                        );
-                    }
-                    if ('subCategories' in config && config.subCategories && config.subCategories.length > 1) {
-                        const subCategories = config.subCategories;
-                        return (
-                            <div className={styles.subCategoryTabs}>
-                                {subCategories.map((item) => (
-                                    <button
-                                        key={item.slug}
-                                        type="button"
-                                        className={`${styles.subCategoryButton} ${
-                                            item.slug === selectedSubCategory.slug ? styles.subCategoryButtonActive : ''
-                                        }`}
-                                        onClick={() => handleSubCategoryChange(item.slug)}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                        );
-                    }
-                    return null;
-                })()}
+                {renderSubCategorySection()}
 
-                        <div className={styles.listSummary}>
-                            <span>
-                        {summaryLabel} · {totalElements.toLocaleString()}개
-                            </span>
-                            {renderHeroInline()}
-                        </div>
+                {mode !== 'category' && (
+                    <div className={styles.listSummary}>
+                        <span>
+                            {summaryLabel} · {totalElements.toLocaleString()}개
+                        </span>
+                        {renderHeroInline()}
+                    </div>
+                )}
                         <div className={styles.listActions}>
                             <label className={styles.sortLabel}>
                                 정렬
@@ -570,7 +674,7 @@ export default function ProductPageClient({
                         </div>
 
                 <ProductGrid
-                    products={data.content}
+                    products={clientContent}
                     emptyMessage={mode === 'search' ? '검색 결과가 없습니다.' : undefined}
                     variant={productCardVariant}
                     onDeleteProduct={onDeleteProduct}

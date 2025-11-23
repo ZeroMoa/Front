@@ -10,8 +10,8 @@ import { BoardType } from '@/types/boardTypes';
 
 const tabClassMap: Record<BoardType, string> = {
     NOTICE: styles.tabNOTICE,
-    FREE: styles.tabFREE,
-    QNA: styles.tabQNA,
+    FAQ: styles.tabFAQ,
+    EVENT: styles.tabEVENT,
 };
 
 export default function BoardDetailPage() {

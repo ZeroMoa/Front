@@ -15,8 +15,8 @@ const MAX_VISIBLE_PAGES = 7;
 
 const badgeClassMap: Record<BoardType, string> = {
     NOTICE: styles.badgeNOTICE,
-    FREE: styles.badgeFREE,
-    QNA: styles.badgeQNA,
+    FAQ: styles.badgeFAQ,
+    EVENT: styles.badgeEVENT,
 };
 
 export default function BoardPage() {
@@ -25,6 +25,8 @@ export default function BoardPage() {
     const [keyword, setKeyword] = useState('');
     const [searchType, setSearchType] = useState<BoardSearchType>('TITLE_OR_CONTENT');
     const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | BoardType>('ALL');
+    const [appliedSearchType, setAppliedSearchType] = useState<BoardSearchType>('TITLE_OR_CONTENT');
+    const [appliedBoardType, setAppliedBoardType] = useState<'ALL' | BoardType>('ALL');
 
     const isSearchMode = keyword.trim().length > 0;
 
@@ -36,14 +38,14 @@ export default function BoardPage() {
 
         if (isSearchMode) {
             searchParams.set('keyword', keyword);
-            searchParams.set('searchType', searchType);
-            if (boardTypeFilter !== 'ALL') {
-                searchParams.set('boardType', boardTypeFilter);
+            searchParams.set('searchType', appliedSearchType);
+            if (appliedBoardType !== 'ALL') {
+                searchParams.set('boardType', appliedBoardType);
             }
         }
 
         return searchParams;
-    }, [page, keyword, searchType, boardTypeFilter, isSearchMode]);
+    }, [page, keyword, appliedSearchType, appliedBoardType, isSearchMode]);
 
     const { data, isLoading, isError, error } = useBoards(params, { search: isSearchMode });
 
@@ -54,12 +56,18 @@ export default function BoardPage() {
 
     const handleSearch = () => {
         const trimmed = searchQuery.trim();
+
         if (!trimmed) {
             setKeyword('');
+            setAppliedSearchType('TITLE_OR_CONTENT');
+            setAppliedBoardType('ALL');
             setPage(0);
             return;
         }
+
         setKeyword(trimmed);
+        setAppliedSearchType(searchType);
+        setAppliedBoardType(boardTypeFilter);
         setPage(0);
     };
 
@@ -77,6 +85,8 @@ export default function BoardPage() {
     const handlePageChange = (pageIndex: number) => {
         setPage(pageIndex);
     };
+
+    const emptyMessage = isSearchMode ? '조건에 맞는 게시글이 없습니다.' : '등록된 게시글이 없습니다.';
 
     const listContent = () => {
         if (notices.length === 0) {
@@ -160,12 +170,11 @@ export default function BoardPage() {
                         </button>
                     </div>
                     <div className={styles.filterSelects}>
-                        <select
+                                <select
                             className={styles.selectField}
                             value={searchType}
                             onChange={(event) => {
                                 setSearchType(event.target.value as BoardSearchType);
-                                setPage(0);
                             }}
                         >
                             {BOARD_SEARCH_TYPE_OPTIONS.map((option) => (
@@ -179,7 +188,6 @@ export default function BoardPage() {
                             value={boardTypeFilter}
                             onChange={(event) => {
                                 setBoardTypeFilter(event.target.value as 'ALL' | BoardType);
-                                setPage(0);
                             }}
                         >
                             <option value="ALL">전체</option>

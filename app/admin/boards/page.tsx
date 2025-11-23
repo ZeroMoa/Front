@@ -19,8 +19,8 @@ import Pagination from '@/components/pagination/Pagination'
 
 const badgeClassMap: Record<BoardType, string> = {
     NOTICE: styles.badgeNOTICE,
-    FREE: styles.badgeFREE,
-    QNA: styles.badgeQNA,
+    FAQ: styles.badgeFAQ,
+    EVENT: styles.badgeEVENT,
 };
 
 export default function BoardPage() {
@@ -71,7 +71,7 @@ export default function BoardPage() {
         }
     };
 
-  const getDisplayNumber = (index: number) => {
+    const getDisplayNumber = (index: number) => {
     return totalElements - (currentPage * BOARD_PAGE_SIZE + index)
   }
 
@@ -79,125 +79,125 @@ export default function BoardPage() {
         setPage(pageIndex);
     };
 
-  const listContent = () => {
-    if (notices.length === 0) {
+    const listContent = () => {
+        if (notices.length === 0) {
       return <div className={styles.noNotices}>{emptyMessage}</div>
-    }
+        }
 
-    return (
-      <>
-        <div className={styles.noticeTable}>
-          <div className={styles.tableHeader}>
-            <span className={styles.headerNo}>번호</span>
-            <span className={styles.headerTitle}>제목</span>
-            <span className={styles.headerDate}>작성일자</span>
-          </div>
-          {notices.map((notice, index) => (
-            <Link href={`/admin/boards/${notice.boardNo}`} key={notice.boardNo} className={styles.noticeLink}>
-              <div className={styles.noticeItem}>
-                <span className={styles.itemNo}>{getDisplayNumber(index)}</span>
-                <div className={styles.itemTitle}>
+        return (
+            <>
+                <div className={styles.noticeTable}>
+                    <div className={styles.tableHeader}>
+                        <span className={styles.headerNo}>번호</span>
+                        <span className={styles.headerTitle}>제목</span>
+                        <span className={styles.headerDate}>작성일자</span>
+                    </div>
+                    {notices.map((notice, index) => (
+                        <Link href={`/admin/boards/${notice.boardNo}`} key={notice.boardNo} className={styles.noticeLink}>
+                            <div className={styles.noticeItem}>
+                                <span className={styles.itemNo}>{getDisplayNumber(index)}</span>
+                                <div className={styles.itemTitle}>
                   <span className={`${styles.noticeBadge} ${badgeClassMap[notice.boardType] ?? ''}`}>
-                    {BOARD_TYPE_LABELS[notice.boardType] ?? notice.boardType}
-                  </span>
-                  <span className={styles.itemTitleText}>{notice.title}</span>
-                </div>
+                                        {BOARD_TYPE_LABELS[notice.boardType] ?? notice.boardType}
+                                    </span>
+                                    <span className={styles.itemTitleText}>{notice.title}</span>
+                                </div>
                 <span className={styles.itemDate}>
                   {new Date(notice.createdAt).toLocaleDateString('ko-KR')}
                 </span>
-              </div>
-            </Link>
-          ))}
-        </div>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
 
-        {totalPages > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
+                {totalPages > 0 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
             pageGroupSize={BOARD_MAX_VISIBLE_PAGES}
-          />
-        )}
-      </>
+                    />
+                )}
+            </>
     )
   }
 
-  if (isLoading) {
+    if (isLoading) {
     return null
-  }
+    }
 
-  if (isError) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.errorBox}>
-          {error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.'}
-        </div>
-      </div>
+    if (isError) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.errorBox}>
+                    {error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.'}
+                </div>
+            </div>
     )
-  }
+    }
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.headerSection}>
-        <h1>공지사항</h1>
-        <div className={styles.topInfo}>
-          <span>Total {totalElements}건 / {currentPage + 1}페이지</span>
-        </div>
-      </div>
+    return (
+        <div className={styles.container}>
+            <div className={styles.headerSection}>
+                <h1>공지사항</h1>
+                <div className={styles.topInfo}>
+                    <span>Total {totalElements}건 / {currentPage + 1}페이지</span>
+                </div>
+            </div>
 
-      <div className={styles.searchAndWriteSection}>
-        <div className={styles.searchControls}>
-          <div className={styles.searchBar}>
-            <input
-              type="text"
-              placeholder="검색어를 입력해주세요."
-              className={styles.searchInput}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            <button className={styles.searchButton} onClick={handleSearch}>
-              <Image src={getCdnUrl('/images/search.png')} alt="검색" width={20} height={20} />
-            </button>
-          </div>
-          <div className={styles.filterSelects}>
-            <select
-              className={styles.selectField}
-              value={searchType}
-              onChange={(event) => {
+            <div className={styles.searchAndWriteSection}>
+                <div className={styles.searchControls}>
+                    <div className={styles.searchBar}>
+                        <input
+                            type="text"
+                            placeholder="검색어를 입력해주세요."
+                            className={styles.searchInput}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <button className={styles.searchButton} onClick={handleSearch}>
+                            <Image src={getCdnUrl('/images/search.png')} alt="검색" width={20} height={20} />
+                        </button>
+                    </div>
+                    <div className={styles.filterSelects}>
+                        <select
+                            className={styles.selectField}
+                            value={searchType}
+                            onChange={(event) => {
                 setSearchType(event.target.value as BoardSearchType)
                 setPage(0)
-              }}
-            >
-              {BOARD_SEARCH_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <select
-              className={styles.selectField}
-              value={boardTypeFilter}
-              onChange={(event) => {
+                            }}
+                        >
+                            {BOARD_SEARCH_TYPE_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            className={styles.selectField}
+                            value={boardTypeFilter}
+                            onChange={(event) => {
                 setBoardTypeFilter(event.target.value as 'ALL' | BoardType)
                 setPage(0)
-              }}
-            >
-              <option value="ALL">전체</option>
-              {BOARD_TYPE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {BOARD_TYPE_LABELS[option]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <Link href="/admin/boards/write">
-          <button className={styles.writeButton}>글쓰기</button>
-        </Link>
-      </div>
+                            }}
+                        >
+                            <option value="ALL">전체</option>
+                            {BOARD_TYPE_OPTIONS.map((option) => (
+                                <option key={option} value={option}>
+                                    {BOARD_TYPE_LABELS[option]}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <Link href="/admin/boards/write">
+                    <button className={styles.writeButton}>글쓰기</button>
+                </Link>
+            </div>
 
-      {listContent()}
-    </div>
+            {listContent()}
+        </div>
   )
 }

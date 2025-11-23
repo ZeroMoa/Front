@@ -148,7 +148,7 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
       if (fallbackMessage.includes('액세스 토큰이 없습니다.') || fallbackMessage.includes('액세스 토큰이 만료되었습니다.')) {
         throw new Error(fallbackMessage)
       }
-    } else if (response.status === 403) {
+  } else if (response.status === 403) {
       if (fallbackMessage.includes('탈퇴한 회원입니다.')) {
         try {
           localStorage.removeItem('accessToken')
@@ -157,9 +157,7 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
         }
         throw new Error('탈퇴한 회원입니다. 자동으로 로그아웃 처리됩니다.')
       }
-      if (fallbackMessage.includes('비밀번호가 일치하지 않습니다.')) {
-        throw new Error(fallbackMessage)
-      }
+      throw new Error('비밀번호를 잘못 입력하셨습니다.')
     }
 
     throw new Error(fallbackMessage)

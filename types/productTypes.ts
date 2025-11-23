@@ -291,9 +291,15 @@ export const normalizeProduct = (rawProduct: RawProduct): Product => {
         normalized.likesCount = likesCount;
     }
 
-    if ('isFavorite' in rawProduct || 'is_favorite' in rawProduct) {
+    if ('isFavorite' in rawProduct || 'is_favorite' in rawProduct || 'favorite' in rawProduct || 'is_valid' in rawProduct || 'isValid' in rawProduct) {
         normalized.isFavorite = coerceBoolean(
-            coalesce(rawProduct['isFavorite'] as RawValue, rawProduct['is_favorite'] as RawValue),
+            coalesce(
+                rawProduct['isFavorite'] as RawValue,
+                rawProduct['is_favorite'] as RawValue,
+                rawProduct['favorite'] as RawValue,
+                rawProduct['is_valid'] as RawValue,
+                rawProduct['isValid'] as RawValue,
+            ),
         );
     }
 

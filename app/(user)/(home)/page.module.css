@@ -267,11 +267,6 @@
     transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.favoriteViewAllButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 18px rgba(50, 72, 112, 0.16);
-}
-
 .favoriteMessage {
     font-size: 0.95rem;
     color: #5a6787;

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import styles from './page.module.css';
 import { useBoardDetail } from '../../hooks/useBoard';
@@ -10,8 +10,8 @@ import { BoardType } from '@/types/boardTypes';
 
 const tabClassMap: Record<BoardType, string> = {
     NOTICE: styles.tabNOTICE,
-    FREE: styles.tabFREE,
-    QNA: styles.tabQNA,
+    FAQ: styles.tabFAQ,
+    EVENT: styles.tabEVENT,
 };
 
 export default function BoardDetailPage() {
@@ -21,6 +21,15 @@ export default function BoardDetailPage() {
     const boardNo = Number(boardIdParam);
 
     const { data, isLoading, isError, error } = useBoardDetail(boardNo);
+
+    useEffect(() => {
+        if (!isError || !(error instanceof Error)) {
+            return;
+        }
+        if (error.message.includes('404')) {
+            router.replace('/404');
+        }
+    }, [isError, error, router]);
 
     const handleBackClick = () => {
         router.push('/board');
@@ -67,10 +76,14 @@ export default function BoardDetailPage() {
     }
 
     if (isError || !data) {
+        const errorMessage = error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.';
+        if (errorMessage.includes('404')) {
+            return null;
+        }
         return (
             <div className={styles.wrapper}>
                 {renderBackButton()}
-                <div className={styles.errorBox}>{error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.'}</div>
+                <div className={styles.errorBox}>{errorMessage}</div>
                 <div className={styles.actionRow}>
                     <button className={styles.listButton} onClick={handleBackClick}>목록</button>
                 </div>

@@ -1,19 +1,18 @@
 'use client'
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { Product, normalizeProduct } from '../../../../types/productTypes';
 import { getCdnUrl } from '@/lib/cdn';
 import FavoriteToggleButton from '../components/FavoriteToggleButton';
 import ProductGrid from '../components/ProductGrid';
+import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth';
 
 const PRODUCT_API_BASE_URL =
     process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL ||
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     'http://localhost:8080';
-
-const PRODUCT_ENDPOINT = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product`;
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
 
 const SWEETENER_KEYWORDS = [
@@ -84,7 +83,7 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
 
                 const response = await fetch(endpoint, {
                     cache: 'no-store',
-                    credentials: 'omit',
+                    credentials: 'include',
                 });
 
                 if (!response.ok) throw new Error('관련 제품을 가져오는데 실패했습니다');
@@ -119,9 +118,11 @@ const RelatedProducts = ({ currentProductNo, categoryNo }: { currentProductNo: n
 export default function ProductDetail() {
     
     const params = useParams();
+    const router = useRouter();
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [shouldRedirectNotFound, setShouldRedirectNotFound] = useState(false);
     const [favoriteState, setFavoriteState] = useState({
         isFavorite: false,
         likesCount: 0,
@@ -133,16 +134,10 @@ export default function ProductDetail() {
         const fetchProduct = async () => {
             try {
                 setIsLoading(true);
-                const endpoint = `${PRODUCT_ENDPOINT}/${params.productNo}`;
-
-                const response = await fetch(endpoint, {
+                const response = await fetchWithAuth(`/product/${params.productNo}`, {
+                    method: 'GET',
                     cache: 'no-store',
-                    credentials: 'omit',
                 });
-
-                if (!response.ok) {
-                    throw new Error('제품을 찾을 수 없습니다');
-                }
 
                 const data = await response.json();
                 const normalized = normalizeProduct(data as Record<string, unknown>);
@@ -151,10 +146,19 @@ export default function ProductDetail() {
                     setProduct(normalized);
                     setIsLoading(false);
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error('Error fetching product:', err);
                 if (mounted) {
-                    setError(err?.message ?? '제품 정보를 불러오지 못했습니다');
+                    const message = err instanceof Error ? err.message : '제품 정보를 불러오지 못했습니다';
+                    setError(message);
+                    if (
+                        message.toLowerCase().includes('not found') ||
+                        message.includes('찾을 수 없습니다') ||
+                        message.includes('404')
+                    ) {
+                        setShouldRedirectNotFound(true);
+                    }
+                    setProduct(null);
                     setIsLoading(false);
                 }
             }
@@ -180,9 +184,27 @@ export default function ProductDetail() {
         });
     }, [product?.productNo, product?.isFavorite, product?.likesCount]);
 
-    if (isLoading) return <div className={styles.loading}>로딩 중...</div>;
-    if (error) return <div className={styles.error}>오류: {error}</div>;
-    if (!product) return <div className={styles.notFound}>제품을 찾을 수 없습니다</div>;
+    useEffect(() => {
+        if (!shouldRedirectNotFound) {
+            return;
+        }
+        router.replace('/404');
+    }, [shouldRedirectNotFound, router]);
+
+    if (isLoading) {
+        return <div className={styles.loading}>로딩 중...</div>;
+    }
+
+    if (error) {
+        if (shouldRedirectNotFound) {
+            return null;
+        }
+        return <div className={styles.loading}>제품 정보를 불러오지 못했습니다.</div>;
+    }
+
+    if (!product) {
+        return null;
+    }
 
     // 카테고리 이름 가져오기
     const getCategoryNames = (parentCategoryNo: number, categoryNo: number) => {
@@ -337,10 +359,14 @@ export default function ProductDetail() {
                                     <div key={item.label} className={styles.servingHighlight}>
                                         <span className={styles.servingHighlightLabel}>{item.label}</span>
                                         <span className={styles.servingHighlightValue}>{item.value}</span>
-                            </div>
+                                    </div>
                                 ))}
-                                        </div>
-                                    )}
+                            </div>
+                        )}
+
+                        {servingHighlights.length > 0 && nutritionRows.length > 0 && (
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                        )}
 
                         {nutritionRows.length > 0 && (
                             <div className={styles.nutritionTable}>
@@ -369,10 +395,14 @@ export default function ProductDetail() {
                                             ))}
                                         </tbody>
                                     </table>
-                                        </div>
-                                        </div>
-                                    )}
+                                </div>
                             </div>
+                        )}
+
+                        {nutritionRows.length > 0 && product.ingredients && product.ingredients.trim() && (
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                        )}
+                    </div>
 
                     {product.ingredients && product.ingredients.trim() && (
                                 <div className={styles.ingredients}>

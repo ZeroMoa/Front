@@ -6,7 +6,7 @@
     display: grid;
     grid-template-columns: 280px 1fr;
     gap: 32px;
-    margin: 20px auto 80px, 90px;
+    margin: 20px auto 80px auto;
     max-width: 1280px;
     padding: 0 24px;
 }
@@ -448,11 +448,28 @@
     cursor: pointer;
 }
 
+.subCategoryHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(210, 220, 240, 0.6);
+}
+
+.categoryCount {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4a5d82;
+}
+
 .subCategoryTabs {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
+    justify-content: flex-end;
 }
 
 .subCategoryButton {

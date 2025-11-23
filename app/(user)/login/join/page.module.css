@@ -1,9 +1,11 @@
 .container {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
+    padding: 60px 0 40px;
     background-color: #f0f2f5; /* 기존 배경색 */
+    box-sizing: border-box;
 }
 
 .card {
@@ -18,7 +20,6 @@
     flex-direction: column;
     align-items: center;
     position: relative;
-    margin-top: 60px; /* 헤더와의 겹침 방지를 위해 상단 마진 추가 */
 }
 
 .logoContainer {
@@ -234,6 +235,9 @@
 
 /* 반응형 */
 @media (max-width: 768px) {
+    .container {
+        padding: 60px 0 40px;
+    }
     .card, .completionCard {
         width: 95%;
         padding: 1.5rem;
@@ -262,6 +266,9 @@
 }
 
 @media (max-width: 500px) {
+    .container {
+        padding: 40px 0 30px;
+    }
     .card, .completionCard {
         padding: 1rem;
     }

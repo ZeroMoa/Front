@@ -9,8 +9,8 @@ const FAVORITE_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/favorites`;
 export const FAVORITE_TOGGLE_COOLDOWN_MS = 500;
 
 export interface ToggleFavoriteResponse {
-    isFavorite: boolean;
-    likesCount: number;
+    isFavorite?: boolean;
+    likesCount?: number;
 }
 
 export interface FetchFavoriteListParams {
@@ -57,21 +57,71 @@ export const toggleFavoriteProduct = async (productNo: number): Promise<ToggleFa
         throw error;
     }
 
-    const payload = await response.json();
+    const responseBody = await response.json();
 
     const rawIsFavorite =
-        payload?.isFavorite ??
-        payload?.favorite ??
-        payload?.is_valid ??
-        payload?.isValid ??
-        payload?.is_favorite;
+        responseBody?.isFavorite ??
+        responseBody?.favorite ??
+        responseBody?.is_valid ??
+        responseBody?.isValid ??
+        responseBody?.is_favorite;
 
-    const rawLikesCount = payload?.likesCount ?? payload?.likes_count ?? payload?.count;
+    const rawLikesCount = responseBody?.likesCount ?? responseBody?.likes_count ?? responseBody?.count;
 
-    return {
-        isFavorite: Boolean(rawIsFavorite),
-        likesCount: typeof rawLikesCount === 'number' ? rawLikesCount : Number(rawLikesCount ?? 0) || 0,
+    const parseBoolean = (value: unknown): boolean | undefined => {
+        if (value === null || typeof value === 'undefined') {
+            return undefined;
+        }
+        if (typeof value === 'boolean') {
+            return value;
+        }
+        if (typeof value === 'number') {
+            return value !== 0;
+        }
+        if (typeof value === 'string') {
+            const normalized = value.trim().toLowerCase();
+            if (['true', '1', 'y', 'yes', 't'].includes(normalized)) {
+                return true;
+            }
+            if (['false', '0', 'n', 'no', 'f'].includes(normalized)) {
+                return false;
+            }
+        }
+        return undefined;
     };
+
+    const parseNumber = (value: unknown): number | undefined => {
+        if (value === null || typeof value === 'undefined') {
+            return undefined;
+        }
+        if (typeof value === 'number') {
+            return value;
+        }
+        if (typeof value === 'string') {
+            const sanitized = value.replace(/,/g, '').trim();
+            if (!sanitized) {
+                return undefined;
+            }
+            const parsed = Number(sanitized);
+            return Number.isNaN(parsed) ? undefined : parsed;
+        }
+        return undefined;
+    };
+
+    const normalizedIsFavorite = parseBoolean(rawIsFavorite);
+    const normalizedLikesCount = parseNumber(rawLikesCount);
+
+    const normalizedResult: ToggleFavoriteResponse = {};
+
+    if (typeof normalizedIsFavorite === 'boolean') {
+        normalizedResult.isFavorite = normalizedIsFavorite;
+    }
+
+    if (typeof normalizedLikesCount === 'number' && !Number.isNaN(normalizedLikesCount)) {
+        normalizedResult.likesCount = normalizedLikesCount;
+    }
+
+    return normalizedResult;
 };
 
 export const fetchFavoriteProducts = async (

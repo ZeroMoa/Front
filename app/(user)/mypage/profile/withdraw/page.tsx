@@ -4,6 +4,10 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { submitWithdrawSurvey, withdrawUser } from '../../../store/api/userAuthApi';
+import { useAppDispatch } from '../../../store/slices/store';
+import { logout } from '../../../store/slices/authSlice';
+import { useQueryClient } from '@tanstack/react-query';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const REASON_ORDER = [
     '정보가 적음',
@@ -18,10 +22,14 @@ const sortReasons = (reasons: string[]) =>
 
 export default function WithdrawPage() {
     const router = useRouter();
+    const dispatch = useAppDispatch();
+    const queryClient = useQueryClient();
     const [password, setPassword] = useState('');
     const [reasonCodes, setReasonCodes] = useState<string[]>([]);
     const [reasonComment, setReasonComment] = useState('');
-    const [error, setError] = useState<string | null>(null);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [formError, setFormError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value, checked } = e.target;
@@ -37,42 +45,47 @@ export default function WithdrawPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError(null);
+        setPasswordError(null);
+        setFormError(null);
 
         if (!password) {
-            setError('비밀번호를 입력해주세요.');
+            setPasswordError('비밀번호를 입력해주세요.');
             return;
         }
 
-        if (reasonCodes.length === 0 && reasonComment.trim() === '') {
-            setError('탈퇴 사유를 하나 이상 선택하거나 의견을 입력해주세요.');
-            return;
-        }
+        setIsSubmitting(true);
 
         try {
-            // 1. 회원 탈퇴 API 호출 (DELETE /user) - 먼저 실행
             await withdrawUser({ password });
 
-            // 2. 탈퇴 성공 시에만 탈퇴 설문조사 API 호출 (POST /survey/withdraw)
             await submitWithdrawSurvey({
-                password: password, // 백엔드 DTO @NotBlank로 인해 필수 (비밀번호는 이미 위에서 검증되었지만 DTO 요구사항상 포함)
-                reasonCodes: reasonCodes,
+                password,
+                reasonCodes: reasonCodes.length > 0 ? reasonCodes : undefined,
                 reasonComment: reasonComment.trim() === '' ? undefined : reasonComment,
             });
 
+            dispatch(logout());
+            queryClient.removeQueries({ queryKey: ['user'], exact: true });
+
             alert('회원 탈퇴가 성공적으로 처리되었습니다. 설문조사도 저장되었습니다.');
-            router.push('/'); // 탈퇴 후 홈으로 이동
-        } catch (err: any) {
+            router.push('/');
+        } catch (err: unknown) {
             console.error('회원 탈퇴 처리 중 오류 발생:', err);
-            if (err.message.includes('비밀번호가 일치하지 않습니다. 회원 탈퇴를 진행할 수 없습니다.')) {
-                alert('비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
-            } else if (err.message.includes('접근 권한이 없습니다.')) {
-                alert('회원 탈퇴 권한이 없습니다. 관리자에게 문의하세요.');
+            const message = err instanceof Error ? err.message : '회원 탈퇴 처리 중 오류가 발생했습니다.';
+
+            if (message.includes('비밀번호')) {
+                setPasswordError('비밀번호를 잘못 입력하셨습니다.');
+            } else if (message.includes('접근 권한이 없습니다')) {
+                setFormError('회원 탈퇴 권한이 없습니다. 관리자에게 문의하세요.');
             } else {
-                setError(`오류: ${err.message}`);
+                setFormError(message);
             }
+        } finally {
+            setIsSubmitting(false);
         }
     };
+
+    const isPasswordError = Boolean(passwordError);
 
     return (
         <div className={styles.pageWrapper}>
@@ -110,13 +123,13 @@ export default function WithdrawPage() {
                                     name="password"
                                     placeholder="현재 비밀번호를 입력해주세요"
                                     type="password"
-                                    className={styles.inputField}
+                                    className={`${styles.inputField} ${isPasswordError ? styles.inputError : ''}`}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
                         </div>
-                        {error && password === '' && <p className={styles.errorMessage}>{error}</p>}
+                        {passwordError && <p className={styles.errorMessage}>{passwordError}</p>}
                     </div>
 
                     <div className={styles.inputGroup}>
@@ -155,15 +168,25 @@ export default function WithdrawPage() {
                                 <span className={styles.contentLengthCounter}>{reasonComment.length}</span>
                             </div>
                         </div>
-                        {error && (password === '' || (reasonCodes.length === 0 && reasonComment.trim() === ''))}
                     </div>
+
+                    {formError && (
+                        <p className={styles.errorMessage}>{formError}</p>
+                    )}
 
             <div className={styles.buttonGroup}>
                         <button type="button" className={`${styles.bottomButton} ${styles.cancelButton}`} onClick={() => router.back()}>
                             <span className={styles.buttonText}>취소</span>
                         </button>
-                        <button type="submit" className={`${styles.bottomButton} ${styles.withdrawButton}`}>
-                            <span className={styles.buttonText}>탈퇴</span>
+                        <button type="submit" className={`${styles.bottomButton} ${styles.withdrawButton}`} disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <span className={styles.buttonLoading}>
+                                    <CircularProgress size={18} />
+                                    <span className={styles.buttonLoadingText}>탈퇴 진행 중...</span>
+                                </span>
+                            ) : (
+                                <span className={styles.buttonText}>탈퇴</span>
+                            )}
                         </button>
                     </div>
                 </form>

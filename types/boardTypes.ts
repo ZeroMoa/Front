@@ -5,7 +5,7 @@ export interface BoardAttachment {
     fileSize: number;
 }
 
-export type BoardType = 'NOTICE' | 'FREE' | 'QNA';
+export type BoardType = 'NOTICE' | 'FAQ' | 'EVENT';
 export type BoardSearchType = 'TITLE' | 'CONTENT' | 'TITLE_OR_CONTENT';
 
 export interface BoardResponse {

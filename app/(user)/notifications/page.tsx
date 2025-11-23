@@ -7,6 +7,7 @@ import styles from './page.module.css';
 import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotification } from '../hooks/useNotification';
 import { UserNotificationResponse } from '@/types/notificationTypes';
 import { getCdnUrl } from '@/lib/cdn';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function NotificationsPage() {
     const router = useRouter();
@@ -104,7 +105,12 @@ export default function NotificationsPage() {
     };
 
     if (!isHydrated || isLoading) {
-        return <p className={styles.loading}>알림을 불러오는 중입니다...</p>;
+        return (
+            <div className={styles.loadingState}>
+                <CircularProgress size={28} />
+                <span className={styles.loadingText}>알림을 불러오는 중입니다...</span>
+            </div>
+        );
     }
     if (error) return <p className={styles.noNotifications}>알림을 불러오는데 실패했습니다: {error.message}</p>;
 

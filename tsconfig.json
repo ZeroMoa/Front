@@ -20,7 +20,8 @@
       "@components/*": ["components/*"],
       "@lib/*": ["lib/*"],
       "@store/*": ["app/(user)/store/*"],
-      "@product/*": ["app/(user)/product/*"]
+      "@product/*": ["app/(user)/product/*"],
+      "@types/*": ["types/*"]
 
     },
     "esModuleInterop": true,

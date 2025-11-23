@@ -11,14 +11,16 @@ import { fetchProductSearch } from '../store/api/userProductApi'
 import { Product } from '@/types/productTypes'
 import { useIsLoggedIn } from '../hooks/useAuth'
 import { getCdnUrl } from '@/lib/cdn'
-import { useAppDispatch } from '../store/slices/store'
-import { setLoggedIn, setUser } from '../store/slices/authSlice'
+import { useAppDispatch, useAppSelector } from '../store/slices/store'
+import { selectIsLoggedIn, setLoggedIn, setUser } from '../store/slices/authSlice'
 
 export default function HomePage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
     const { isLoggedIn: queryIsLoggedIn, userData, isLoading: authLoading, error: authError } = useIsLoggedIn();
+    const reduxIsLoggedIn = useAppSelector(selectIsLoggedIn);
+    const isAuthenticated = Boolean(queryIsLoggedIn || reduxIsLoggedIn);
     const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
     const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
     const [favoriteError, setFavoriteError] = useState<string | null>(null);
@@ -59,9 +61,10 @@ export default function HomePage() {
         let cancelled = false;
 
         const loadFavorites = async () => {
-            if (!queryIsLoggedIn) {
+            if (!isAuthenticated) {
                 setFavoriteProducts([]);
                 setFavoriteError(null);
+                setIsFavoriteLoading(false);
                 return;
             }
 
@@ -91,11 +94,11 @@ export default function HomePage() {
         return () => {
             cancelled = true;
         };
-    }, [queryIsLoggedIn]);
+    }, [isAuthenticated]);
 
     const handleViewAllFavorites = () => {
-        if (!queryIsLoggedIn) {
-            alert('로그인 후 이용해주세요');
+        if (!isAuthenticated) {
+            alert('로그인 후 이용해주세요~.~');
             return;
         }
         router.push('/favorites');
@@ -156,21 +159,33 @@ export default function HomePage() {
                 <div className={styles.searchTags}>
                     <button 
                         className={styles.tag}
-                        onClick={() => handleTagClick("주스")}
+                        onClick={() => handleTagClick("제로")}
                     >
-                        주스
+                        제로
                     </button>
                     <button 
                         className={styles.tag}
-                        onClick={() => handleTagClick("젤리")}
+                        onClick={() => handleTagClick("저당")}
                     >
-                        젤리
+                        저당
                     </button>
                     <button 
                         className={styles.tag}
-                        onClick={() => handleTagClick("단백질 바")}
+                        onClick={() => handleTagClick("단백질")}
                     >
-                        단백질 바
+                        단백질 
+                    </button>
+                    <button 
+                        className={styles.tag}
+                        onClick={() => handleTagClick("콜라")}
+                    >
+                        콜라 
+                    </button>
+                    <button 
+                        className={styles.tag}
+                        onClick={() => handleTagClick("초콜릿")}
+                    >
+                        초콜릿
                     </button>
                 </div>
             </section>
@@ -264,7 +279,7 @@ export default function HomePage() {
                 <Link href="/board" className={styles.noticeLink}>
                     <div className={styles.noticeItem}>
                         <Image
-                            src={getCdnUrl('/images/notice.png')}
+                            src={getCdnUrl('/images/notice2.png')}
                             alt="공지사항"
                             width={80}
                             height={80}

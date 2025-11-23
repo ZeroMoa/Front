@@ -1,5 +1,5 @@
 import { ProductResponse, Product, normalizeProduct } from '@/types/productTypes';
-import type { NutritionSlug } from '@/app/product/config';
+import type { NutritionSlug } from '@/app/(user)/product/config';
 
 const PRODUCT_API_BASE_URL =
     process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
@@ -191,26 +191,78 @@ export async function fetchNutritionProducts(
     const query = buildNutritionQuery(params);
     const endpoint = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product/${nutritionSlug}?${query.toString()}`;
 
+    const isBrowser = typeof window !== 'undefined';
+
+    if (isBrowser) {
+        const { fetchWithAuth } = await import('../../../../lib/common/api/fetchWithAuth');
+        const response = await fetchWithAuth(`/product/${nutritionSlug}?${query.toString()}`, {
+            method: init?.method ?? 'GET',
+            cache: init?.cache ?? 'no-store',
+            ...init,
+        });
+
+        if (!response.ok) {
+            const errorPayload = await response
+                .json()
+                .catch(async () => ({ message: await response.text().catch(() => response.statusText) }));
+
+            console.error('[fetchNutritionProducts] 요청 실패', {
+                endpoint,
+                status: response.status,
+                statusText: response.statusText,
+                payload: errorPayload,
+            });
+
+            throw new Error(`영양 기준 제품 조회에 실패했습니다. (status: ${response.status})`);
+        }
+
+        const payload = await response.json();
+        return normalizeProductResponse(payload);
+    }
+
+    let headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...(init?.headers ?? {}),
+    };
+
+    let serializedCookies: string | undefined;
+
+    try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        const allCookies = cookieStore.getAll();
+
+        if (allCookies.length > 0) {
+            serializedCookies = allCookies.map(({ name, value }) => `${name}=${value}`).join('; ');
+        }
+    } catch (error) {
+        console.warn('[fetchNutritionProducts] cookies() 호출 실패, 비인증 요청으로 진행합니다.', error);
+    }
+
+    if (serializedCookies) {
+        headers = {
+            ...headers,
+            Cookie: serializedCookies,
+        };
+    }
+
     let response = await fetch(endpoint, {
         cache: init?.cache ?? 'no-store',
         ...init,
-        headers: {
-            'Content-Type': 'application/json',
-            ...(init?.headers ?? {}),
-        },
-        credentials: 'omit',
+        headers,
+        credentials: 'include',
     });
 
     if (response.status === 401) {
         try {
             const { fetchWithAuth } = await import('../../../../lib/common/api/fetchWithAuth');
-            response = await fetchWithAuth(`/product/search?${query.toString()}`, {
+            response = await fetchWithAuth(`/product/${nutritionSlug}?${query.toString()}`, {
                 method: init?.method ?? 'GET',
                 cache: init?.cache ?? 'no-store',
                 ...init,
             });
         } catch (error) {
-            console.warn('[fetchProductSearch] 인증 요청 재시도 실패, 원본 응답을 사용합니다.', error);
+            console.warn('[fetchNutritionProducts] 인증 요청 재시도 실패, 원본 응답을 사용합니다.', error);
         }
     }
 

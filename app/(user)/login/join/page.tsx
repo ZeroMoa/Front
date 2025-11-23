@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -45,6 +45,8 @@ export default function JoinPage() {
     const [isDirectInput, setIsDirectInput] = useState(false); // 이메일 도메인 직접 입력 여부
     const [isUsernameValidState, setIsUsernameValidState] = useState<boolean | null>(null); // 아이디 최종 유효성 상태: null(검사중), true(유효), false(유효하지 않음)
     const [isEmailValidState, setIsEmailValidState] = useState<boolean | null>(null); // 이메일 최종 유효성 상태: null(검사중), true(유효), false(유효하지 않음)
+    const emailDropdownRef = useRef<HTMLDivElement | null>(null);
+    const [emailDirty, setEmailDirty] = useState(false);
 
     // 비밀번호 가시성 상태 추가
     const [showPassword, setShowPassword] = useState(false);
@@ -119,14 +121,40 @@ export default function JoinPage() {
     useEffect(() => {
         if (debouncedUsername) {
             checkExistenceCallback('username', debouncedUsername);
+        } else {
+            setUsernameError(null);
+            setUsernameSuccess(null);
+            setIsUsernameValidState(null);
         }
     }, [debouncedUsername, checkExistenceCallback]);
 
     useEffect(() => {
-        if (debouncedEmailFront && debouncedEmailBack && debouncedEmail !== '@') {
+        if (
+            emailDirty &&
+            debouncedEmailFront &&
+            debouncedEmailBack &&
+            debouncedEmail !== '@'
+        ) {
             checkExistenceCallback('email', debouncedEmail);
         }
-    }, [debouncedEmail, checkExistenceCallback, debouncedEmailFront, debouncedEmailBack]);
+    }, [debouncedEmail, checkExistenceCallback, debouncedEmailFront, debouncedEmailBack, emailDirty]);
+
+    useEffect(() => {
+        if (!showEmailDomainSelect) {
+            return;
+        }
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (emailDropdownRef.current && !emailDropdownRef.current.contains(event.target as Node)) {
+                setShowEmailDomainSelect(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showEmailDomainSelect]);
 
     const handleNext = async (e: React.FormEvent) => { // async로 변경
         e.preventDefault();
@@ -217,9 +245,11 @@ export default function JoinPage() {
         if (domain === '직접입력') {
             setEmailBack('');
             setIsDirectInput(true);
+            setEmailDirty(false);
         } else {
             setEmailBack(domain);
             setIsDirectInput(false);
+            setEmailDirty(Boolean(emailFront));
         }
         setShowEmailDomainSelect(false);
         setEmailError(null);
@@ -246,7 +276,13 @@ export default function JoinPage() {
                                     id="username" 
                                     className={`${styles.inputField} ${username ? styles.hasValue : ''}`}
                                     value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    onChange={(e) => {
+                                        const normalized = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                                        setUsername(normalized);
+                                    }}
+                                    inputMode="text"
+                                    pattern="[A-Za-z0-9]*"
+                                    autoComplete="username"
                                     required /* onBlur 제거 */
                                 />
                             </div>
@@ -264,12 +300,16 @@ export default function JoinPage() {
                                         className={`${styles.inputInfo} ${styles.emailInput}`}
                                         placeholder="이메일 주소 입력"
                                         value={emailFront}
-                                        onChange={(e) => setEmailFront(e.target.value)}
+                                        onChange={(e) => {
+                                            setEmailFront(e.target.value);
+                                            setEmailDirty(true);
+                                        }}
                                         required /* onBlur 제거 */
                                     />
                                 </div>
                                 <div className={styles.textAt}>@</div>
                                 <div
+                                    ref={emailDropdownRef}
                                     className={`${styles.boxSelect} ${showEmailDomainSelect ? styles.on : ''}`}
                                 >
                                     {isDirectInput ? (
@@ -279,7 +319,10 @@ export default function JoinPage() {
                                             className={`${styles.inputInfo} ${styles.emailInput} ${styles.domainInputField} ${emailBack ? styles.hasValue : ''}`}
                                             placeholder="직접 입력"
                                             value={emailBack}
-                                            onChange={(e) => setEmailBack(e.target.value)}
+                                            onChange={(e) => {
+                                                setEmailBack(e.target.value);
+                                                setEmailDirty(true);
+                                            }}
                                             onClick={(e) => e.stopPropagation()} // 입력 필드를 클릭했을 때 상위 이벤트 방지
                                             required={!emailError} /* 이메일 오류가 없을 때만 required */
                                         />

@@ -28,6 +28,11 @@ export default function FavoritesPage() {
     const [data, setData] = useState<ProductResponse | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [hasHydrated, setHasHydrated] = useState(false);
+
+    useEffect(() => {
+        setHasHydrated(true);
+    }, []);
 
     useEffect(() => {
         if (authLoading) {
@@ -36,7 +41,7 @@ export default function FavoritesPage() {
 
         if (!isLoggedIn && !alertShownRef.current) {
             alertShownRef.current = true;
-            alert('로그인 후 이용해주세요');
+            alert('로그인 후 이용해주세요~.~');
             router.replace('/');
         }
     }, [authLoading, isLoggedIn, router]);
@@ -85,6 +90,14 @@ export default function FavoritesPage() {
     const totalElements = data?.totalElements ?? 0;
     const totalPages = data?.totalPages ?? 0;
     const currentContent = data?.content ?? [];
+    const isFetching = authLoading || isLoading;
+    const effectiveIsFetching = hasHydrated && isFetching;
+
+    const headerDescription = error
+        ? '좋아요한 제품을 불러오지 못했습니다.'
+        : effectiveIsFetching
+        ? '좋아요 목록 불러오는 중...'
+        : `총 ${totalElements.toLocaleString()}개의 제품을 확인할 수 있어요.`;
 
     const handlePageChange = useCallback(
         (nextPage: number) => {
@@ -116,9 +129,7 @@ export default function FavoritesPage() {
             <header className={styles.header}>
                 <div className={styles.titleGroup}>
                     <h1 className={styles.title}>좋아요한 상품</h1>
-                    <p className={styles.description}>
-                        {isLoading ? '좋아요한 제품을 불러오는 중입니다...' : `총 ${totalElements.toLocaleString()}개의 제품을 확인할 수 있어요.`}
-                    </p>
+                    <p className={styles.description}>{headerDescription}</p>
                 </div>
                 <div className={styles.controls}>
                     <label className={styles.pageSizeLabel}>
@@ -137,10 +148,10 @@ export default function FavoritesPage() {
             <section className={styles.content}>
                 {error ? (
                     <p className={styles.errorMessage}>{error}</p>
+                ) : effectiveIsFetching ? (
+                    <p className={styles.message}>좋아요 목록 불러오는 중...</p>
                 ) : !isLoggedIn ? (
                     <p className={styles.message}>로그인 후 좋아요한 상품을 확인할 수 있습니다.</p>
-                ) : isLoading ? (
-                    <p className={styles.message}>좋아요한 제품을 불러오는 중입니다...</p>
                 ) : currentContent.length === 0 ? (
                     <p className={styles.message}>아직 좋아요한 제품이 없어요.</p>
                 ) : (

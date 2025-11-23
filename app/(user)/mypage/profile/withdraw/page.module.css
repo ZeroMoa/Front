@@ -4,7 +4,6 @@
     padding: 40px 0;
     background-color: #f7f7f7;
     min-height: calc(100vh - var(--header-height)); /* 헤더 높이를 제외한 최소 높이 설정 */
-    margin-top: 120px;
 }
 
 .withdrawContainer {
@@ -130,6 +129,9 @@
 .inputField:focus {
     border-color: #4A90E2;
 }
+.inputError {
+    border-color: #ff6666;
+}
 
 .errorMessage {
     color: #ff6666;
@@ -250,7 +252,18 @@
 }
 
 .withdrawButton:hover {
-    background-color: #3a75c1; /* hover 시 색상 조정 */
+    background: linear-gradient(135deg, #d6455d, #d63d7a);
+}
+
+.buttonLoading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.buttonLoadingText {
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .buttonText {

@@ -170,7 +170,7 @@ export default function Header() {
 
     const handleFavoritesClick = () => {
         if (!isLoggedIn) {
-            alert('로그인 후 이용해주세요');
+            alert('로그인 후 이용해주세요~.~');
             return;
         }
         router.push('/favorites'); // 좋아요 상품 페이지 경로
@@ -230,7 +230,7 @@ export default function Header() {
                 <div className={styles.navContainer}>
                     <div className={styles.logo}>
                         <Link href="/" onClick={() => dispatch(resetState())}>
-                            <Image src={getCdnUrl('/images/logo.png')} alt="제로모아" width={190} height={100} priority={true}/>
+                            <Image src={getCdnUrl('/images/logo.png')} alt="제로모아" width={190} height={90} priority={true}/>
                         </Link>
                     </div>
                     <ul className={styles.nav_links}>

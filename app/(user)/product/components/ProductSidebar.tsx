@@ -111,7 +111,13 @@ export default function ProductSidebar({
     );
 
     const handleSubmit = () => {
-        onKeywordSubmit(inputValue.trim());
+        const trimmed = inputValue.trim();
+        if (!trimmed) {
+            alert('검색어를 입력해주세요.');
+            setInputValue('');
+            return;
+        }
+        onKeywordSubmit(trimmed);
     };
 
     const handleKeyPress: React.KeyboardEventHandler<HTMLInputElement> = (event) => {

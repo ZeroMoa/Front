@@ -11,7 +11,7 @@ import {
     isNutritionSlug,
 } from '../config';
 import type { CategorySlug, NutritionSlug, SubCategoryConfig } from '../config';
-import { fetchProductSearch } from '@/app/store/api/product';
+import { fetchProductSearch } from '@/app/(user)/store/api/userProductApi';
 import ProductPageClient from '../components/ProductPageClient';
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
