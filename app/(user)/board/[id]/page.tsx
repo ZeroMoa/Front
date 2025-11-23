@@ -21,6 +21,8 @@ export default function BoardDetailPage() {
     const boardNo = Number(boardIdParam);
 
     const { data, isLoading, isError, error } = useBoardDetail(boardNo);
+    const boardTypeLabel = data ? BOARD_TYPE_LABELS[data.boardType] ?? data.boardType : undefined;
+    const activeTabClass = data ? tabClassMap[data.boardType] : '';
 
     useEffect(() => {
         if (!isError || !(error instanceof Error)) {
@@ -35,12 +37,21 @@ export default function BoardDetailPage() {
         router.push('/board');
     };
 
-    const renderBackButton = () => (
+    const renderBackRow = () => (
         <div className={styles.backButtonRow}>
             <button type="button" className={styles.backButton} onClick={handleBackClick} aria-label="목록 페이지로 이동">
                 <span className={styles.backIcon} aria-hidden="true" />
                 <span className={styles.backText}>목록으로</span>
             </button>
+            {data?.boardType && boardTypeLabel && (
+                <div className={styles.tabWrap}>
+                    <ul className={styles.tabList}>
+                        <li className={`${styles.tabItem} ${styles.activeTab} ${activeTabClass}`}>
+                            <span>{boardTypeLabel}</span>
+                        </li>
+                    </ul>
+                </div>
+            )}
         </div>
     );
 
@@ -57,7 +68,7 @@ export default function BoardDetailPage() {
     if (!boardIdParam || Number.isNaN(boardNo)) {
         return (
             <div className={styles.wrapper}>
-                {renderBackButton()}
+                {renderBackRow()}
                 <div className={styles.errorBox}>잘못된 접근입니다.</div>
                 <div className={styles.actionRow}>
                     <button className={styles.listButton} onClick={handleBackClick}>목록</button>
@@ -69,7 +80,7 @@ export default function BoardDetailPage() {
     if (isLoading) {
         return (
             <div className={styles.wrapper}>
-                {renderBackButton()}
+                {renderBackRow()}
                 <div className={styles.loadingBox}>게시글을 불러오는 중입니다...</div>
             </div>
         );
@@ -82,7 +93,7 @@ export default function BoardDetailPage() {
         }
         return (
             <div className={styles.wrapper}>
-                {renderBackButton()}
+                {renderBackRow()}
                 <div className={styles.errorBox}>{errorMessage}</div>
                 <div className={styles.actionRow}>
                     <button className={styles.listButton} onClick={handleBackClick}>목록</button>
@@ -92,19 +103,10 @@ export default function BoardDetailPage() {
     }
 
     const attachments = data.attachments ?? [];
-    const boardTypeLabel = BOARD_TYPE_LABELS[data.boardType] ?? data.boardType;
 
     return (
         <div className={styles.wrapper}>
-            {renderBackButton()}
-            <div className={styles.tabWrap}>
-                <ul className={styles.tabList}>
-                    <li className={`${styles.tabItem} ${styles.activeTab} ${data ? tabClassMap[data.boardType] : ''}`}>
-                        <span>{boardTypeLabel}</span>
-                    </li>
-                </ul>
-            </div>
-
+            {renderBackRow()}
             <div className={styles.detailCard}>
                 <div className={styles.detailHeader}>
                     <div className={styles.titleRow}>

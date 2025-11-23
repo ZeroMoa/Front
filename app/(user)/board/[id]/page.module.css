@@ -1,8 +1,8 @@
 /* app/board/[id]/page.module.css */
 
 .wrapper {
-    max-width: 920px;
-    margin: 20px auto 60px auto;
+    max-width: 960px;
+    margin: 40px auto 60px auto;
     padding: 36px 48px;
     background: radial-gradient(circle at top, #ffffff 0%, #f8fbff 60%, #f3f6fb 100%);
     border-radius: 18px;
@@ -12,8 +12,9 @@
 
 .backButtonRow {
     display: flex;
-    justify-content: flex-start;
+    align-items: center;
     margin-bottom: 18px;
+    gap: 16px;
 }
 
 .backButton {
@@ -52,8 +53,8 @@
 
 .tabWrap {
     display: flex;
-    justify-content: flex-start;
-    margin-bottom: 22px;
+    justify-content: flex-end;
+    margin-bottom: 0;
 }
 
 .tabList {

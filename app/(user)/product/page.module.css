@@ -6,7 +6,7 @@
     display: grid;
     grid-template-columns: 280px 1fr;
     gap: 32px;
-    margin: 20px auto 80px auto;
+    margin: 40px auto 80px auto;
     max-width: 1280px;
     padding: 0 24px;
 }
@@ -971,8 +971,15 @@
 
 .listActions {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
     gap: 16px;
+    width: 100%;
+}
+
+.listActionsControls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-left: auto;
 }
 

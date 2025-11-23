@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import CircularProgress from '@mui/material/CircularProgress';
 import styles from './page.module.css';
 import { Product, normalizeProduct } from '../../../../types/productTypes';
 import { getCdnUrl } from '@/lib/cdn';
@@ -192,7 +193,12 @@ export default function ProductDetail() {
     }, [shouldRedirectNotFound, router]);
 
     if (isLoading) {
-        return <div className={styles.loading}>로딩 중...</div>;
+        return (
+            <div className={styles.loading}>
+                <CircularProgress size={40} />
+                <p>제품 정보를 불러오는 중입니다...</p>
+            </div>
+        );
     }
 
     if (error) {

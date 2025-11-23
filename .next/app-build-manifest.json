@@ -40,11 +40,47 @@
       "static/chunks/main-app.js",
       "static/chunks/app/_not-found/page.js"
     ],
+    "/(user)/login/join/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/login/join/page.css",
+      "static/chunks/app/(user)/login/join/page.js"
+    ],
     "/(user)/product/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/(user)/product/page.css",
       "static/chunks/app/(user)/product/page.js"
+    ],
+    "/(user)/product/search/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/product/search/page.css",
+      "static/chunks/app/(user)/product/search/page.js"
+    ],
+    "/(user)/product/[productNo]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/product/[productNo]/page.css",
+      "static/chunks/app/(user)/product/[productNo]/page.js"
+    ],
+    "/(user)/board/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/board/page.css",
+      "static/chunks/app/(user)/board/page.js"
+    ],
+    "/(user)/board/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/board/[id]/page.css",
+      "static/chunks/app/(user)/board/[id]/page.js"
+    ],
+    "/(user)/board/[...slug]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/board/[...slug]/page.css",
+      "static/chunks/app/(user)/board/[...slug]/page.js"
     ]
   }
 }

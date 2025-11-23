@@ -316,6 +316,13 @@
     font-size: 18px;
 }
 
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
 .error {
     color: #e53935;
 }

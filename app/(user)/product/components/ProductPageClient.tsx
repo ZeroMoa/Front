@@ -316,6 +316,42 @@ export default function ProductPageClient({
         });
     };
 
+    const handleHeroFilterToggle = (slug: NutritionSlug) => {
+        const filterKey = HERO_FILTER_MAP[slug];
+        if (!filterKey) {
+            return;
+        }
+        if (lockedFilters?.includes(filterKey)) {
+            return;
+        }
+
+        const isActive = currentFilters[filterKey];
+        if (isActive) {
+            commitUpdates({ [filterKey]: null, isNew: null, page: 0 });
+            return;
+        }
+
+        const filterReset = PRODUCT_FILTER_KEYS.reduce<Record<string, string | null>>((accumulator, key) => {
+            accumulator[key] = null;
+            return accumulator;
+        }, {});
+
+        commitUpdates({
+            ...filterReset,
+            [filterKey]: 'true',
+            isNew: null,
+            page: 0,
+        });
+    };
+
+    const handleHeroButtonClick = (slug: NutritionSlug) => {
+        if (mode === 'nutrition') {
+            handleCollectionNavigate(slug);
+            return;
+        }
+        handleHeroFilterToggle(slug);
+    };
+
     const handleNewHeroSelect = (slug: 'all' | NutritionSlug) => {
         const baseUpdates: Record<string, string | null> = {
             isZeroCalorie: null,
@@ -441,7 +477,7 @@ export default function ProductPageClient({
                                 key={item.slug}
                                 type="button"
                                 className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
-                                onClick={() => handleCollectionNavigate(item.slug)}
+                                onClick={() => handleHeroButtonClick(item.slug)}
                                 aria-pressed={isActive}
                             >
                                 <span className={styles.heroCardLabel}>{item.label}</span>
@@ -650,28 +686,48 @@ export default function ProductPageClient({
                         {renderHeroInline()}
                     </div>
                 )}
-                        <div className={styles.listActions}>
-                            <label className={styles.sortLabel}>
-                                정렬
-                                <select value={normalizedSort} onChange={handleSortChange} className={styles.sortSelect}>
-                                    {SORT_OPTIONS.map((option) => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-                            <label className={styles.pageSizeLabel}>
-                                페이지 크기
-                                <select value={selectedPageSize} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-                                    {pageSizeOptions.map((option) => (
-                                        <option key={option} value={option}>
-                                            {option}개씩 보기
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-                        </div>
+                <div className={styles.listActions}>
+                    {mode === 'category' && activeCategorySlug === 'icecream' && (
+                        <span className={styles.categoryCount}>{totalElements.toLocaleString()}개</span>
+                    )}
+                    <div className={styles.listActionsControls}>
+                        {mode === 'category' && activeCategorySlug === 'icecream' && (
+                            <>
+                                <button
+                                    type="button"
+                                    className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${
+                                        isNewActive ? styles.heroCardActive : ''
+                                    }`}
+                                    onClick={handleNewToggle}
+                                    aria-pressed={isNewActive}
+                                >
+                                    신제품
+                                </button>
+                                <span className={styles.heroDivider} aria-hidden="true" />
+                            </>
+                        )}
+                        <label className={styles.sortLabel}>
+                            정렬
+                            <select value={normalizedSort} onChange={handleSortChange} className={styles.sortSelect}>
+                                {SORT_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className={styles.pageSizeLabel}>
+                            페이지 크기
+                            <select value={selectedPageSize} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
+                                {pageSizeOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                        {option}개씩 보기
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
+                </div>
 
                 <ProductGrid
                     products={clientContent}

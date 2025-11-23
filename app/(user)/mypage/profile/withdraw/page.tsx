@@ -67,7 +67,7 @@ export default function WithdrawPage() {
             dispatch(logout());
             queryClient.removeQueries({ queryKey: ['user'], exact: true });
 
-            alert('회원 탈퇴가 성공적으로 처리되었습니다. 설문조사도 저장되었습니다.');
+            alert('회원 탈퇴가 성공적으로 처리되었습니다.');
             router.push('/');
         } catch (err: unknown) {
             console.error('회원 탈퇴 처리 중 오류 발생:', err);

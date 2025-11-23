@@ -292,7 +292,7 @@ export default function HomePage() {
                     </div>
                 </Link>
             </section>
-
+            <div className={styles.sectionDivider} aria-hidden="true" />
             <section className={styles.newSection}>
                 <div className={styles.favoriteHeader}>
                     <h2 className={styles.favoriteTitle}>따끈따끈 신제품</h2>
@@ -309,7 +309,7 @@ export default function HomePage() {
                     <ProductGrid products={newProducts} className={styles.favoriteGrid} />
                 )}
             </section>
-
+            <div className={styles.sectionDivider} aria-hidden="true" />
             <section className={styles.favoriteSection}>
                 <div className={styles.favoriteHeader}>
                     <h2 className={styles.favoriteTitle}>내가 좋아하는 상품</h2>
