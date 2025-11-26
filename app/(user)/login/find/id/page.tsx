@@ -1,19 +1,58 @@
-'use client'
+ 'use client'
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAppDispatch } from '../../../store/slices/store';
+import { openLoginModal } from '../../../store/slices/authSlice';
 import styles from './page.module.css'; // 이 페이지 전용 CSS
 import ErrorModal from '../../find/component/ErrorModal'; // 공통 모달 임포트 경로 수정
 import { findUserId } from '../../../store/api/userAuthApi';
-import { FindIdRequest, FindIdResponse } from '../../../../types/auth';
+import { FindIdResponse } from '../../../../../types/authTypes';
+
+const EMAIL_DOMAINS = [
+    'naver.com',
+    'gmail.com',
+    'hanmail.net',
+    'nate.com',
+    'hotmail.com',
+    'daum.net',
+    'outlook.com',
+    'kakao.com',
+];
+
+const getRawErrorMessage = (error: unknown): string => {
+    if (typeof error === 'string') return error;
+    if (typeof error === 'object' && error !== null) {
+        if ('message' in error && typeof (error as { message?: unknown }).message === 'string') {
+            return (error as { message?: string }).message as string;
+        }
+        if ('message' in error) {
+            return String((error as { message?: unknown }).message);
+        }
+    }
+    return '';
+};
+
+const getFindIdFriendlyError = (error: unknown): string => {
+    const rawMessage = getRawErrorMessage(error);
+    if (rawMessage.includes('Failed to fetch')) {
+        return '서버와 연결이 끊어졌습니다.';
+    }
+    if (rawMessage.includes('인증 자격')) {
+        return '이메일 주소를 잘못 입력하셨습니다.';
+    }
+    return rawMessage || '아이디 찾기 중 오류가 발생했습니다.';
+};
 
 export default function FindIdPage() {
-    const router = useRouter();
+    const dispatch = useAppDispatch();
 
     // 아이디 찾기 관련 상태
     const [findIdName, setFindIdName] = useState('');
-    const [findIdEmail, setFindIdEmail] = useState('');
+    const [findIdEmailFront, setFindIdEmailFront] = useState('');
+    const [findIdEmailBack, setFindIdEmailBack] = useState('');
+    const [showEmailDomainSelect, setShowEmailDomainSelect] = useState(false);
+    const [isEmailDirectInput, setIsEmailDirectInput] = useState(false);
+    const emailDropdownRef = useRef<HTMLDivElement | null>(null);
     const [foundUsername, setFoundUsername] = useState<string | null>(null); // 찾은 아이디
     const [foundCreatedDate, setFoundCreatedDate] = useState<string | null>(null); // 가입 날짜
     const [showFullId, setShowFullId] = useState(false); // 아이디 전체보기 상태
@@ -35,73 +74,148 @@ export default function FindIdPage() {
         setErrorMessage('');
     };
 
+    useEffect(() => {
+        if (!showEmailDomainSelect) {
+            return;
+        }
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (emailDropdownRef.current && !emailDropdownRef.current.contains(event.target as Node)) {
+                setShowEmailDomainSelect(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showEmailDomainSelect]);
+
     // 아이디 찾기 API 호출
     const handleFindId = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const trimmedFront = findIdEmailFront.trim();
+        const trimmedBack = findIdEmailBack.trim();
+        if (!trimmedFront || !trimmedBack) {
+            openErrorModal('이메일을 완전하게 입력해 주세요.');
+            return;
+        }
+
         try {
             const data: FindIdResponse = await findUserId({
                 name: findIdName,
-                email: findIdEmail,
+                email: `${trimmedFront}@${trimmedBack}`,
             });
             setFoundUsername(data.username);
             setFoundCreatedDate(data.createdDate);
             setFindIdStep(2); // 성공 화면으로 전환
         } catch (error: any) {
             console.error('아이디 찾기 요청 중 오류 발생:', error);
-            openErrorModal(error.message || '아이디 찾기 중 오류가 발생했습니다.');
+            openErrorModal(getFindIdFriendlyError(error));
         }
     };
 
     const handleLoginRedirect = () => {
-        router.push('/'); // 메인 페이지로 이동 또는 로그인 모달 열기
-        //dispatch(openLoginModal());
+        dispatch(openLoginModal());
     };
 
     return (
         <div className={styles.container}>
             <div className={styles.card}>
                 <h2 className={styles.title}>아이디 찾기</h2>
+                <div className={styles.sectionDivider} aria-hidden="true" />
 
-                <div className={styles.tabContainer}> {/* 탭 내비게이션은 이메일 인증만 남김 */}
-                    <button
-                        type="button"
-                        className={`${styles.tabButton} ${styles.activeTab}`}
-                        disabled // 단일 탭이므로 비활성화
-                    >
-                        이메일 인증
-                    </button>
-                </div>
-
-                {/* 아이디 찾기 내용 */}
                 <div className={styles.tabContent}>
                     {findIdStep === 1 && (
-                        <form onSubmit={handleFindId} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div className={styles.inputGroup}>
-                                <label htmlFor="findIdName">이름</label>
-                                <input
-                                    type="text"
-                                    id="findIdName"
-                                    className={styles.inputField}
-                                    placeholder="이름을 입력해 주세요"
-                                    value={findIdName}
-                                    onChange={(e) => setFindIdName(e.target.value)}
-                                    required
-                                />
-                            </div>
+                        <form
+                            onSubmit={handleFindId}
+                            style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                        >
                             <div className={styles.inputGroup}>
                                 <label htmlFor="findIdEmail">이메일</label>
-                                <input
-                                    type="email"
-                                    id="findIdEmail"
-                                    className={styles.inputField}
-                                    placeholder="이메일을 입력해 주세요"
-                                    value={findIdEmail}
-                                    onChange={(e) => setFindIdEmail(e.target.value)}
-                                    required
-                                />
+                                <div className={styles.boxEmail}>
+                                    <div className={`${styles.boxInput} ${findIdEmailFront ? styles.hasValue : ''}`}>
+                                        <input
+                                            type="text"
+                                            id="findIdEmail"
+                                            className={`${styles.inputInfo} ${styles.emailInput}`}
+                                            placeholder="이메일 앞자리 입력"
+                                            value={findIdEmailFront}
+                                            onChange={(e) => setFindIdEmailFront(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div className={styles.textAt}>@</div>
+                                    <div ref={emailDropdownRef} className={styles.boxSelect}>
+                                        {isEmailDirectInput ? (
+                                            <input
+                                                type="text"
+                                                className={`${styles.inputInfo} ${styles.emailInput} ${styles.domainInputField} ${
+                                                    findIdEmailBack ? styles.hasValue : ''
+                                                }`}
+                                                placeholder="직접 입력"
+                                                value={findIdEmailBack}
+                                                onChange={(e) => setFindIdEmailBack(e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                required
+                                            />
+                                        ) : (
+                                            <div
+                                                className={`${styles.inputInfo} ${styles.emailInput} ${styles.domainDisplayField} ${
+                                                    findIdEmailBack ? styles.hasValue : ''
+                                                }`}
+                                            >
+                                                {findIdEmailBack || '선택해주세요.'}
+                                            </div>
+                                        )}
+                                        <div
+                                            className={styles.selectArrowContainer}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowEmailDomainSelect((prev) => !prev);
+                                            }}
+                                        >
+                                            <span className={styles.selectArrow}>{showEmailDomainSelect ? '▲' : '▼'}</span>
+                                        </div>
+                                        <div className={styles.boxLayer} style={{ display: showEmailDomainSelect ? 'block' : 'none' }}>
+                                            <ul className={styles.listAdress}>
+                                                <li className={styles.listItem}>
+                                                    <button
+                                                        type="button"
+                                                        className={styles.buttonMail}
+                                                        onClick={() => {
+                                                            setFindIdEmailBack('');
+                                                            setIsEmailDirectInput(true);
+                                                            setShowEmailDomainSelect(false);
+                                                        }}
+                                                    >
+                                                        직접입력
+                                                    </button>
+                                                </li>
+                                                {EMAIL_DOMAINS.map((domain) => (
+                                                    <li key={domain} className={styles.listItem}>
+                                                        <button
+                                                            type="button"
+                                                            className={styles.buttonMail}
+                                                            onClick={() => {
+                                                                setFindIdEmailBack(domain);
+                                                                setIsEmailDirectInput(false);
+                                                                setShowEmailDomainSelect(false);
+                                                            }}
+                                                        >
+                                                            {domain}
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <button type="submit" className={styles.confirmButton}>확인</button>
+                            <button type="submit" className={styles.confirmButton}>
+                                확인
+                            </button>
                         </form>
                     )}
 
@@ -110,19 +224,10 @@ export default function FindIdPage() {
                             <p className={styles.resultMessage}>고객님의 계정을 찾았습니다.</p>
                             <p className={styles.resultSubMessage}>아이디 확인 후 로그인해주세요.</p>
                             <div className={styles.foundIdInfo}>
-                                <Image
-                                    src="/images/ico_profile.svg" // 적절한 프로필 아이콘 경로로 변경
-                                    alt="프로필 아이콘"
-                                    width={24}
-                                    height={24}
-                                    className={styles.profileIcon}
-                                />
                                 <span className={styles.maskedId}>{showFullId ? foundUsername : foundUsername.replace(/(.{2}).+(.{3})/, '$1***$2')}</span>
                                 <span className={styles.joinedDate}>가입일 {foundCreatedDate}</span>
                             </div>
-                            <button type="button" className={styles.fullIdButton} onClick={() => setShowFullId(!showFullId)}>
-                                {showFullId ? '아이디 숨기기' : '아이디 전체보기'}
-                            </button>
+                            
                             <button type="button" className={styles.loginButton} onClick={handleLoginRedirect}>로그인</button>
                         </div>
                     )}

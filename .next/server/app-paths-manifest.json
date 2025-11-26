@@ -1,7 +1,6 @@
 {
-  "/(user)/board/page": "app/(user)/board/page.js",
-  "/(user)/mypage/profile/page": "app/(user)/mypage/profile/page.js",
-  "/(user)/notifications/page": "app/(user)/notifications/page.js",
-  "/(user)/board/[id]/page": "app/(user)/board/[id]/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/(user)/login/find/pw/page": "app/(user)/login/find/pw/page.js",
+  "/(user)/login/find/id/page": "app/(user)/login/find/id/page.js",
   "/(user)/(home)/page": "app/(user)/(home)/page.js"
 }

@@ -199,7 +199,8 @@ export const resetUserPassword = async (data: ResetPasswordRequest): Promise<any
             }
             throw new Error(errorData.message || '비밀번호 재설정에 실패했습니다.');
         }
-        return response.json();
+        const text = await response.text();
+        return { message: text };
     } catch (error: any) {
         // 백엔드 명세: 400 Bad Request에 대해 특정 메시지
         if (error.message.includes('유효하지 않거나 만료된 토큰이거나, 비밀번호 정책에 맞지 않습니다.')) {

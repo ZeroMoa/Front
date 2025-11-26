@@ -18,7 +18,7 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     text-align: center;
     width: 100%;
-    max-width: 350px;
+    max-width: 400px;
 }
 
 .modalContent p {
@@ -26,11 +26,12 @@
     color: #333;
     margin-bottom: 25px;
     line-height: 1.5;
+    white-space: pre-line;
 }
 
 .modalContent button {
     padding: 12px 25px;
-    background-color: #6a0dad;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -41,5 +42,5 @@
 }
 
 .modalContent button:hover {
-    background-color: #5a0ca0;
+    background: linear-gradient(135deg, #4f7cff, #6c5cff);
 }

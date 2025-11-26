@@ -91,6 +91,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         router.push('/login/join'); // 회원가입 페이지로 이동
     };
 
+    const handleFindNavigation = (path: string) => {
+        onClose();
+        if (typeof window !== 'undefined') {
+            window.location.assign(path);
+        } else {
+            router.push(path);
+        }
+    };
+
     return (
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}> {/* 모달 바깥 클릭 시 닫히도록 */}
@@ -156,7 +165,27 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                             />
                             자동 로그인
                         </label>
-                        <Link href="/login/find/id" className={styles.findLinks} onClick={onClose}>아이디찾기</Link><span className={styles.separator}>|</span><Link href="/login/find/pw" className={styles.findLinks} onClick={onClose}>비밀번호 찾기</Link>
+                        <Link
+                            href="/login/find/id"
+                            className={styles.findLinks}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleFindNavigation('/login/find/id');
+                            }}
+                        >
+                            아이디찾기
+                        </Link>
+                        <span className={styles.separator}>|</span>
+                        <Link
+                            href="/login/find/pw"
+                            className={styles.findLinks}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleFindNavigation('/login/find/pw');
+                            }}
+                        >
+                            비밀번호 찾기
+                        </Link>
                     </div>
 
                     <div className={styles.buttonGroup}>

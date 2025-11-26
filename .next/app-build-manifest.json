@@ -1,16 +1,21 @@
 {
   "pages": {
-    "/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
-    ],
     "/not-found": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/not-found.css",
       "static/chunks/app/not-found.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
     ],
     "/(user)/layout": [
       "static/chunks/webpack.js",
@@ -24,17 +29,6 @@
       "static/css/app/(user)/not-found.css",
       "static/chunks/app/(user)/not-found.js"
     ],
-    "/(user)/mypage/profile/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(user)/mypage/profile/page.css",
-      "static/chunks/app/(user)/mypage/profile/page.js"
-    ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
-    ],
     "/(user)/(home)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -46,77 +40,17 @@
       "static/css/app/(user)/(home)/page.css",
       "static/chunks/app/(user)/(home)/page.js"
     ],
-    "/(user)/product/page": [
+    "/(user)/login/find/pw/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/(user)/product/page.css",
-      "static/chunks/app/(user)/product/page.js"
+      "static/css/app/(user)/login/find/pw/page.css",
+      "static/chunks/app/(user)/login/find/pw/page.js"
     ],
-    "/(user)/favorites/page": [
+    "/(user)/login/find/id/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/(user)/favorites/page.css",
-      "static/chunks/app/(user)/favorites/page.js"
-    ],
-    "/(user)/product/new/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(user)/product/new/page.css",
-      "static/chunks/app/(user)/product/new/page.js"
-    ],
-    "/(user)/board/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(user)/board/page.css",
-      "static/chunks/app/(user)/board/page.js"
-    ],
-    "/admin/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/layout.css",
-      "static/chunks/app/admin/layout.js"
-    ],
-    "/admin/products/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/products/page.css",
-      "static/chunks/app/admin/products/page.js"
-    ],
-    "/admin/boards/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/boards/page.css",
-      "static/chunks/app/admin/boards/page.js"
-    ],
-    "/admin/boards/write/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/boards/write/page.css",
-      "static/chunks/app/admin/boards/write/page.js"
-    ],
-    "/admin/boards/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/boards/[id]/page.css",
-      "static/chunks/app/admin/boards/[id]/page.js"
-    ],
-    "/(user)/login/join/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(user)/login/join/page.css",
-      "static/chunks/app/(user)/login/join/page.js"
-    ],
-    "/(user)/board/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(user)/board/[id]/page.css",
-      "static/chunks/app/(user)/board/[id]/page.js"
-    ],
-    "/(user)/notifications/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(user)/notifications/page.css",
-      "static/chunks/app/(user)/notifications/page.js"
+      "static/css/app/(user)/login/find/id/page.css",
+      "static/chunks/app/(user)/login/find/id/page.js"
     ]
   }
 }
