@@ -343,18 +343,24 @@ export default function ProductDetail() {
                         <div className={styles.productHeader}>
                             <div className={styles.productMeta}>
                                 <div className={styles.metaTopRow}>
-                                <span className={styles.category}>
+                                    <span className={styles.category}>
                                         {getCategoryNames(
                                             (product as Product & { parentCategoryNo?: number }).parentCategoryNo ?? product.categoryNo,
                                             product.categoryNo,
                                         )}
-                                </span>
-                                    {product.companyName?.trim() && (
-                                        <span className={styles.companyNameInline}>{product.companyName.trim()}</span>
-                                        )}
+                                    </span>
+                                </div>
+                                <div className={styles.productTitleGroup}>
+                                    <div className={styles.productTitleRow}>
+                                        <h1 className={styles.productName}>{product.productName}</h1>
                                     </div>
-                                <div className={styles.productTitleRow}>
-                                    <h1 className={styles.productName}>{product.productName}</h1>
+                                    <span className={styles.productHeaderDivider} aria-hidden="true" />
+                                    {product.companyName?.trim() && (
+                                        <>
+                                            <p className={styles.companyNameDetail}>{product.companyName.trim()}</p>
+                                            <span className={styles.productHeaderDivider} aria-hidden="true" />
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>

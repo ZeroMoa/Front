@@ -238,6 +238,18 @@ export default function ProductPageClient({
         });
 
         Object.entries(updates).forEach(([key, value]) => {
+            if (key === 'page') {
+                if (value === undefined || value === null || value === '') {
+                    nextParams.delete('page');
+                } else {
+                    const numericValue =
+                        typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+                    const safeValue = Number.isFinite(numericValue) ? Math.max(0, Math.floor(numericValue)) : 0;
+                    nextParams.set('page', String(safeValue + 1));
+                }
+                return;
+            }
+
             if (value === undefined || value === null || value === '') {
                 nextParams.delete(key);
             } else {
@@ -301,7 +313,7 @@ export default function ProductPageClient({
         } else {
         nextParams.set('collection', nextCollection);
         }
-        nextParams.set('page', '0');
+        nextParams.set('page', '1');
 
         nextParams.delete('type');
         nextParams.delete('category');

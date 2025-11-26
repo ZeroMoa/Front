@@ -24,6 +24,17 @@
       "static/css/app/(user)/not-found.css",
       "static/chunks/app/(user)/not-found.js"
     ],
+    "/(user)/mypage/profile/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/mypage/profile/page.css",
+      "static/chunks/app/(user)/mypage/profile/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
+    ],
     "/(user)/(home)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -35,34 +46,23 @@
       "static/css/app/(user)/(home)/page.css",
       "static/chunks/app/(user)/(home)/page.js"
     ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
-    ],
-    "/(user)/login/join/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(user)/login/join/page.css",
-      "static/chunks/app/(user)/login/join/page.js"
-    ],
     "/(user)/product/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/(user)/product/page.css",
       "static/chunks/app/(user)/product/page.js"
     ],
-    "/(user)/product/search/page": [
+    "/(user)/favorites/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/(user)/product/search/page.css",
-      "static/chunks/app/(user)/product/search/page.js"
+      "static/css/app/(user)/favorites/page.css",
+      "static/chunks/app/(user)/favorites/page.js"
     ],
-    "/(user)/product/[productNo]/page": [
+    "/(user)/product/new/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/(user)/product/[productNo]/page.css",
-      "static/chunks/app/(user)/product/[productNo]/page.js"
+      "static/css/app/(user)/product/new/page.css",
+      "static/chunks/app/(user)/product/new/page.js"
     ],
     "/(user)/board/page": [
       "static/chunks/webpack.js",
@@ -70,17 +70,53 @@
       "static/css/app/(user)/board/page.css",
       "static/chunks/app/(user)/board/page.js"
     ],
+    "/admin/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/layout.css",
+      "static/chunks/app/admin/layout.js"
+    ],
+    "/admin/products/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/products/page.css",
+      "static/chunks/app/admin/products/page.js"
+    ],
+    "/admin/boards/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/boards/page.css",
+      "static/chunks/app/admin/boards/page.js"
+    ],
+    "/admin/boards/write/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/boards/write/page.css",
+      "static/chunks/app/admin/boards/write/page.js"
+    ],
+    "/admin/boards/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/boards/[id]/page.css",
+      "static/chunks/app/admin/boards/[id]/page.js"
+    ],
+    "/(user)/login/join/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(user)/login/join/page.css",
+      "static/chunks/app/(user)/login/join/page.js"
+    ],
     "/(user)/board/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/(user)/board/[id]/page.css",
       "static/chunks/app/(user)/board/[id]/page.js"
     ],
-    "/(user)/board/[...slug]/page": [
+    "/(user)/notifications/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/(user)/board/[...slug]/page.css",
-      "static/chunks/app/(user)/board/[...slug]/page.js"
+      "static/css/app/(user)/notifications/page.css",
+      "static/chunks/app/(user)/notifications/page.js"
     ]
   }
 }

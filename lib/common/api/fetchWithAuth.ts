@@ -105,11 +105,24 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
   // const accessToken = Cookies.get('accessToken') // accessToken 쿠키 직접 읽기 제거
   const headers = buildHeaders(options, xsrfToken) // accessToken 관련 파라미터 제거
 
-  let response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-    credentials: 'include',
-  })
+  let response: Response
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      credentials: 'include',
+    })
+  } catch (error) {
+    if (error instanceof Error) {
+      const lowered = error.message.toLowerCase()
+      if (lowered.includes('fetch failed') || lowered.includes('failed to fetch')) {
+        throw new Error('서버와 통신하지 못했습니다. 잠시 후 다시 시도해주세요.')
+      }
+      throw error
+    }
+    throw new Error('서버와 통신하지 못했습니다. 잠시 후 다시 시도해주세요.')
+  }
 
   if (response.status === 401 && !retried) {
     try {

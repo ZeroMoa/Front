@@ -31,6 +31,14 @@ const parseNumberParam = (value: string | undefined, fallback: number, min = 0) 
     return Math.floor(parsed);
 };
 
+const parsePageParam = (value: string | undefined, fallback: number) => {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed < 1) {
+        return fallback;
+    }
+    return Math.max(0, Math.floor(parsed) - 1);
+};
+
 const parseBooleanParam = (value: string | undefined) => {
     if (value === undefined) {
         return undefined;
@@ -53,6 +61,14 @@ const parseFilters = (params: RawSearchParams) =>
 
 const FALLBACK_SUBCATEGORY: SubCategoryConfig = { slug: 'all', label: '전체', categoryNo: 0 };
 
+const isNetworkErrorMessage = (message?: string | null) => {
+    if (!message) {
+        return false;
+    }
+    const lowered = message.toLowerCase();
+    return lowered.includes('fetch failed') || lowered.includes('failed to fetch');
+};
+
 export default async function ProductSearchPage({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
     const params = await searchParams;
 
@@ -69,7 +85,7 @@ export default async function ProductSearchPage({ searchParams }: { searchParams
         );
     }
 
-    const page = parseNumberParam(parseSingleValue(params.page), 0, 0);
+    const page = parsePageParam(parseSingleValue(params.page), 0);
     const size = parseNumberParam(
         parseSingleValue(params.size),
         SEARCH_PAGE_CONFIG.pageSizeOptions[0] ?? 30,
@@ -118,18 +134,39 @@ export default async function ProductSearchPage({ searchParams }: { searchParams
         ? selectedSubCategory.categoryNo
         : undefined;
 
-    const productResponse = await fetchProductSearch(
-        {
-            query: keyword,
-            categoryNo: searchCategoryNo,
-            page,
-            size,
-            sort,
-            isNew: isNewParam,
-            filters,
-        },
-        { cache: 'no-store' },
-    );
+    let productResponse;
+    let fetchError: string | null = null;
+
+    try {
+        productResponse = await fetchProductSearch(
+            {
+                query: keyword,
+                categoryNo: searchCategoryNo,
+                page,
+                size,
+                sort,
+                isNew: isNewParam,
+                filters,
+            },
+            { cache: 'no-store' },
+        );
+    } catch (error) {
+        const fallbackMessage = '제품 검색 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+        fetchError =
+            error instanceof Error && error.message && !isNetworkErrorMessage(error.message)
+                ? error.message
+                : fallbackMessage;
+    }
+
+    if (fetchError || !productResponse) {
+        return (
+            <div className={styles.pageWrapper}>
+                <section className={styles.content}>
+                    <div className={styles.emptyState}>{fetchError ?? '제품 검색 결과를 불러오지 못했습니다.'}</div>
+                </section>
+            </div>
+        );
+    }
 
     const totalElements = productResponse.totalElements ?? productResponse.content.length;
 

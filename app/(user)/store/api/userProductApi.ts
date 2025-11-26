@@ -68,7 +68,9 @@ const buildCategoryQuery = ({
     query.set('sort', sort);
 
     if (typeof isNew === 'boolean') {
-        query.set('isNew', String(isNew));
+        const value = String(isNew);
+        query.set('isNew', value);
+        query.set('is_new', value);
     }
 
     (Object.entries(filters) as Array<[keyof FetchCategoryProductsParams['filters'], boolean | undefined]>).forEach(
@@ -177,7 +179,9 @@ const buildNutritionQuery = ({
     }
 
     if (typeof isNew === 'boolean') {
-        query.set('isNew', String(isNew));
+        const value = String(isNew);
+        query.set('isNew', value);
+        query.set('is_new', value);
     }
 
     return query;
@@ -329,7 +333,9 @@ const buildSearchQuery = ({
     }
 
     if (typeof isNew === 'boolean') {
-        params.set('isNew', String(isNew));
+        const value = String(isNew);
+        params.set('isNew', value);
+        params.set('is_new', value);
     }
 
     (Object.entries(filters) as Array<[keyof FetchProductSearchParams['filters'], boolean | undefined]>).forEach(

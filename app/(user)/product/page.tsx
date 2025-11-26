@@ -46,6 +46,14 @@ const parseNumberParam = (value: string | undefined, fallback: number, min = 0) 
     return parsed;
 };
 
+const parsePageParam = (value: string | undefined, fallback: number) => {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed < 1) {
+        return fallback;
+    }
+    return Math.max(0, Math.floor(parsed) - 1);
+};
+
 const parseBooleanParam = (value: string | undefined) => {
     if (value === undefined) {
         return undefined;
@@ -65,6 +73,14 @@ const parseFilters = (searchParams: ProductSearchParams) => {
         accumulator[key] = raw === 'true';
         return accumulator;
     }, { ...DEFAULT_FILTER_STATE });
+};
+
+const isNetworkErrorMessage = (message?: string | null) => {
+    if (!message) {
+        return false;
+    }
+    const lowered = message.toLowerCase();
+    return lowered.includes('fetch failed') || lowered.includes('failed to fetch');
 };
 
 export default async function ProductPage({ searchParams }: { searchParams: Promise<ProductSearchParams> }) {
@@ -88,7 +104,7 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
     const subParam = parseSingleValue(params.sub);
     const selectedSubCategory = getSubCategorySlug(categoryConfig, subParam);
 
-    const page = parseNumberParam(parseSingleValue(params.page), 0, 0);
+    const page = parsePageParam(parseSingleValue(params.page), 0);
     const size = parseNumberParam(
         parseSingleValue(params.size),
         categoryConfig.pageSizeOptions[0] ?? 30,
@@ -115,30 +131,46 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
         ? selectedSubCategory.categoryNo
         : undefined;
 
-    const productResponse = hasKeyword
-        ? await fetchProductSearch(
-              {
-                  query: keyword,
-                  categoryNo: searchCategoryNo,
-                  page,
-                  size,
-                  sort,
-                  isNew: isNewParam,
-                  filters,
-              },
-              { cache: 'no-store' },
-          )
-        : await fetchCategoryProducts(
-              {
-                  categoryNo: selectedSubCategory.categoryNo,
-                  page,
-                  size,
-                  sort,
-                  isNew: isNewParam,
-                  filters: activeFilters,
-              },
-              { cache: 'no-store' },
-          );
+    let productResponse;
+    try {
+        productResponse = hasKeyword
+            ? await fetchProductSearch(
+                  {
+                      query: keyword,
+                      categoryNo: searchCategoryNo,
+                      page,
+                      size,
+                      sort,
+                      isNew: isNewParam,
+                      filters,
+                  },
+                  { cache: 'no-store' },
+              )
+            : await fetchCategoryProducts(
+                  {
+                      categoryNo: selectedSubCategory.categoryNo,
+                      page,
+                      size,
+                      sort,
+                      isNew: isNewParam,
+                      filters: activeFilters,
+                  },
+                  { cache: 'no-store' },
+              );
+    } catch (error) {
+        const fallbackMessage = '제품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+        const message =
+            error instanceof Error && error.message && !isNetworkErrorMessage(error.message)
+                ? error.message
+                : fallbackMessage;
+        return (
+            <div className={styles.pageWrapper}>
+                <section className={styles.content}>
+                    <div className={styles.emptyState}>{message}</div>
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.pageWrapper}>
@@ -160,12 +192,12 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
 }
 
 async function renderNutritionPage(nutritionSlug: NutritionSlug, params: ProductSearchParams) {
-     const config = NUTRITION_CONFIG[nutritionSlug];
- 
-     const page = parseNumberParam(parseSingleValue(params.page), 0, 0);
-     const size = parseNumberParam(parseSingleValue(params.size), config.pageSizeOptions[0] ?? 30, 1);
-     const sort = parseSingleValue(params.sort) ?? config.defaultSort;
-     const keyword = parseSingleValue(params.keyword) ?? '';
+    const config = NUTRITION_CONFIG[nutritionSlug];
+
+    const page = parsePageParam(parseSingleValue(params.page), 0);
+    const size = parseNumberParam(parseSingleValue(params.size), config.pageSizeOptions[0] ?? 30, 1);
+    const sort = parseSingleValue(params.sort) ?? config.defaultSort;
+    const keyword = parseSingleValue(params.keyword) ?? '';
     const isNewParam = parseBooleanParam(parseSingleValue(params.isNew));
 
     const categoryParam = parseSingleValue(params.category);
@@ -204,42 +236,61 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
         ? selectedSubCategory.categoryNo
         : undefined;
 
-    const productResponse = hasKeyword
-        ? await fetchProductSearch(
-              {
-                  query: keyword,
-                  categoryNo: searchCategoryNo,
-                  page,
-                  size,
-                  sort,
-                  isNew: isNewParam,
-                  filters,
-              },
-              { cache: 'no-store' },
-          )
-        : categoryConfig
-        ? await fetchCategoryProducts(
-              {
-                  categoryNo: selectedSubCategory.categoryNo,
-                  page,
-                  size,
-                  sort,
-                  isNew: isNewParam,
-                  filters: activeFilters,
-              },
-              { cache: 'no-store' },
-          )
-        : await fetchNutritionProducts(
-              config.endpoint,
-              {
-                  page,
-                  size,
-                  sort,
-                  keyword: keyword || undefined,
-                  isNew: isNewParam,
-              },
-              { cache: 'no-store' },
-          );
+    let productResponse;
+    const shouldUseSearch = hasKeyword || Boolean(isNewParam);
+    try {
+        if (categoryConfig) {
+            productResponse = await fetchCategoryProducts(
+                {
+                    categoryNo: selectedSubCategory.categoryNo,
+                    page,
+                    size,
+                    sort,
+                    isNew: isNewParam,
+                    filters: activeFilters,
+                },
+                { cache: 'no-store' },
+            );
+        } else if (shouldUseSearch) {
+            productResponse = await fetchProductSearch(
+                {
+                    query: keyword,
+                    categoryNo: searchCategoryNo,
+                    page,
+                    size,
+                    sort,
+                    isNew: isNewParam,
+                    filters,
+                },
+                { cache: 'no-store' },
+            );
+        } else {
+            productResponse = await fetchNutritionProducts(
+                config.endpoint,
+                {
+                    page,
+                    size,
+                    sort,
+                    keyword: keyword || undefined,
+                    isNew: isNewParam,
+                },
+                { cache: 'no-store' },
+            );
+        }
+    } catch (error) {
+        const fallbackMessage = '제품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+        const message =
+            error instanceof Error && error.message && !isNetworkErrorMessage(error.message)
+                ? error.message
+                : fallbackMessage;
+        return (
+            <div className={styles.pageWrapper}>
+                <section className={styles.content}>
+                    <div className={styles.emptyState}>{message}</div>
+                </section>
+            </div>
+        );
+    }
  
     return (
         <div className={styles.pageWrapper}>

@@ -122,6 +122,7 @@ export interface Product {
     isZeroSugar: boolean; // BOOLEAN DEFAULT FALSE
     isLowCalorie: boolean; // BOOLEAN DEFAULT FALSE
     isLowSugar: boolean; // BOOLEAN DEFAULT FALSE
+    isNew?: boolean;
     likesCount?: number;
     isFavorite?: boolean;
   }
@@ -299,6 +300,26 @@ export const normalizeProduct = (rawProduct: RawProduct): Product => {
                 rawProduct['favorite'] as RawValue,
                 rawProduct['is_valid'] as RawValue,
                 rawProduct['isValid'] as RawValue,
+            ),
+        );
+    }
+
+    if (
+        'isNew' in rawProduct ||
+        'is_new' in rawProduct ||
+        'isNewProduct' in rawProduct ||
+        'is_new_product' in rawProduct ||
+        'newProduct' in rawProduct ||
+        'is_recent' in rawProduct
+    ) {
+        normalized.isNew = coerceBoolean(
+            coalesce(
+                rawProduct['isNew'] as RawValue,
+                rawProduct['is_new'] as RawValue,
+                rawProduct['isNewProduct'] as RawValue,
+                rawProduct['is_new_product'] as RawValue,
+                rawProduct['newProduct'] as RawValue,
+                rawProduct['is_recent'] as RawValue,
             ),
         );
     }

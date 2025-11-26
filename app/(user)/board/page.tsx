@@ -19,6 +19,17 @@ const badgeClassMap: Record<BoardType, string> = {
     EVENT: styles.badgeEVENT,
 };
 
+const resolveErrorMessage = (error: unknown) => {
+    if (error instanceof Error) {
+        const lowered = error.message.toLowerCase();
+        if (lowered.includes('fetch failed') || lowered.includes('failed to fetch')) {
+            return '게시글을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+        }
+        return error.message;
+    }
+    return '게시글을 불러오지 못했습니다.';
+};
+
 export default function BoardPage() {
     const [page, setPage] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
@@ -138,9 +149,7 @@ export default function BoardPage() {
     if (isError) {
         return (
             <div className={styles.container}>
-                <div className={styles.errorBox}>
-                    {error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.'}
-                </div>
+                <div className={styles.errorBox}>{resolveErrorMessage(error)}</div>
             </div>
         );
     }

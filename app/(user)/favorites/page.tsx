@@ -11,6 +11,15 @@ import { useIsLoggedIn } from '../hooks/useAuth';
 
 const DEFAULT_PAGE_SIZE = 20;
 const DEFAULT_SORT = 'createdDate,desc';
+const PAGE_MIN = 1;
+
+const SORT_OPTIONS: Array<{ value: string; label: string }> = [
+    { value: 'product.productName,asc', label: '제품명 오름차순' },
+    { value: 'product.productName,desc', label: '제품명 내림차순' },
+    { value: 'product.updatedDate,desc', label: '최신 업데이트순' },
+    { value: 'createdDate,desc', label: '좋아요 최신순' },
+    { value: 'product.likesCount,desc', label: '인기순' },
+] as const;
 
 export default function FavoritesPage() {
     const router = useRouter();
@@ -18,12 +27,35 @@ export default function FavoritesPage() {
     const { isLoggedIn, isLoading: authLoading } = useIsLoggedIn();
     const alertShownRef = useRef(false);
 
-    const pageParam = Number(searchParams.get('page') ?? '0');
-    const sizeParam = Number(searchParams.get('size') ?? String(DEFAULT_PAGE_SIZE));
-    const sortParam = searchParams.get('sort') ?? DEFAULT_SORT;
+    const pageParamRaw = searchParams.get('page');
+    const sizeParamRaw = searchParams.get('size');
+    const sortParamRaw = searchParams.get('sort');
 
-    const currentPage = Number.isNaN(pageParam) || pageParam < 0 ? 0 : pageParam;
-    const currentSize = Number.isNaN(sizeParam) || sizeParam <= 0 ? DEFAULT_PAGE_SIZE : sizeParam;
+    const displayPage = useMemo(() => {
+        const parsed = Number(pageParamRaw);
+        if (Number.isNaN(parsed) || parsed < PAGE_MIN) {
+            return PAGE_MIN;
+        }
+        return Math.floor(parsed);
+    }, [pageParamRaw]);
+
+    const currentPageIndex = displayPage - 1;
+
+    const currentSize = useMemo(() => {
+        const parsed = Number(sizeParamRaw);
+        if (Number.isNaN(parsed) || parsed <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.floor(parsed);
+    }, [sizeParamRaw]);
+
+    const normalizedSort = useMemo(() => {
+        if (!sortParamRaw) {
+            return DEFAULT_SORT;
+        }
+        const hasMatch = SORT_OPTIONS.some((option) => option.value === sortParamRaw);
+        return hasMatch ? sortParamRaw : DEFAULT_SORT;
+    }, [sortParamRaw]);
 
     const [data, setData] = useState<ProductResponse | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -59,14 +91,29 @@ export default function FavoritesPage() {
 
             try {
                 const response = await fetchFavoriteProducts({
-                    page: currentPage,
+                    page: currentPageIndex,
                     size: currentSize,
-                    sort: sortParam,
+                    sort: normalizedSort,
                 });
 
-                if (!cancelled) {
-                    setData(response);
+                if (cancelled) {
+                    return;
                 }
+
+                const totalPages = typeof response.totalPages === 'number' ? response.totalPages : 0;
+                if (totalPages > 0 && currentPageIndex >= totalPages) {
+                    const safeLastIndex = Math.max(0, totalPages - 1);
+                    if (safeLastIndex !== currentPageIndex) {
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set('page', String(safeLastIndex + 1));
+                        params.set('size', String(currentSize));
+                        params.set('sort', normalizedSort);
+                        router.replace(`/favorites?${params.toString()}`, { scroll: true });
+                        return;
+                    }
+                }
+
+                setData(response);
             } catch (err) {
                 if (!cancelled) {
                     const message = err instanceof Error ? err.message : '좋아요한 제품을 불러오지 못했습니다.';
@@ -85,7 +132,7 @@ export default function FavoritesPage() {
         return () => {
             cancelled = true;
         };
-    }, [authLoading, isLoggedIn, currentPage, currentSize, sortParam]);
+    }, [authLoading, isLoggedIn, currentPageIndex, currentSize, normalizedSort, router, searchParams]);
 
     const totalElements = data?.totalElements ?? 0;
     const totalPages = data?.totalPages ?? 0;
@@ -97,32 +144,46 @@ export default function FavoritesPage() {
         ? '좋아요한 제품을 불러오지 못했습니다.'
         : effectiveIsFetching
         ? '좋아요 목록 불러오는 중...'
-        : `총 ${totalElements.toLocaleString()}개의 제품을 확인할 수 있어요.`;
+        : totalElements > 0
+        ? `총 ${totalElements.toLocaleString()}개의 제품을 확인할 수 있어요.`
+        : '좋아요한 제품을 찾을 수 없어요.';
 
     const handlePageChange = useCallback(
         (nextPage: number) => {
             const params = new URLSearchParams(searchParams.toString());
-            params.set('page', String(nextPage));
+            params.set('page', String(nextPage + 1));
             params.set('size', String(currentSize));
-            params.set('sort', sortParam);
+            params.set('sort', normalizedSort);
             router.replace(`/favorites?${params.toString()}`, { scroll: true });
         },
-        [currentSize, router, searchParams, sortParam],
+        [currentSize, normalizedSort, router, searchParams],
     );
 
     const handlePageSizeChange = useCallback(
         (event: React.ChangeEvent<HTMLSelectElement>) => {
             const nextSize = Number(event.target.value);
             const params = new URLSearchParams(searchParams.toString());
-            params.set('page', '0');
+            params.set('page', String(PAGE_MIN));
             params.set('size', String(nextSize));
-            params.set('sort', sortParam);
+            params.set('sort', normalizedSort);
             router.replace(`/favorites?${params.toString()}`, { scroll: true });
         },
-        [router, searchParams, sortParam],
+        [normalizedSort, router, searchParams],
     );
 
     const pageSizeOptions = useMemo(() => [20, 40, 60], []);
+
+    const handleSortChange = useCallback(
+        (event: React.ChangeEvent<HTMLSelectElement>) => {
+            const nextSort = event.target.value;
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('page', String(PAGE_MIN));
+            params.set('size', String(currentSize));
+            params.set('sort', nextSort);
+            router.replace(`/favorites?${params.toString()}`, { scroll: true });
+        },
+        [currentSize, router, searchParams],
+    );
 
     return (
         <div className={styles.pageWrapper}>
@@ -132,6 +193,16 @@ export default function FavoritesPage() {
                     <p className={styles.description}>{headerDescription}</p>
                 </div>
                 <div className={styles.controls}>
+                    <label className={styles.sortLabel}>
+                        정렬
+                        <select value={normalizedSort} onChange={handleSortChange} className={styles.sortSelect}>
+                            {SORT_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
                     <label className={styles.pageSizeLabel}>
                         페이지 크기
                         <select value={currentSize} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
@@ -150,8 +221,6 @@ export default function FavoritesPage() {
                     <p className={styles.errorMessage}>{error}</p>
                 ) : effectiveIsFetching ? (
                     <p className={styles.message}>좋아요 목록 불러오는 중...</p>
-                ) : !isLoggedIn ? (
-                    <p className={styles.message}>로그인 후 좋아요한 상품을 확인할 수 있습니다.</p>
                 ) : currentContent.length === 0 ? (
                     <p className={styles.message}>아직 좋아요한 제품이 없어요.</p>
                 ) : (
@@ -159,7 +228,7 @@ export default function FavoritesPage() {
                 )}
 
                 {currentContent.length > 0 && totalPages > 1 && (
-                    <ProductPagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+                    <ProductPagination currentPage={currentPageIndex} totalPages={totalPages} onPageChange={handlePageChange} />
                 )}
             </section>
         </div>

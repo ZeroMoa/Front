@@ -9,6 +9,18 @@ import { UserNotificationResponse } from '@/types/notificationTypes';
 import { getCdnUrl } from '@/lib/cdn';
 import CircularProgress from '@mui/material/CircularProgress';
 
+const decodeHtmlEntities = (value: string): string => {
+    if (!value) {
+        return '';
+    }
+    if (typeof window === 'undefined') {
+        return value;
+    }
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = value;
+    return textarea.value;
+};
+
 export default function NotificationsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -157,7 +169,10 @@ export default function NotificationsPage() {
                             <Image src={getCdnUrl('/images/bell.png')} alt="알림 아이콘" width={40} height={40} className={styles.notificationIcon} />
                             <div className={styles.notificationText}>
                                 <h2 className={styles.notificationTitle}>{notification.title}</h2>
-                                <p className={styles.notificationContent}>{notification.content}</p>
+                                <div
+                                    className={styles.notificationContent}
+                                    dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(notification.content) }}
+                                />
                                 <div className={styles.notificationFooterContent}> {/* 이 div로 타임스탬프와 액션 버튼을 감쌉니다. */}
                                     <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
                                     <div className={styles.notificationActions}> {/* notificationActions를 이 위치로 이동 */}

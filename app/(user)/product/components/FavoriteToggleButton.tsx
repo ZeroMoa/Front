@@ -57,37 +57,37 @@ export default function FavoriteToggleButton({
     };
 
     const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
 
-        if (!isLoggedIn) {
-            alert('로그인 후 이용해주세요~.~');
-            return;
-        }
+            if (!isLoggedIn) {
+                alert('로그인 후 이용해주세요~.~');
+                return;
+            }
 
-        const now = Date.now();
-        if (now - lastClickRef.current < FAVORITE_TOGGLE_COOLDOWN_MS) {
-            alert('너무 빠르게 누르고 있어요. 잠시 후 다시 시도해주세요.');
-            return;
-        }
+            const now = Date.now();
+            if (now - lastClickRef.current < FAVORITE_TOGGLE_COOLDOWN_MS) {
+                alert('너무 빠르게 누르고 있어요. 잠시 후 다시 시도해주세요.');
+                return;
+            }
 
-        if (isLoading) {
-            return;
-        }
+            if (isLoading) {
+                return;
+            }
 
-        lastClickRef.current = now;
-        setIsLoading(true);
+            lastClickRef.current = now;
+            setIsLoading(true);
 
-        const previousIsFavorite = isFavorite;
-        const previousLikesCount = likesCount;
+            const previousIsFavorite = isFavorite;
+            const previousLikesCount = likesCount;
 
         // Optimistic UI Update
-        const optimisticIsFavorite = !previousIsFavorite;
-        const optimisticLikesCount = Math.max(0, previousLikesCount + (optimisticIsFavorite ? 1 : -1));
+                const optimisticIsFavorite = !previousIsFavorite;
+                const optimisticLikesCount = Math.max(0, previousLikesCount + (optimisticIsFavorite ? 1 : -1));
 
-        setIsFavorite(optimisticIsFavorite);
-        setLikesCount(optimisticLikesCount);
-        onChange?.({ isFavorite: optimisticIsFavorite, likesCount: optimisticLikesCount });
+                setIsFavorite(optimisticIsFavorite);
+                setLikesCount(optimisticLikesCount);
+                onChange?.({ isFavorite: optimisticIsFavorite, likesCount: optimisticLikesCount });
         persistFavoriteState({ productNo, isFavorite: optimisticIsFavorite, likesCount: optimisticLikesCount });
 
         try {
@@ -104,26 +104,26 @@ export default function FavoriteToggleButton({
             setLikesCount(resolvedLikesCount);
             onChange?.({ isFavorite: resolvedIsFavorite, likesCount: resolvedLikesCount });
             persistFavoriteState({ productNo, isFavorite: resolvedIsFavorite, likesCount: resolvedLikesCount });
-        } catch (error) {
-            const status = (error as Error & { status?: number }).status;
+            } catch (error) {
+                const status = (error as Error & { status?: number }).status;
 
-            if (status === 401) {
-                alert('로그인 후 이용해주세요~.~');
-            } else if (status === 429) {
-                alert('너무 빠르게 누르고 있어요. 잠시 후 다시 시도해주세요.');
-            } else {
-                const message = error instanceof Error ? error.message : '좋아요 처리 중 오류가 발생했습니다.';
-                alert(message);
-            }
+                if (status === 401) {
+                    alert('로그인 후 이용해주세요~.~');
+                } else if (status === 429) {
+                    alert('너무 빠르게 누르고 있어요. 잠시 후 다시 시도해주세요.');
+                } else {
+                    const message = error instanceof Error ? error.message : '좋아요 처리 중 오류가 발생했습니다.';
+                    alert(message);
+                }
 
             // Rollback on error
-            setIsFavorite(previousIsFavorite);
-            setLikesCount(previousLikesCount);
-            onChange?.({ isFavorite: previousIsFavorite, likesCount: previousLikesCount });
+                setIsFavorite(previousIsFavorite);
+                setLikesCount(previousLikesCount);
+                onChange?.({ isFavorite: previousIsFavorite, likesCount: previousLikesCount });
             persistFavoriteState({ productNo, isFavorite: previousIsFavorite, likesCount: previousLikesCount });
-        } finally {
-            setIsLoading(false);
-        }
+            } finally {
+                setIsLoading(false);
+            }
     };
 
     return (

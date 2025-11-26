@@ -42,12 +42,28 @@ const parseNumberParam = (value: string | undefined, fallback: number, min = 0) 
     return parsed;
 };
 
+const parsePageParam = (value: string | undefined, fallback: number) => {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed < 1) {
+        return fallback;
+    }
+    return Math.max(0, Math.floor(parsed) - 1);
+};
+
 const parseFilters = (searchParams: NewProductsSearchParams) => {
     return PRODUCT_FILTER_KEYS.reduce<Record<ProductFilterKey, boolean>>((accumulator, key) => {
         const raw = parseSingleValue(searchParams[key]);
         accumulator[key] = raw === 'true';
         return accumulator;
     }, { ...DEFAULT_FILTER_STATE });
+};
+
+const isNetworkErrorMessage = (message?: string | null) => {
+    if (!message) {
+        return false;
+    }
+    const lowered = message.toLowerCase();
+    return lowered.includes('fetch failed') || lowered.includes('failed to fetch');
 };
 
 export default async function NewProductsPage({ searchParams }: { searchParams: Promise<NewProductsSearchParams> }) {
@@ -64,7 +80,7 @@ export default async function NewProductsPage({ searchParams }: { searchParams: 
     const categoryConfig = categorySlug ? CATEGORY_CONFIG[categorySlug] : undefined;
     const subParam = parseSingleValue(params.sub);
 
-    const page = parseNumberParam(parseSingleValue(params.page), 0, 0);
+    const page = parsePageParam(parseSingleValue(params.page), 0);
     const size = parseNumberParam(parseSingleValue(params.size), NEW_PRODUCTS_PAGE_CONFIG.pageSizeOptions[0] ?? 30, 1);
     const sort = parseSingleValue(params.sort) ?? NEW_PRODUCTS_PAGE_CONFIG.defaultSort;
     const keyword = parseSingleValue(params.keyword) ?? '';
@@ -94,12 +110,36 @@ export default async function NewProductsPage({ searchParams }: { searchParams: 
         ? selectedSubCategory.categoryNo
         : undefined;
 
-    const productResponse = categoryConfig
-        ? hasKeyword
-            ? await fetchProductSearch(
+    let productResponse;
+    try {
+        productResponse = categoryConfig
+            ? hasKeyword
+                ? await fetchProductSearch(
+                      {
+                          query: keyword,
+                          categoryNo: searchCategoryNo,
+                          page,
+                          size,
+                          sort,
+                          isNew,
+                          filters,
+                      },
+                      { cache: 'no-store' },
+                  )
+                : await fetchCategoryProducts(
+                      {
+                          categoryNo: selectedSubCategory.categoryNo,
+                          page,
+                          size,
+                          sort,
+                          isNew,
+                          filters: activeFilters,
+                      },
+                      { cache: 'no-store' },
+                  )
+            : await fetchProductSearch(
                   {
-                      query: keyword,
-                      categoryNo: searchCategoryNo,
+                      query: keyword || undefined,
                       page,
                       size,
                       sort,
@@ -107,29 +147,21 @@ export default async function NewProductsPage({ searchParams }: { searchParams: 
                       filters,
                   },
                   { cache: 'no-store' },
-              )
-            : await fetchCategoryProducts(
-                  {
-                      categoryNo: selectedSubCategory.categoryNo,
-                      page,
-                      size,
-                      sort,
-                      isNew,
-                      filters: activeFilters,
-                  },
-                  { cache: 'no-store' },
-              )
-        : await fetchProductSearch(
-              {
-                  query: keyword || undefined,
-                  page,
-                  size,
-                  sort,
-                  isNew,
-                  filters,
-              },
-              { cache: 'no-store' },
-          );
+              );
+    } catch (error) {
+        const fallbackMessage = '신제품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+        const message =
+            error instanceof Error && error.message && !isNetworkErrorMessage(error.message)
+                ? error.message
+                : fallbackMessage;
+        return (
+            <div className={styles.pageWrapper}>
+                <section className={styles.content}>
+                    <div className={styles.emptyState}>{message}</div>
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.pageWrapper}>

@@ -14,6 +14,14 @@ import { getCdnUrl } from '@/lib/cdn'
 import { useAppDispatch, useAppSelector } from '../store/slices/store'
 import { selectIsLoggedIn, setLoggedIn, setUser } from '../store/slices/authSlice'
 
+const isNetworkErrorMessage = (message?: string | null) => {
+    if (!message) {
+        return false;
+    }
+    const lowered = message.toLowerCase();
+    return lowered.includes('fetch failed') || lowered.includes('failed to fetch');
+};
+
 export default function HomePage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
@@ -78,7 +86,11 @@ export default function HomePage() {
                 }
             } catch (error) {
                 if (!cancelled) {
-                    const message = error instanceof Error ? error.message : '좋아요한 제품을 불러오지 못했습니다.';
+                    const fallbackMessage = '좋아요한 제품을 불러오지 못했습니다.';
+                    const message =
+                        error instanceof Error && error.message && !isNetworkErrorMessage(error.message)
+                            ? error.message
+                            : fallbackMessage;
                     setFavoriteError(message);
                     setFavoriteProducts([]);
                 }
@@ -118,7 +130,11 @@ export default function HomePage() {
                 }
             } catch (error) {
                 if (!cancelled) {
-                    const message = error instanceof Error ? error.message : '신제품을 불러오지 못했습니다.';
+                    const fallbackMessage = '신제품을 불러오지 못했습니다.';
+                    const message =
+                        error instanceof Error && error.message && !isNetworkErrorMessage(error.message)
+                            ? error.message
+                            : fallbackMessage;
                     setNewError(message);
                     setNewProducts([]);
                 }

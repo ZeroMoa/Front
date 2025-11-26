@@ -145,6 +145,7 @@ function ProductCard({
             erythritolLabel ? { label: '에리스리톨', value: erythritolLabel } : null,
         ].filter(Boolean) as Array<{ label: string; value: string }>
     );
+    const hasCompany = Boolean(product.companyName && product.companyName.trim());
 
     const handleNavigate = useCallback(() => {
         const target = getProductHref ? getProductHref(product) : `/product/${product.productNo}`;
@@ -248,7 +249,13 @@ function ProductCard({
             </div>
             <div className={styles.cardBody}>
                 <h3 className={styles.productName}>{product.productName}</h3>
-                {product.companyName && <p className={styles.companyName}>{product.companyName}</p>}
+                <span className={styles.cardDivider} aria-hidden="true" />
+                {hasCompany && (
+                    <>
+                        <p className={styles.companyName}>{product.companyName}</p>
+                        {summaryItems.length > 0 && <span className={styles.cardDivider} aria-hidden="true" />}
+                    </>
+                )}
                 {summaryItems.map((item) => (
                     <div key={item.label} className={styles.nutritionRow}>
                         <span className={styles.nutritionLabel}>{item.label}</span>

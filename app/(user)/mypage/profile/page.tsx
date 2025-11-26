@@ -64,6 +64,7 @@ export default function ProfilePage() {
     const [currentPasswordError, setCurrentPasswordError] = useState<string | null>(null);
     const [currentPasswordMismatchError, setCurrentPasswordMismatchError] = useState<string | null>(null); // 현재 비밀번호 불일치 에러 메시지 추가
     const [generalUpdateError, setGeneralUpdateError] = useState<string | null>(null);
+    const [isCurrentPasswordValid, setIsCurrentPasswordValid] = useState<boolean | null>(null);
 
     const availableDomains = ['naver.com', 'gmail.com', 'hanmail.net', 'nate.com', 'hotmail.com', 'daum.net', 'outlook.com', 'kakao.com', '직접입력'];
 
@@ -156,6 +157,8 @@ export default function ProfilePage() {
     const checkCurrentPassword = async (password: string): Promise<boolean> => {
         if (!password) {
             setCurrentPasswordMismatchError(null); // 비밀번호가 비어있으면 에러 메시지 초기화
+            setCurrentPasswordError('현재 비밀번호를 입력해주세요.');
+            setIsCurrentPasswordValid(false);
             return false; // API 호출 없이 바로 false 반환
         }
 
@@ -164,14 +167,20 @@ export default function ProfilePage() {
             
             if (!isMatch) { // isMatch가 false인 경우 (비밀번호 불일치)
                 setCurrentPasswordMismatchError('현재 비밀번호가 일치하지 않습니다.');
+                setCurrentPasswordError(null);
+                setIsCurrentPasswordValid(false);
                 return false;
             }
             // isMatch가 true인 경우 (비밀번호 일치), 오류 메시지 초기화
             setCurrentPasswordMismatchError(null);
+            setCurrentPasswordError(null);
+            setIsCurrentPasswordValid(true);
             return true;
         } catch (error: any) {
             console.error('현재 비밀번호 확인 중 오류 발생:', error);
             setCurrentPasswordMismatchError(`오류 발생: ${error.message}`);
+            setCurrentPasswordError(null);
+            setIsCurrentPasswordValid(false);
             return false;
         }
     };
@@ -268,6 +277,23 @@ export default function ProfilePage() {
             return;
         }
 
+        if (!isSocialUser) {
+            if (!currentPassword.trim()) {
+                setCurrentPasswordError('현재 비밀번호를 입력해주세요.');
+                setIsCurrentPasswordValid(false);
+                alert('현재 비밀번호를 입력해주세요!');
+                return;
+            }
+
+            if (isCurrentPasswordValid !== true) {
+                const validated = await checkCurrentPassword(currentPassword);
+                if (!validated) {
+                    alert('현재 비밀번호가 일치하지 않습니다.');
+                    return;
+                }
+            }
+        }
+
         const updatedData: UserRequestDTO = {
             username: userData.username,
             nickname: nickname,
@@ -290,8 +316,8 @@ export default function ProfilePage() {
                     return;
                 }
                 // 현재 비밀번호 유효성 검사
-                const isCurrentPasswordValid = await checkCurrentPassword(currentPassword);
-                if (!isCurrentPasswordValid) {
+                const isValid = await checkCurrentPassword(currentPassword);
+                if (!isValid) {
                     return; // 비밀번호 불일치 시 제출 중단
                 }
                 updatedData.password = newPassword;
@@ -326,6 +352,7 @@ export default function ProfilePage() {
             setEmailSuccess('현재 이메일입니다.');
             // 비밀번호 변경 성공 시 비밀번호 필드 초기화 (보안상 좋음)
             setCurrentPassword('');
+            setIsCurrentPasswordValid(null);
             setNewPassword('');
             setNewPasswordConfirm('');
         } catch (err: any) {
@@ -387,12 +414,15 @@ export default function ProfilePage() {
                                                 setCurrentPassword(e.target.value);
                                                 setCurrentPasswordError(null); // 입력 시작 시 에러 메시지 초기화
                                                 setCurrentPasswordMismatchError(null); // 입력 시작 시 불일치 에러 초기화
+                                                setIsCurrentPasswordValid(null);
                                             }}
                                             onBlur={async () => {
                                                 if (!isSocialUser && currentPassword) {
                                                     await checkCurrentPassword(currentPassword);
                                                 } else if (!currentPassword) {
                                                     setCurrentPasswordMismatchError(null);
+                                                    setIsCurrentPasswordValid(false);
+                                                    setCurrentPasswordError('현재 비밀번호를 입력해주세요.');
                                                 }
                                             }}
                                         />
@@ -584,7 +614,20 @@ export default function ProfilePage() {
                         )}
 
                         <div className={styles.buttonGroup}>
-                            <button type="submit" className={`${styles.bottomButton} ${styles.saveButton}`}>수정 내용 저장하기</button>
+                            <button
+                                type="submit"
+                                className={`${styles.bottomButton} ${styles.saveButton}`}
+                                disabled={
+                                    !isSocialUser &&
+                                    (!currentPassword.trim() || isCurrentPasswordValid !== true)
+                                }
+                                aria-disabled={
+                                    !isSocialUser &&
+                                    (!currentPassword.trim() || isCurrentPasswordValid !== true)
+                                }
+                            >
+                                수정 내용 저장하기
+                            </button>
 
                         </div>
                         <hr className={styles.buttonSeparator} /> {/* 구분선 추가 */}

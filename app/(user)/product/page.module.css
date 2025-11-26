@@ -1,5 +1,6 @@
 .pageWrapper {
     width: 100%;
+
 }
 
 .layout {
@@ -593,6 +594,14 @@
     position: relative;
     overflow: visible;
     z-index: 1;
+}
+
+.cardDivider {
+    width: 100%;
+    height: 1px;
+    background: rgba(200, 210, 235, 0.6);
+    border-radius: 999px;
+    margin: 4px 0;
 }
 
 .card:hover {
