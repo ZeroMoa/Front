@@ -134,29 +134,29 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
     let productResponse;
     try {
         productResponse = hasKeyword
-            ? await fetchProductSearch(
-                  {
-                      query: keyword,
-                      categoryNo: searchCategoryNo,
-                      page,
-                      size,
-                      sort,
-                      isNew: isNewParam,
-                      filters,
-                  },
-                  { cache: 'no-store' },
-              )
-            : await fetchCategoryProducts(
-                  {
-                      categoryNo: selectedSubCategory.categoryNo,
-                      page,
-                      size,
-                      sort,
-                      isNew: isNewParam,
-                      filters: activeFilters,
-                  },
-                  { cache: 'no-store' },
-              );
+        ? await fetchProductSearch(
+              {
+                  query: keyword,
+                  categoryNo: searchCategoryNo,
+                  page,
+                  size,
+                  sort,
+                  isNew: isNewParam,
+                  filters,
+              },
+              { cache: 'no-store' },
+          )
+        : await fetchCategoryProducts(
+              {
+                  categoryNo: selectedSubCategory.categoryNo,
+                  page,
+                  size,
+                  sort,
+                  isNew: isNewParam,
+                  filters: activeFilters,
+              },
+              { cache: 'no-store' },
+          );
     } catch (error) {
         const fallbackMessage = '제품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
         const message =
@@ -192,12 +192,12 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
 }
 
 async function renderNutritionPage(nutritionSlug: NutritionSlug, params: ProductSearchParams) {
-    const config = NUTRITION_CONFIG[nutritionSlug];
-
+     const config = NUTRITION_CONFIG[nutritionSlug];
+ 
     const page = parsePageParam(parseSingleValue(params.page), 0);
-    const size = parseNumberParam(parseSingleValue(params.size), config.pageSizeOptions[0] ?? 30, 1);
-    const sort = parseSingleValue(params.sort) ?? config.defaultSort;
-    const keyword = parseSingleValue(params.keyword) ?? '';
+     const size = parseNumberParam(parseSingleValue(params.size), config.pageSizeOptions[0] ?? 30, 1);
+     const sort = parseSingleValue(params.sort) ?? config.defaultSort;
+     const keyword = parseSingleValue(params.keyword) ?? '';
     const isNewParam = parseBooleanParam(parseSingleValue(params.isNew));
 
     const categoryParam = parseSingleValue(params.category);
@@ -253,29 +253,29 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
             );
         } else if (shouldUseSearch) {
             productResponse = await fetchProductSearch(
-                {
-                    query: keyword,
-                    categoryNo: searchCategoryNo,
-                    page,
-                    size,
-                    sort,
-                    isNew: isNewParam,
-                    filters,
-                },
-                { cache: 'no-store' },
+              {
+                  query: keyword,
+                  categoryNo: searchCategoryNo,
+                  page,
+                  size,
+                  sort,
+                  isNew: isNewParam,
+                  filters,
+              },
+              { cache: 'no-store' },
             );
         } else {
             productResponse = await fetchNutritionProducts(
-                config.endpoint,
-                {
-                    page,
-                    size,
-                    sort,
-                    keyword: keyword || undefined,
-                    isNew: isNewParam,
-                },
-                { cache: 'no-store' },
-            );
+              config.endpoint,
+              {
+                  page,
+                  size,
+                  sort,
+                  keyword: keyword || undefined,
+                  isNew: isNewParam,
+              },
+              { cache: 'no-store' },
+          );
         }
     } catch (error) {
         const fallbackMessage = '제품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';

@@ -139,17 +139,17 @@ export default async function ProductSearchPage({ searchParams }: { searchParams
 
     try {
         productResponse = await fetchProductSearch(
-            {
-                query: keyword,
-                categoryNo: searchCategoryNo,
-                page,
-                size,
-                sort,
-                isNew: isNewParam,
-                filters,
-            },
-            { cache: 'no-store' },
-        );
+        {
+            query: keyword,
+            categoryNo: searchCategoryNo,
+            page,
+            size,
+            sort,
+            isNew: isNewParam,
+            filters,
+        },
+        { cache: 'no-store' },
+    );
     } catch (error) {
         const fallbackMessage = '제품 검색 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
         fetchError =

@@ -160,8 +160,8 @@ export default function AdminUsersPage() {
   )
 
   const fetchUsers = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+      setLoading(true)
+      setError(null)
     try {
       const nextData = await fetchAdminUsersList({
         page,
@@ -171,14 +171,14 @@ export default function AdminUsersPage() {
         sortDirection: sortState.direction,
       })
       setData(nextData)
-    } catch (fetchError: unknown) {
-      if ((fetchError as Error).name === 'AbortError') {
-        return
+      } catch (fetchError: unknown) {
+        if ((fetchError as Error).name === 'AbortError') {
+          return
+        }
+        setError((fetchError as Error).message ?? '알 수 없는 오류가 발생했습니다.')
+      } finally {
+        setLoading(false)
       }
-      setError((fetchError as Error).message ?? '알 수 없는 오류가 발생했습니다.')
-    } finally {
-      setLoading(false)
-    }
   }, [keyword, page, size, sortState.field, sortState.direction])
 
   useEffect(() => {
@@ -247,14 +247,14 @@ const renderLoadingState = () => (
     <CircularProgress size={40} className={styles.loadingSpinner} />
     <p>회원 목록 불러오는 중...</p>
   </div>
-)
+  )
 
   return (
     <div className={styles.container}>
       <div className={styles.summarySection}>
         <div className={styles.titleRow}>
           <h1 className={styles.pageTitle}>회원 조회</h1>
-          <span className={styles.resultInfo}>
+        <span className={styles.resultInfo}>
             총 {(loading && totalElements === 0 ? '—' : totalElements.toLocaleString())}명
           </span>
         </div>

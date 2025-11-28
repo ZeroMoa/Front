@@ -1,13 +1,13 @@
 'use client'
 
-import { useMemo, useState, useEffect, useTransition } from 'react'
+import { useMemo, useState, useEffect, useTransition, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import baseStyles from '@/app/(user)/product/[productNo]/page.module.css'
 import styles from './adminDetail.module.css'
 import { getCdnUrl } from '@/lib/cdn'
 import type { Product } from '@/types/productTypes'
 import { updateAdminProduct, type AdminProductUpdatePayload } from '@/app/admin/store/api/adminProductApi'
+import FavoriteToggleButton from '@/app/(user)/product/components/FavoriteToggleButton'
 
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png')
 
@@ -194,9 +194,12 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [isEditingIngredients, setIsEditingIngredients] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [, startTransition] = useTransition()
+  const initialFormRef = useRef<FormState>(createInitialFormState(product))
 
   useEffect(() => {
-    setFormState(createInitialFormState(product))
+    const initial = createInitialFormState(product)
+    initialFormRef.current = initial
+    setFormState(initial)
     setEditingHighlight(null)
     setEditingNutritionKey(null)
     setIsEditingIngredients(false)
@@ -215,15 +218,29 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   const highlightItems = [
     formState.totalContent
-      ? { label: '총 내용량', value: formState.totalContent, editable: true as const, field: 'totalContent' as const }
+      ? {
+          label: '총 내용량',
+          value: formState.totalContent,
+          editable: true as const,
+          field: 'totalContent' as const,
+          isModified: formState.totalContent !== initialFormRef.current.totalContent,
+        }
       : null,
-    servingSizeLabel ? { label: '1회 제공량', value: servingSizeLabel, editable: false as const } : null,
+    servingSizeLabel
+      ? { label: '1회 제공량', value: servingSizeLabel, editable: false as const, isModified: false }
+      : null,
     formState.allergens
-      ? { label: '알레르기', value: formState.allergens, editable: true as const, field: 'allergens' as const }
+      ? {
+          label: '알레르기',
+          value: formState.allergens,
+          editable: true as const,
+          field: 'allergens' as const,
+          isModified: formState.allergens !== initialFormRef.current.allergens,
+        }
       : null,
   ].filter(Boolean) as Array<
-    | { label: string; value: string; editable: true; field: 'totalContent' | 'allergens' }
-    | { label: string; value: string; editable: false }
+    | { label: string; value: string; editable: true; field: 'totalContent' | 'allergens'; isModified: boolean }
+    | { label: string; value: string; editable: false; isModified: boolean }
   >
 
   const nutritionRows = useMemo(() => {
@@ -237,12 +254,16 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       }
       const percentLabel =
         field.percentBase && hasValue ? formatPercentageValue(Number(rawValue), field.percentBase) : ''
-      return {
+    const initialValue = initialFormRef.current.nutrition[field.key] ?? ''
+    const isModified = rawValue !== initialValue
+
+    return {
         ...field,
         rawValue,
         percentLabel,
         isEditing,
         hasValue,
+      isModified,
       }
     }).filter(Boolean) as Array<
       (typeof NUTRITION_FIELDS)[number] & {
@@ -250,6 +271,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         percentLabel: string
         isEditing: boolean
         hasValue: boolean
+        isModified: boolean
       }
     >
   }, [formState.nutrition, editingNutritionKey])
@@ -314,16 +336,58 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     }
   }
 
+  const [favoriteState, setFavoriteState] = useState({
+    isFavorite: Boolean(product.isFavorite),
+    likesCount: product.likesCount ?? 0,
+  })
+
+  const infoCardRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    setFavoriteState({
+      isFavorite: Boolean(product.isFavorite),
+      likesCount: product.likesCount ?? 0,
+    })
+  }, [product.productNo, product.isFavorite, product.likesCount])
+
+  useEffect(() => {
+    if (!editingHighlight && !editingNutritionKey) {
+      return undefined
+    }
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (infoCardRef.current?.contains(event.target as Node)) {
+        return
+      }
+      setEditingHighlight(null)
+      setEditingNutritionKey(null)
+    }
+
+    document.addEventListener('mousedown', handleDocumentClick)
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick)
+    }
+  }, [editingHighlight, editingNutritionKey])
+
   return (
-    <div className={baseStyles.wrapper}>
-      <main className={baseStyles.productContainer}>
-        <div className={baseStyles.imageSection}>
+    <div className={styles.wrapper}>
+      <main className={styles.productContainer}>
+        <div className={styles.imageSection}>
+          <div className={styles.imageFavoriteOverlay}>
+            <span className={styles.imageFavoriteCount}>{favoriteState.likesCount.toLocaleString()}</span>
+            <FavoriteToggleButton
+              productNo={product.productNo}
+              initialIsFavorite={favoriteState.isFavorite}
+              initialLikesCount={favoriteState.likesCount}
+              onChange={setFavoriteState}
+            />
+          </div>
           <Image
             src={imageSrc}
             alt={product.productName || '제품 이미지'}
             width={300}
             height={300}
-            className={baseStyles.detailProductImage}
+              className={styles.detailProductImage}
             unoptimized
             onError={(event) => {
               const target = event.target as HTMLImageElement
@@ -332,31 +396,36 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           />
         </div>
 
-        <section className={baseStyles.infoSection}>
-          <div className={baseStyles.infoCard}>
-            <div className={baseStyles.productHeader}>
-              <div className={baseStyles.productMeta}>
-                <div className={baseStyles.metaTopRow}>
-                  <span className={baseStyles.category}>{categoryLabel}</span>
-                  {product.companyName?.trim() && (
-                    <span className={baseStyles.companyNameInline}>{product.companyName.trim()}</span>
-                  )}
+        <section className={styles.infoSection}>
+          <div className={styles.infoCard} ref={infoCardRef}>
+            <div className={styles.productHeader}>
+              <div className={styles.productMeta}>
+                <div className={styles.metaTopRow}>
+                  <span className={styles.category}>{categoryLabel}</span>
                 </div>
-                <div className={baseStyles.productTitleRow}>
-                  <h1 className={baseStyles.productName}>{product.productName}</h1>
+                <div className={styles.productTitleGroup}>
+                  <div className={styles.productTitleRow}>
+                    <h1 className={styles.productName}>{product.productName}</h1>
+                  </div>
+                  {product.companyName?.trim() && (
+                    <>
+                      <span className={styles.productHeaderDivider} aria-hidden="true" />
+                      <p className={styles.companyNameDetail}>{product.companyName.trim()}</p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
             {highlightItems.length > 0 && (
-              <div className={baseStyles.servingHighlights}>
+              <div className={styles.servingHighlights}>
                 {highlightItems.map((item) => {
                   if (item.editable) {
                     const isEditing = editingHighlight === item.field
                     return (
                       <div
                         key={item.label}
-                        className={`${baseStyles.servingHighlight} ${styles.editableHighlight}`}
+                        className={`${styles.servingHighlight} ${styles.editableHighlight}`}
                         onClick={() => setEditingHighlight(item.field)}
                         role="button"
                         tabIndex={0}
@@ -367,7 +436,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                           }
                         }}
                       >
-                        <span className={baseStyles.servingHighlightLabel}>{item.label}</span>
+                        <span className={styles.servingHighlightLabel}>{item.label}</span>
                         {isEditing ? (
                           <input
                             className={styles.editableInput}
@@ -376,32 +445,48 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                             onBlur={() => setEditingHighlight(null)}
                           />
                         ) : (
-                          <span className={baseStyles.servingHighlightValue}>{formState[item.field]}</span>
+                          <span
+                            className={`${styles.servingHighlightValue} ${
+                              item.isModified ? styles.modifiedText : ''
+                            }`.trim()}
+                          >
+                            {formState[item.field]}
+                          </span>
                         )}
                       </div>
                     )
                   }
                   return (
-                    <div key={item.label} className={baseStyles.servingHighlight}>
-                      <span className={baseStyles.servingHighlightLabel}>{item.label}</span>
-                      <span className={baseStyles.servingHighlightValue}>{item.value}</span>
+                    <div key={item.label} className={styles.servingHighlight}>
+                      <span className={styles.servingHighlightLabel}>{item.label}</span>
+                      <span
+                        className={`${styles.servingHighlightValue} ${
+                          item.isModified ? styles.modifiedText : ''
+                        }`.trim()}
+                      >
+                        {item.value}
+                      </span>
                     </div>
                   )
                 })}
               </div>
             )}
 
+            {highlightItems.length > 0 && nutritionRows.length > 0 && (
+              <div className={styles.sectionDivider} aria-hidden="true" />
+            )}
+
             {nutritionRows.length > 0 && (
-              <div className={baseStyles.nutritionTable}>
-                <h3 className={baseStyles.sectionTitle}>
+              <div className={styles.nutritionTable}>
+                <h3 className={styles.sectionTitle}>
                   {product.nutritionBasisText
                     ? `영양정보 (${product.nutritionBasisText} 기준)`
                     : product.nutritionBasisValue
                     ? `영양정보 (${product.nutritionBasisValue}${product.nutritionBasisUnit ?? ''} 기준)`
                     : '영양정보'}
                 </h3>
-                <div className={baseStyles.nutritionTableWrapper}>
-                  <table className={baseStyles.nutritionTableGrid}>
+                <div className={styles.nutritionTableWrapper}>
+                  <table className={styles.nutritionTableGrid}>
                     <thead>
                       <tr className={styles.nutritionHeaderRow}>
                         <th>영양 성분</th>
@@ -413,11 +498,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       {nutritionRows.map((row, index) => (
                         <tr
                           key={row.key}
-                          className={`${baseStyles.nutritionRow} ${index % 2 === 0 ? baseStyles.nutritionRowEven : ''}`.trim()}
+                          className={`${styles.nutritionRow} ${index % 2 === 0 ? styles.nutritionRowEven : ''}`.trim()}
                         >
                           <th scope="row">{row.label}</th>
                           <td
-                            className={styles.nutritionEditableCell}
+                  className={styles.nutritionEditableCell}
                             onClick={() => setEditingNutritionKey(row.key)}
                           >
                             {row.isEditing ? (
@@ -428,7 +513,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                                 onBlur={() => setEditingNutritionKey(null)}
                               />
                             ) : (
-                              `${row.rawValue}${row.unit}`
+                              <span className={row.isModified ? styles.modifiedText : ''}>
+                                {`${row.rawValue}${row.unit}`}
+                              </span>
                             )}
                           </td>
                           <td>{row.percentLabel}</td>
@@ -439,11 +526,17 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 </div>
               </div>
             )}
+            
+            {nutritionRows.length > 0 && product.ingredients && product.ingredients.trim() && (
+              <div className={styles.sectionDivider} aria-hidden="true" />
+            )}
           </div>
 
-          {formState.ingredients && (
-            <div className={baseStyles.ingredients}>
-              <h3 className={baseStyles.sectionTitle}>원재료</h3>
+            
+
+            {formState.ingredients && (
+            <div className={styles.ingredients}>
+              <h3 className={styles.sectionTitle}>원재료</h3>
               {isEditingIngredients ? (
                 <textarea
                   className={styles.editableTextArea}
@@ -475,12 +568,12 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     const isSweetener = SWEETENER_KEYWORDS.some((keyword) => ingredient.includes(keyword))
                     const isCaffeine = CAFFEINE_KEYWORDS.some((keyword) => ingredient.includes(keyword))
                     const highlightClass = isSweetener
-                      ? baseStyles.ingredientHighlightSweetener
+                      ? styles.ingredientHighlightSweetener
                       : isCaffeine
-                      ? baseStyles.ingredientHighlightCaffeine
+                      ? styles.ingredientHighlightCaffeine
                       : ''
                     return (
-                      <span key={`${ingredient}-${index}`} className={`${baseStyles.ingredient} ${highlightClass}`.trim()}>
+                      <span key={`${ingredient}-${index}`} className={`${styles.ingredient} ${highlightClass}`.trim()}>
                         {ingredient}
                       </span>
                     )

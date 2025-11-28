@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { ReactNode, createContext, useContext, useMemo, useState, useCallback, useEffect, useRef } from 'react'
 import styles from './layout.module.css'
 import { getCdnUrl } from '@/lib/cdn'
+import { fetchAdminUserStats } from '@/app/admin/store/api/adminUserApi'
 import Cookies from 'js-cookie'
 
 type NavChildItem = {
@@ -34,7 +35,7 @@ const NAV_ITEMS: NavItem[] = [
     label: '제품',
     icon: '/images/product_white.png',
     children: [
-      { href: '/admin/products', label: '제품 조회/삭제', shortLabel: '조회' },
+      { href: '/admin/products', label: '제품 조회/ 수정', shortLabel: '조회' },
       { href: '/admin/products/register', label: '제품 등록', shortLabel: '등록' },
     ],
   },
@@ -133,6 +134,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }),
     [headerValues, updateHeaderValues]
   )
+
+  useEffect(() => {
+    let isMounted = true
+    const loadHeaderStats = async () => {
+      try {
+        const stats = await fetchAdminUserStats()
+        if (isMounted) {
+          setHeaderValues((prev) => ({
+            ...prev,
+            ...stats,
+          }))
+        }
+      } catch (statsError) {
+        console.error('헤더 카드 통계 로딩 중 오류', statsError)
+      }
+    }
+    loadHeaderStats()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const handleToggleSidebar = () => {
     setIsSidebarCollapsed((prev) => !prev)

@@ -4,7 +4,7 @@ import Cookies from 'js-cookie'
 
 let sessionRedirectScheduled = false
 
-function handleSessionExpiry(originPathname: string, loginTarget: string) {
+function handleSessionExpiry(originPathname: string, loginTarget: string, showAlert = false) {
   if (typeof window === 'undefined' || sessionRedirectScheduled) {
     return
   }
@@ -26,7 +26,9 @@ function handleSessionExpiry(originPathname: string, loginTarget: string) {
       // ignore logout failure
     })
     .finally(() => {
-      window.alert(alertMessage)
+      if (showAlert) {
+        window.alert(alertMessage)
+      }
 
       setTimeout(() => {
         window.location.replace(loginTarget)
@@ -124,7 +126,21 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
     throw new Error('서버와 통신하지 못했습니다. 잠시 후 다시 시도해주세요.')
   }
 
-  if (response.status === 401 && !retried) {
+  let errorDetails: { message?: string } | null = null
+  if (!response.ok) {
+    errorDetails = await parseErrorResponse(response)
+  }
+
+  const normalizedMessage = (errorDetails?.message ?? '').toLowerCase()
+  const isAccessTokenIssue =
+    response.status === 401 ||
+    normalizedMessage.includes('액세스 토큰') ||
+    normalizedMessage.includes('access token')
+
+  const shouldAttemptRefresh =
+    !retried && (response.status === 401 || response.status === 403) && isAccessTokenIssue
+
+  if (shouldAttemptRefresh) {
     try {
       const refreshHeaders = buildHeaders({}, xsrfToken) // accessToken 관련 파라미터 제거
       const refreshResponse = await fetch(`${API_BASE_URL}/jwt/refresh`, {
@@ -134,34 +150,43 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
       })
 
       if (refreshResponse.ok) {
-        // 리프레시 성공 후, 브라우저가 새 accessToken 쿠키를 자동으로 처리하므로
-        // 다시 요청할 때 fetchWithAuth가 업데이트된 쿠키를 사용하도록 함
-        response = await fetchWithAuth(path, options, true)
-      } else {
-        const { message } = await parseErrorResponse(refreshResponse)
-        const errorMessage = message || '리프레시 토큰이 만료되었거나 유효하지 않습니다. 다시 로그인하십시오.'
-        handleSessionExpiry(originPathname, loginRedirectTarget)
-        throw new Error(errorMessage)
+        return await fetchWithAuth(path, options, true)
       }
+
+      const refreshError = await parseErrorResponse(refreshResponse)
+      const refreshErrorMessage = refreshError.message ?? ''
+      const normalizedRefresh = refreshErrorMessage.toLowerCase()
+      const shouldAlert =
+        refreshResponse.status === 401 ||
+        refreshResponse.status === 403 ||
+        normalizedRefresh.includes('refresh')
+
+      handleSessionExpiry(originPathname, loginRedirectTarget, shouldAlert)
+      const errorMessage =
+        refreshError.message || '리프레시 토큰이 만료되었거나 유효하지 않습니다. 다시 로그인하십시오.'
+      throw new Error(errorMessage)
     } catch (error) {
       console.error('토큰 재발급 중 오류 발생:', error)
-      handleSessionExpiry(originPathname, loginRedirectTarget)
-      throw error instanceof Error ? error : new Error('토큰 재발급 중 알 수 없는 오류가 발생했습니다.')
+      handleSessionExpiry(originPathname, loginRedirectTarget, false)
+      throw error instanceof Error
+        ? error
+        : new Error('토큰 재발급 중 알 수 없는 오류가 발생했습니다.')
     }
-  } else if (response.status === 401 && retried) {
-    const { message } = await parseErrorResponse(response)
-    throw new Error(message || '토큰 재발급 후에도 인증되지 않았습니다.')
+  }
+
+  if (response.status === 401 && retried) {
+    const errorMessage = errorDetails?.message
+    throw new Error(errorMessage || '토큰 재발급 후에도 인증되지 않았습니다.')
   }
 
   if (!response.ok) {
-    const { message } = await parseErrorResponse(response)
-    const fallbackMessage = message || `API 요청 실패: ${response.status} ${response.statusText}`
+    const fallbackMessage = errorDetails?.message || `API 요청 실패: ${response.status} ${response.statusText}`
 
     if (response.status === 401) {
       if (fallbackMessage.includes('액세스 토큰이 없습니다.') || fallbackMessage.includes('액세스 토큰이 만료되었습니다.')) {
         throw new Error(fallbackMessage)
       }
-  } else if (response.status === 403) {
+    } else if (response.status === 403) {
       if (fallbackMessage.includes('탈퇴한 회원입니다.')) {
         try {
           localStorage.removeItem('accessToken')

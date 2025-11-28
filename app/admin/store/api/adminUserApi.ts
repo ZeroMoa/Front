@@ -141,10 +141,8 @@ export async function fetchAdminUserStats() {
     return 0
   }
 
-  const [registeredToday, deletedToday] = await Promise.all([
-    fetchCount('/admin/users/today-registered-count'),
-    fetchCount('/admin/users/today-deleted-count'),
-  ])
+  const registeredToday = await fetchCount('/admin/users/today-registered-count')
+  const deletedToday = await fetchCount('/admin/users/today-deleted-count')
 
   return { registeredToday, deletedToday }
 }

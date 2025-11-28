@@ -70,7 +70,7 @@ export const CATEGORY_CONFIG: Record<CategorySlug, CategoryPageConfig> = {
     drinks: {
         kind: 'category',
         slug: 'drinks',
-        title: '음료 카테고리',
+        title: '음료',
         categoryNo: 1,
         defaultSort: 'productName,asc',
         pageSizeOptions: DEFAULT_PAGE_SIZE_OPTIONS,
@@ -89,7 +89,7 @@ export const CATEGORY_CONFIG: Record<CategorySlug, CategoryPageConfig> = {
     snacks: {
         kind: 'category',
         slug: 'snacks',
-        title: '과자 카테고리',
+        title: '과자',
         categoryNo: 2,
         defaultSort: 'productName,asc',
         pageSizeOptions: DEFAULT_PAGE_SIZE_OPTIONS,
@@ -106,7 +106,7 @@ export const CATEGORY_CONFIG: Record<CategorySlug, CategoryPageConfig> = {
     icecream: {
         kind: 'category',
         slug: 'icecream',
-        title: '아이스크림 카테고리',
+        title: '아이스크림',
         categoryNo: 3,
         defaultSort: 'productName,asc',
         pageSizeOptions: DEFAULT_PAGE_SIZE_OPTIONS,

@@ -113,33 +113,11 @@ export default async function NewProductsPage({ searchParams }: { searchParams: 
     let productResponse;
     try {
         productResponse = categoryConfig
-            ? hasKeyword
-                ? await fetchProductSearch(
-                      {
-                          query: keyword,
-                          categoryNo: searchCategoryNo,
-                          page,
-                          size,
-                          sort,
-                          isNew,
-                          filters,
-                      },
-                      { cache: 'no-store' },
-                  )
-                : await fetchCategoryProducts(
-                      {
-                          categoryNo: selectedSubCategory.categoryNo,
-                          page,
-                          size,
-                          sort,
-                          isNew,
-                          filters: activeFilters,
-                      },
-                      { cache: 'no-store' },
-                  )
-            : await fetchProductSearch(
+        ? hasKeyword
+            ? await fetchProductSearch(
                   {
-                      query: keyword || undefined,
+                      query: keyword,
+                      categoryNo: searchCategoryNo,
                       page,
                       size,
                       sort,
@@ -147,7 +125,29 @@ export default async function NewProductsPage({ searchParams }: { searchParams: 
                       filters,
                   },
                   { cache: 'no-store' },
-              );
+              )
+            : await fetchCategoryProducts(
+                  {
+                      categoryNo: selectedSubCategory.categoryNo,
+                      page,
+                      size,
+                      sort,
+                      isNew,
+                      filters: activeFilters,
+                  },
+                  { cache: 'no-store' },
+              )
+        : await fetchProductSearch(
+              {
+                  query: keyword || undefined,
+                  page,
+                  size,
+                  sort,
+                  isNew,
+                  filters,
+              },
+              { cache: 'no-store' },
+          );
     } catch (error) {
         const fallbackMessage = '신제품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
         const message =

@@ -21,9 +21,26 @@ export default function AdminLoginPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const form = event.currentTarget
+    const usernameInput = form.elements.namedItem('username') as HTMLInputElement | null
+    const passwordInput = form.elements.namedItem('password') as HTMLInputElement | null
+    const resolvedUsername = (usernameInput?.value ?? '').trim()
+    const resolvedPassword = passwordInput?.value ?? ''
+
+    if (!resolvedUsername || resolvedPassword.length === 0) {
+      setError('아이디와 비밀번호를 모두 입력해주세요.')
+      return
+    }
+    setUsername(resolvedUsername)
+    setPassword(resolvedPassword)
     if (!ADMIN_LOGIN_ENDPOINT) {
       setError('로그인 엔드포인트가 설정되지 않았습니다.')
       return
+    }
+
+    const payload = {
+      username: resolvedUsername,
+      password: resolvedPassword,
     }
 
     setLoading(true)
@@ -36,10 +53,7 @@ export default function AdminLoginPage() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          username,
-          password,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
@@ -104,7 +118,7 @@ export default function AdminLoginPage() {
 
         {error && <div className={styles.errorMessage}>{error}</div>}
 
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form className={styles.form} method="post" action="#" autoComplete="off" onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
             <label htmlFor="admin-username">아이디</label>
             <div className={styles.inputFieldWrapper}>
@@ -116,7 +130,7 @@ export default function AdminLoginPage() {
                 placeholder="관리자 아이디를 입력하세요"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
-                autoComplete="username"
+                autoComplete="off"
                 required
               />
             </div>
@@ -133,7 +147,7 @@ export default function AdminLoginPage() {
                 placeholder="비밀번호를 입력하세요"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
+                autoComplete="off"
                 required
               />
               <button

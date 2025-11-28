@@ -490,7 +490,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
               value={formValues.totalContent}
               onChange={handleInputChange}
               className={styles.textInput}
-              placeholder="예: 350mL × 20개"
+              placeholder="예: 350mL"
             />
           </label>
           <label className={styles.field}>

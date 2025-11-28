@@ -179,7 +179,7 @@ export default function BoardPage() {
                         </button>
                     </div>
                     <div className={styles.filterSelects}>
-                                <select
+                        <select
                             className={styles.selectField}
                             value={searchType}
                             onChange={(event) => {
