@@ -15,6 +15,10 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const setErrorAndClose = (message: string) => {
+    setError(message)
+  }
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!ADMIN_LOGIN_ENDPOINT) {
@@ -46,16 +50,42 @@ export default function AdminLoginPage() {
             message = result.message
           }
         } catch {
-          // ignore json parse error
+          // ignore
         }
-        throw new Error(message)
+        setErrorAndClose(message)
+        return
+      }
+
+      const meResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? ''}/user/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      })
+
+      if (!meResponse.ok) {
+        setErrorAndClose('어드민 계정이 아닙니다.')
+        return
+      }
+
+      const meData = await meResponse.json()
+      const normalizedRole = typeof meData?.roleType === 'string' ? meData.roleType.toUpperCase() : ''
+      if (normalizedRole !== 'ADMIN' && normalizedRole !== 'ROLE_ADMIN') {
+        setErrorAndClose('어드민 계정이 아닙니다.')
+        return
       }
 
       setUsername('')
       setPassword('')
       router.push('/admin/users')
     } catch (loginError) {
-      setError((loginError as Error).message ?? '로그인 중 오류가 발생했습니다.')
+      if (loginError instanceof Error && loginError.message && loginError.message.includes('Failed to fetch')) {
+        setError('서버와 연결이 끊겼습니다. 다시 시도해주세요.')
+      } else {
+        const fallbackMessage = (loginError as Error).message ?? '로그인 중 오류가 발생했습니다.'
+        setErrorAndClose(fallbackMessage)
+      }
     } finally {
       setLoading(false)
     }
@@ -64,6 +94,11 @@ export default function AdminLoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
+        {loading && (
+          <div className={styles.loadingOverlay}>
+            <div className={styles.loadingContent}>로그인 중...</div>
+          </div>
+        )}
         <Image src="/images/logo2.png" alt="제로모아" width={320} height={112} priority className={styles.logo} />
         <h1 className={styles.title}>관리자 로그인</h1>
 

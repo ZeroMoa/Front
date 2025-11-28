@@ -33,8 +33,8 @@ export const SORT_FIELD_MAP: Record<AdminUserSortKey, string> = {
 export const MANAGE_USER_FILTER_OPTIONS = {
   role: [
     { value: 'ALL', label: '전체' },
-    { value: 'USER', label: 'ROLE_USER' },
-    { value: 'ADMIN', label: 'ROLE_ADMIN' },
+    { value: 'USER', label: 'USER' },
+    { value: 'ADMIN', label: 'ADMIN' },
   ],
   lock: [
     { value: 'ALL', label: '전체' },

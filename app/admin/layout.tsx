@@ -2,14 +2,16 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { ReactNode, createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { ReactNode, createContext, useContext, useMemo, useState, useCallback, useEffect, useRef } from 'react'
 import styles from './layout.module.css'
 import { getCdnUrl } from '@/lib/cdn'
+import Cookies from 'js-cookie'
 
 type NavChildItem = {
   href: string
   label: string
+  shortLabel?: string
 }
 
 type NavItem = {
@@ -24,16 +26,16 @@ const NAV_ITEMS: NavItem[] = [
     label: '회원',
     icon: '/images/users_white.png',
     children: [
-      { href: '/admin/users', label: '회원 조회' },
-      { href: '/admin/users/manage', label: '회원 관리' },
+      { href: '/admin/users', label: '회원 조회', shortLabel: '조회' },
+      { href: '/admin/users/manage', label: '회원 관리', shortLabel: '관리' },
     ],
   },
   {
     label: '제품',
     icon: '/images/product_white.png',
     children: [
-      { href: '/admin/products', label: '제품 조회/삭제' },
-      { href: '/admin/products/register', label: '제품 등록' },
+      { href: '/admin/products', label: '제품 조회/삭제', shortLabel: '조회' },
+      { href: '/admin/products/register', label: '제품 등록', shortLabel: '등록' },
     ],
   },
   { href: '/admin/boards', label: '게시판', icon: '/images/notice_white.png' },
@@ -96,6 +98,7 @@ function hexToRgba(hex: string, alpha = 0.35) {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
+  const router = useRouter()
 
   const [headerValues, setHeaderValues] = useState<AdminLayoutHeaderValues>({
     pendingProducts: null,
@@ -104,6 +107,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   })
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const profileMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const parentWithChild = NAV_ITEMS.find((item) =>
@@ -131,6 +136,55 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleToggleSidebar = () => {
     setIsSidebarCollapsed((prev) => !prev)
+  }
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) {
+      return
+    }
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isProfileMenuOpen])
+
+  const handleLogout = useCallback(async () => {
+    try {
+      const xsrfToken = Cookies.get('XSRF-TOKEN')
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(xsrfToken ? { 'X-XSRF-TOKEN': xsrfToken } : {}),
+        },
+        credentials: 'include',
+      })
+      if (!response.ok) {
+        let message = `로그아웃에 실패했습니다. (HTTP ${response.status})`
+        try {
+          const data = await response.json()
+          if (data && typeof data.message === 'string') {
+            message = data.message
+          }
+        } catch {
+          // ignore
+        }
+        throw new Error(message)
+      }
+    } catch (logoutError) {
+      console.error('Failed to logout admin:', logoutError)
+      alert(logoutError instanceof Error ? logoutError.message : '로그아웃 중 오류가 발생했습니다.')
+    } finally {
+      setIsProfileMenuOpen(false)
+      router.replace('/admin/login')
+    }
+  }, [router])
+
+  const handleProfileToggle = () => {
+    setIsProfileMenuOpen((prev) => !prev)
   }
 
   if (pathname === '/admin/login') {
@@ -229,7 +283,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                 childActive ? styles.navSubmenuItemActive : ''
                               }`}
                             >
-                              {child.label}
+                              <span className={styles.navSubmenuText}>
+                                <span className={styles.navSubmenuLabelFull}>{child.label}</span>
+                                <span className={styles.navSubmenuLabelShort}>
+                                  {child.shortLabel ?? child.label}
+                                </span>
+                              </span>
                             </Link>
                           )
                         })}
@@ -260,33 +319,52 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         <section className={styles.main}>
           <header className={styles.header}>
-            <div className={styles.headerCards}>
-              {HEADER_CARDS.map(({ title, valueKey, icon, color }) => {
-                const value = headerValues[valueKey]
-                const displayValue =
-                  typeof value === 'number' && !Number.isNaN(value) ? value.toLocaleString() : '—'
-                const circleShadow = hexToRgba(color, 0.32)
-                const valueColor = color
-  return (
-                  <div key={valueKey} className={styles.headerCard}>
-                    <div className={styles.cardColorBar} style={{ backgroundColor: color }} />
-                    <div className={styles.cardBody}>
-                      <div className={styles.cardTextGroup}>
-                        <span className={styles.cardTitle}>{title}</span>
-                        <span className={styles.cardValue} style={{ color: valueColor }}>
-                          {displayValue}
-                        </span>
-                      </div>
-                      <div
-                        className={styles.cardCircle}
-                        style={{ backgroundColor: color, boxShadow: `0 18px 28px ${circleShadow}` }}
-                      >
-                        <Image src={getCdnUrl(icon)} alt={title} width={40} height={40} className={styles.cardIcon} />
+            <div className={styles.headerInner}>
+              <div className={styles.headerCards}>
+                {HEADER_CARDS.map(({ title, valueKey, icon, color }) => {
+                  const value = headerValues[valueKey]
+                  const displayValue =
+                    typeof value === 'number' && !Number.isNaN(value) ? value.toLocaleString() : '—'
+                  const circleShadow = hexToRgba(color, 0.32)
+                  const valueColor = color
+                  return (
+                    <div key={valueKey} className={styles.headerCard}>
+                      <div className={styles.cardColorBar} style={{ backgroundColor: color }} />
+                      <div className={styles.cardBody}>
+                        <div className={styles.cardTextGroup}>
+                          <span className={styles.cardTitle}>{title}</span>
+                          <span className={styles.cardValue} style={{ color: valueColor }}>
+                            {displayValue}
+                          </span>
+                        </div>
+                        <div
+                          className={styles.cardCircle}
+                          style={{ backgroundColor: color, boxShadow: `0 18px 28px ${circleShadow}` }}
+                        >
+                          <Image src={getCdnUrl(icon)} alt={title} width={40} height={40} className={styles.cardIcon} />
+                        </div>
                       </div>
                     </div>
+                  )
+                })}
+              </div>
+              <div className={styles.headerActions} ref={profileMenuRef}>
+                <button
+                  type="button"
+                  className={styles.profileButton}
+                  onClick={handleProfileToggle}
+                  aria-label="관리자 메뉴 열기"
+                >
+                  <Image src={getCdnUrl('/images/profile.png')} alt="관리자" width={44} height={44} />
+                </button>
+                {isProfileMenuOpen && (
+                  <div className={styles.profileMenu}>
+                    <button type="button" className={styles.profileMenuItem} onClick={handleLogout}>
+                      로그아웃
+                    </button>
                   </div>
-                )
-              })}
+                )}
+              </div>
             </div>
           </header>
 

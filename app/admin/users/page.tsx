@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from 'react'
+import CircularProgress from '@mui/material/CircularProgress'
 import Image from 'next/image'
 import { getCdnUrl } from '@/lib/cdn'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -29,19 +30,20 @@ import type {
 type SortState = { field: AdminUserSortKey | null; direction: SortDirection | null }
 
 const INITIAL_SORT_STATE: SortState = { field: null, direction: null }
-const SKELETON_ROW_COUNT = 8
+const DEFAULT_SORT_KEY: AdminUserSortKey = 'createdDate'
+const DEFAULT_SORT_STATE: SortState = { field: DEFAULT_SORT_KEY, direction: 'desc' }
 
 function parseSortState(sortParam: string | null): SortState {
-  if (!sortParam) return INITIAL_SORT_STATE
+  if (!sortParam) return DEFAULT_SORT_STATE
 
   const [field, direction] = sortParam.split(',')
   if (!field || (direction !== 'asc' && direction !== 'desc')) {
-    return INITIAL_SORT_STATE
+    return DEFAULT_SORT_STATE
   }
 
   const entries = Object.entries(SORT_FIELD_MAP) as Array<[AdminUserSortKey, string]>
   const matched = entries.find(([, value]) => value === field)
-  if (!matched) return INITIAL_SORT_STATE
+  if (!matched) return DEFAULT_SORT_STATE
   return { field: matched[0], direction }
 }
 
@@ -108,6 +110,8 @@ export default function AdminUsersPage() {
   const sortParam = searchParams.get('sort')
   const sortState = useMemo(() => parseSortState(sortParam), [sortParam])
   const keyword = searchParams.get('q') ?? ''
+
+  const isDefaultSortActive = sortParam === null
 
   useEffect(() => {
     setSearchTerm(keyword)
@@ -201,7 +205,8 @@ export default function AdminUsersPage() {
   }
 
   const handleSort = (field: AdminUserSortKey) => {
-    const next = nextSortState(sortState, field)
+    const baselineState = isDefaultSortActive && field === DEFAULT_SORT_KEY ? INITIAL_SORT_STATE : sortState
+    const next = nextSortState(baselineState, field)
     updateQueryParams({
       sort: next.field && next.direction ? `${SORT_FIELD_MAP[next.field]},${next.direction}` : null,
       page: '0',
@@ -237,30 +242,12 @@ export default function AdminUsersPage() {
     )
   }
 
-  const renderSkeletonTable = () => (
-    <table className={`${styles.table} ${styles.tableLoading}`}>
-      <thead className={styles.tableHead}>
-        <tr>
-          {ADMIN_USER_TABLE_COLUMNS.map(({ key, label, width }) => (
-            <th key={key} style={width ? { width } : undefined} className={styles.sortable}>
-              {label}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {Array.from({ length: Math.min(size, SKELETON_ROW_COUNT) }).map((_, rowIndex) => (
-          <tr key={`skeleton-${rowIndex}`} className={styles.skeletonRow}>
-            {ADMIN_USER_TABLE_COLUMNS.map(({ key }) => (
-              <td key={`${key}-${rowIndex}`}>
-                <div className={styles.skeletonBlock} />
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
+const renderLoadingState = () => (
+  <div className={styles.loadingOverlay}>
+    <CircularProgress size={40} className={styles.loadingSpinner} />
+    <p>회원 목록 불러오는 중...</p>
+  </div>
+)
 
   return (
     <div className={styles.container}>
@@ -307,7 +294,7 @@ export default function AdminUsersPage() {
 
       <div className={styles.tableWrapper}>
         {loading ? (
-          renderSkeletonTable()
+          renderLoadingState()
         ) : error ? (
           <div className={styles.errorState}>{error}</div>
         ) : (

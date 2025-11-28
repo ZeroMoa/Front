@@ -38,6 +38,7 @@ export interface ManageUser {
   nickname: string
   isLock: boolean
   roleType: string
+  isDeleted: boolean
 }
 
 export interface PageResponse<T> {
@@ -49,8 +50,10 @@ export interface PageResponse<T> {
 }
 
 export interface EditFormState {
-  email: string
   nickname: string
+  emailFront: string
+  emailBack: string
+  isDirectInput: boolean
 }
 
 export interface UserFilters {
@@ -68,7 +71,7 @@ export function normalizeAdminUser(raw: any): AdminUser {
     isLock: (raw.isLock ?? raw.is_lock ?? false) as boolean,
     isSocial: (raw.isSocial ?? raw.is_social ?? false) as boolean,
     createdDate: (raw.createdDate ?? raw.created_date ?? null) as string | null,
-    updateDate: (raw.updateDate ?? raw.updated_date ?? null) as string | null,
+    updateDate: (raw.updateDate ?? raw.updatedDate ?? raw.updated_date ?? null) as string | null,
     isDeleted: (raw.isDeleted ?? raw.is_deleted ?? false) as boolean,
     deletedAt: (raw.deletedAt ?? raw.deleted_at ?? null) as string | null,
   }
@@ -84,6 +87,7 @@ export function normalizeManageUser(raw: any): ManageUser {
     nickname: raw.nickname ?? '',
     isLock: Boolean(raw.isLock ?? raw.is_lock ?? false),
     roleType: normalizedRole,
+    isDeleted: Boolean(raw.isDeleted ?? raw.is_deleted ?? false),
   }
 }
 

@@ -95,19 +95,34 @@ export async function fetchAdminUserManagement(params: AdminUserManageParams): P
   const hasLock = filters?.isLock && filters.isLock !== 'ALL'
 
   if (hasUsername) {
-    query.set('username', filters!.username.trim())
+    const trimmed = filters!.username.trim()
+    query.set('username', trimmed)
   }
   if (hasEmail) {
-    query.set('email', filters!.email.trim())
+    const trimmed = filters!.email.trim()
+    query.set('email', trimmed)
   }
   if (hasRole) {
-    query.set('roleType', filters!.roleType)
+    const role = filters!.roleType === 'ADMIN' ? 'ROLE_ADMIN' : filters!.roleType === 'USER' ? 'ROLE_USER' : filters!.roleType
+    query.set('roleType', role)
   }
   if (hasLock) {
     query.set('isLock', filters!.isLock)
   }
 
+  const qParts: string[] = []
+  if (hasUsername) {
+    qParts.push(filters!.username.trim())
+  }
+  if (hasEmail) {
+    qParts.push(filters!.email.trim())
+  }
+
   const requiresSearch = hasUsername || hasEmail || hasRole || hasLock
+  if (requiresSearch) {
+    query.set('q', (qParts.join(' ').trim() || '*').trim())
+  }
+
   const endpoint = requiresSearch ? '/admin/users/search' : '/admin/users'
 
   const response = await fetchWithAuth(buildEndpointWithQuery(endpoint, query))

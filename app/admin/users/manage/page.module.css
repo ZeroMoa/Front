@@ -73,22 +73,52 @@
   }
   
   .filtersRow {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    display: flex;
     gap: 16px;
-    align-items: end;
+    align-items: flex-end;
+    flex-wrap: wrap;
   }
-  
-  .filterField {
+
+  .filterUsernameField,
+  .filterEmailField,
+  .filterRoleField,
+  .filterLockField {
     display: flex;
     flex-direction: column;
     gap: 8px;
     font-size: 13px;
     color: #435181;
   }
-  
-  .filterField input,
-  .filterField select {
+
+  .filterUsernameField {
+    width: 220px;
+  }
+
+  .filterEmailField {
+    min-width: 280px;
+    flex: 0 1 280px;
+  }
+
+  .filterRoleField {
+    width: 150px;
+  }
+
+  .filterLockField {
+    width: 150px;
+  }
+
+  .filterFieldSmall {
+    max-width: 160px;
+  }
+
+  .filterFieldSmall select {
+    width: 100%;
+  }
+
+  .filterUsernameField input,
+  .filterEmailField input,
+  .filterRoleField select,
+  .filterLockField select {
     border-radius: 12px;
     border: 1px solid rgba(155, 174, 220, 0.6);
     padding: 10px 12px;
@@ -97,7 +127,18 @@
     background: rgba(248, 250, 255, 0.95);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   }
-  
+
+  @media (max-width: 860px) {
+    .filtersRow {
+      flex-direction: column;
+    }
+
+    .resetButton {
+      width: 100%;
+      justify-self: stretch;
+    }
+  }
+
   .resetButton {
     border: none;
     border-radius: 10px;
@@ -109,9 +150,8 @@
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.18s ease, opacity 0.18s ease;
-    align-self: auto;
+    align-self: flex-end;
     width: fit-content;
-    justify-self: end;
   }
   
   .resetButton:disabled {
@@ -119,9 +159,7 @@
     cursor: not-allowed;
   }
   
-  .resetButton:not(:disabled):hover {
-    transform: translateY(-1px);
-  }
+
   
 .tableHead {
     background: linear-gradient(135deg, #e3ecff, #c7d8ff);
@@ -148,24 +186,48 @@
     cursor: pointer;
   }
   
-  .tableBody tr {
-    background: rgba(247, 249, 255, 0.95);
+.tableBody tr {
+    background: rgba(255, 255, 255, 0.97);
     color: #2a3e70;
     transition: background-color 0.2s ease;
   }
-  
-  .tableBody tr:nth-child(even) {
-    background: rgba(255, 255, 255, 0.97);
+
+  .tableRow {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .tableRow {
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
   
-  .tableBody tr:hover {
-    background: rgba(214, 226, 255, 0.32);
-  }
+
   
+
+  
+  .deletedRow {
+    background: rgba(255, 228, 232, 0.88) !important;
+    color: #7b1d2a !important;
+  }
+
+  .deletedRow td {
+    border-color: rgba(220, 150, 160, 0.45);
+  }
+
+  .lockedRow {
+    background: rgba(70, 74, 88, 0.92) !important;
+    color: #f2f4f9 !important;
+  }
+
+  .lockedRow td {
+    border-color: rgba(110, 114, 130, 0.55);
+  }
+
+
+
   .tableBody td {
     padding: 18px 22px;
     font-size: 14px;
-    color: #2a3e70;
+    color: inherit;
     border-bottom: 1px solid rgba(210, 220, 245, 0.5);
     vertical-align: middle;
   }
@@ -214,6 +276,7 @@
     color: #fff;
     transition: opacity 0.2s ease;
     pointer-events: none;
+    margin-left: -8px;
   }
   
   .toggleTrack::after {
@@ -287,59 +350,54 @@
     background: #f15b6c;
     color: #fff;
   }
-  
-  .deleteButton:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(192, 57, 43, 0.18);
-  }
+
   
   .editButton {
     background: linear-gradient(135deg, #5a7bff, #7f53ff);
     color: #fff;
   }
-  
-  .editButton:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(91, 118, 255, 0.2);
-  }
+
   
   .submitButton {
     background: linear-gradient(135deg, #5a7bff, #7f53ff);
     color: #fff;
   }
-  
-  .submitButton:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 22px rgba(91, 118, 255, 0.28);   
-    filter: brightness(1.03);
-  }
+
   
   .cancelButton {
     background: rgba(229, 235, 255, 0.9);
     color: #4a63a8;
   }
   
-  .cancelButton:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 22px rgba(87, 109, 190, 0.22);
-  }
+
   
   .expandedRow {
     background: rgba(247, 249, 255, 0.75);
   }
   
   .editForm {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px 22px;
-    padding: 18px 18px 22px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 18px;
   }
   
   .formField {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 1 220px;
+  min-width: 160px;
+}
+
+.formFieldCompact {
+  flex: 0 1 180px;
+}
+
+.formFieldWide {
+  flex: 1 1 360px;
+  min-width: 260px;
+}
   
   .formLabel {
     font-size: 13px;
@@ -365,9 +423,10 @@
   
   .formActions {
     display: flex;
-    justify-content: flex-end;
+    align-items: flex-end;
     gap: 10px;
-    grid-column: 1 / -1;
+    margin-left: auto;
+    min-width: 170px;
   }
   
   .statusMessage {
@@ -393,17 +452,153 @@
     display: flex;
     justify-content: flex-end;
   }
+
+  .boxEmail {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 45%;
+  }
+
+  .boxInput {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(155, 174, 220, 0.6);
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(250, 252, 255, 0.95);
+  }
+
+  .inputInfo {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    color: #2f3f69;
+    background: transparent;
+  }
+
+  .emailInput {
+    font-size: 14px;
+  }
+
+  .textAt {
+    font-size: 15px;
+    color: #435181;
+  }
+
+  .boxSelect {
+    position: relative;
+    flex: 1;
+    border: 1px solid rgba(155, 174, 220, 0.6);
+    border-radius: 10px;
+    background-color: rgba(248, 250, 255, 0.95);
+    display: flex;
+    align-items: center;
+    height: 44px;
+  }
+
+  .domainDisplayField,
+  .domainInputField {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: 10px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #2f3f69;
+  }
+
+  .selectArrowContainer {
+    position: relative;
+    width: 40px;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .selectArrow {
+    font-size: 0.85rem;
+    color: #626f9f;
+    pointer-events: none;
+  }
+
+  .boxLayer {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(155, 174, 220, 0.6);
+    border-radius: 12px;
+    box-shadow: 0 18px 40px rgba(45, 64, 119, 0.18);
+    z-index: 15;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .listAdress {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+  }
+
+  .listItem {
+    padding: 0;
+  }
+
+  .buttonMail {
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    font-size: 14px;
+    color: #2f3f69;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+  }
+
+  .buttonMail:hover {
+    background: rgba(93, 124, 255, 0.12);
+  }
+
+  .hasValue {
+    background-color: rgba(245, 248, 255, 0.92);
+  }
   
-  .loadingState,
+  .loadingOverlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 80px 20px;
+    min-height: 220px;
+  }
+
+  .loadingSpinner {
+    color: #4f7cff;
+  }
+
   .emptyState {
     padding: 40px 20px;
     text-align: center;
-    color: #4a5884;
-    font-size: 15px;
-  }
-  
-  .emptyState {
     color: rgba(74, 88, 132, 0.75);
+    font-size: 15px;
   }
   
   

@@ -105,10 +105,6 @@
   border-collapse: collapse;
 }
 
-.tableLoading {
-  pointer-events: none;
-}
-
 .tableHead tr {
   background: linear-gradient(135deg, #e3ecff, #c7d8ff);
 }
@@ -157,30 +153,18 @@
   border-bottom: 1px solid rgba(210, 220, 245, 0.5);
 }
 
-.skeletonRow td {
-  padding: 18px 22px;
-  border-bottom: 1px solid rgba(210, 220, 245, 0.3);
+.loadingOverlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 80px 20px;
+  min-height: 220px;
 }
 
-.skeletonBlock {
-  height: 18px;
-  width: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(223, 231, 250, 0.42), rgba(206, 220, 255, 0.78), rgba(223, 231, 250, 0.42));
-  background-size: 400px 100%;
-  animation: skeletonShimmer 1.4s ease-in-out infinite;
-}
-
-@keyframes skeletonShimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  50% {
-    background-position: 200px 0;
-  }
-  100% {
-    background-position: 400px 0;
-  }
+.loadingSpinner {
+  color: #4f7cff;
 }
 
 .statusBadge {

@@ -77,6 +77,17 @@
     box-sizing: border-box;
 }
 
+.inputField::-ms-reveal,
+.inputField::-ms-clear {
+    display: none;
+}
+
+.inputField::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    display: none;
+    pointer-events: none;
+}
+
 .optionsContainer {
     width: 60%;
     display: flex;

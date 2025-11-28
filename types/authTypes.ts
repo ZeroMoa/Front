@@ -3,6 +3,13 @@ interface UserResponseDTO {
     social: boolean;
     nickname: string;
     email: string;
+    isLock?: boolean;
+    isSocial?: boolean;
+    roleType?: string;
+    createdDate?: string;
+    updatedDate?: string;
+    isDeleted?: boolean;
+    deletedAt?: string | null;
 }
 
 interface UserRequestDTO {

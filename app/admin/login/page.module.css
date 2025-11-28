@@ -73,6 +73,17 @@
   box-shadow: 0 0 0 4px rgba(79, 124, 255, 0.1);
 }
 
+.inputField::-ms-reveal,
+.inputField::-ms-clear {
+  display: none;
+}
+
+.inputField::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none;
+  pointer-events: none;
+}
+
 .passwordToggle {
   position: absolute;
   top: 50%;
@@ -111,6 +122,27 @@
   color: rgba(31, 47, 92, 0.5);
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 24, 44, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  z-index: 5;
+}
+
+.loadingContent {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2f5c;
+  box-shadow: 0 14px 28px rgba(5, 10, 30, 0.22);
 }
 
 .errorMessage {
