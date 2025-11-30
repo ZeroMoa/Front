@@ -206,7 +206,7 @@
 }
 
 .sectionDivider {
-    width: calc(100% - 72px);
+    width: 100%;
     height: 1px;
     margin: 32px auto;
     background: rgba(200, 210, 235, 0.6);
@@ -314,14 +314,30 @@
     font-size: 13px;
 }
 
-.ingredientHighlightSweetener {
+.ingredientText {
+    display: inline-flex;
+    align-items: center;
+}
+
+.ingredientKeyword {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 4px;
+    border-radius: 999px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.ingredientHighlightSweetener,
+.ingredientKeywordSweetener {
     background: linear-gradient(135deg, rgba(247, 160, 96, 0.96), rgba(230, 120, 60, 0.94));
     color: #fff;
     border-color: transparent;
     box-shadow: 0 12px 22px rgba(230, 120, 60, 0.25);
 }
 
-.ingredientHighlightCaffeine {
+.ingredientHighlightCaffeine,
+.ingredientKeywordCaffeine {
     background: linear-gradient(135deg, #D7B19D, #A47148);
     color: #fff;
     border-color: transparent;
@@ -407,7 +423,35 @@
 .saveButtonBar {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
   margin-top: 40px;
+}
+
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 100, 102, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 235, 235, 0.9));
+  color: #d65154;
+  box-shadow: 0 12px 20px rgba(214, 81, 84, 0.18);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.deleteButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 26px rgba(214, 81, 84, 0.22);
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+  box-shadow: none;
 }
 
 .saveButton {

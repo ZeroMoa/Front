@@ -23,7 +23,8 @@ export default function Pagination({
   }
 
   const safePageGroupSize = Math.max(pageGroupSize, 1)
-  const currentGroup = Math.floor(currentPage / safePageGroupSize)
+  const internalCurrentPage = Math.max(currentPage - 1, 0)
+  const currentGroup = Math.floor(internalCurrentPage / safePageGroupSize)
   const startPage = currentGroup * safePageGroupSize
   const endPage = Math.min(totalPages - 1, startPage + safePageGroupSize - 1)
 
@@ -33,10 +34,10 @@ export default function Pagination({
   }
 
   const goToPage = (page: number) => {
-    if (page < 0 || page >= totalPages || page === currentPage) {
+    if (page < 0 || page >= totalPages || page === internalCurrentPage) {
       return
     }
-    onPageChange(page)
+    onPageChange(page + 1)
   }
 
   return (
@@ -45,15 +46,15 @@ export default function Pagination({
         type="button"
         className={clsx(styles.pageArrow, styles.firstArrow)}
         onClick={() => goToPage(0)}
-        disabled={currentPage === 0}
+        disabled={internalCurrentPage === 0}
       >
         <span className={styles.visuallyHidden}>첫 페이지</span>
       </button>
       <button
         type="button"
         className={clsx(styles.pageArrow, styles.prevArrow)}
-        onClick={() => goToPage(currentPage - 1)}
-        disabled={currentPage === 0}
+        onClick={() => goToPage(internalCurrentPage - 1)}
+        disabled={internalCurrentPage === 0}
       >
         <span className={styles.visuallyHidden}>이전 페이지</span>
       </button>
@@ -62,9 +63,9 @@ export default function Pagination({
           <button
             key={page}
             type="button"
-            className={clsx(styles.pageButton, page === currentPage && styles.pageButtonActive)}
+            className={clsx(styles.pageButton, page === internalCurrentPage && styles.pageButtonActive)}
             onClick={() => goToPage(page)}
-            aria-current={page === currentPage ? 'page' : undefined}
+            aria-current={page === internalCurrentPage ? 'page' : undefined}
           >
             {page + 1}
           </button>
@@ -73,8 +74,8 @@ export default function Pagination({
       <button
         type="button"
         className={clsx(styles.pageArrow, styles.nextArrow)}
-        onClick={() => goToPage(currentPage + 1)}
-        disabled={currentPage >= totalPages - 1}
+        onClick={() => goToPage(internalCurrentPage + 1)}
+        disabled={internalCurrentPage >= totalPages - 1}
       >
         <span className={styles.visuallyHidden}>다음 페이지</span>
       </button>
@@ -82,7 +83,7 @@ export default function Pagination({
         type="button"
         className={clsx(styles.pageArrow, styles.lastArrow)}
         onClick={() => goToPage(totalPages - 1)}
-        disabled={currentPage >= totalPages - 1}
+        disabled={internalCurrentPage >= totalPages - 1}
       >
         <span className={styles.visuallyHidden}>마지막 페이지</span>
       </button>

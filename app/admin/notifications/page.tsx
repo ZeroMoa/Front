@@ -105,8 +105,8 @@ export default function AdminNotificationsPage() {
 
   const totalElements = data?.totalElements ?? filteredContent.length
   const totalPages = data?.totalPages ?? 0
-  const currentPage = data?.number ?? page
-  const baseRowNumber = currentPage * pageSize
+  const currentPageIndex = data?.number ?? page
+  const baseRowNumber = currentPageIndex * pageSize
   const isDefaultFilters =
     filters.title === INITIAL_FILTERS.title &&
     filters.boardNo === INITIAL_FILTERS.boardNo &&
@@ -121,7 +121,7 @@ export default function AdminNotificationsPage() {
   }
 
   const handlePageChange = (nextPage: number) => {
-    setPage(nextPage)
+    setPage(Math.max(nextPage - 1, 0))
   }
 
   const handlePageSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -369,7 +369,7 @@ export default function AdminNotificationsPage() {
 
       <div className={styles.footer}>
         {totalPages > 1 && (
-          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+          <Pagination currentPage={currentPageIndex + 1} totalPages={totalPages} onPageChange={handlePageChange} />
         )}
       </div>
 

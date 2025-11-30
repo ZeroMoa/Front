@@ -51,7 +51,7 @@ export default function WithdrawSurveyPage() {
   const { data, isLoading, isError, error } = useWithdrawSurveys(params)
 
   const handlePageChange = (nextPage: number) => {
-    setPage(nextPage)
+    setPage(Math.max(nextPage - 1, 0))
   }
 
   const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -376,7 +376,7 @@ export default function WithdrawSurveyPage() {
 
       {!isLoading && !isError && totalPages > 1 && (
         <div className={styles.paginationWrapper}>
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
+          <Pagination currentPage={page + 1} totalPages={totalPages} onPageChange={handlePageChange} />
         </div>
       )}
     </div>

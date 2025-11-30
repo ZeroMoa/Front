@@ -214,11 +214,9 @@ export default function AdminUsersPage() {
   }
 
   const handlePageChange = (nextPage: number) => {
-    const targetPage = Math.max(
-      Math.min(nextPage, Math.max((data?.totalPages ?? 1) - 1, 0)),
-      0
-    )
-    updateQueryParams({ page: targetPage.toString() })
+    const totalPagesCount = Math.max(data?.totalPages ?? 1, 1)
+    const zeroBasedPage = Math.min(Math.max(nextPage - 1, 0), totalPagesCount - 1)
+    updateQueryParams({ page: zeroBasedPage.toString() })
   }
 
   const handlePageSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -228,7 +226,7 @@ export default function AdminUsersPage() {
     })
   }
 
-  const currentPage = Math.max(data?.number ?? page, 0)
+  const currentPageIndex = Math.max(data?.number ?? page, 0)
   const totalPages = data?.totalPages ?? 0
   const totalElements = data?.totalElements ?? 0
   const tableContent = data?.content ?? []
@@ -367,7 +365,7 @@ const renderLoadingState = () => (
             </table>
 
             <div className={styles.tableFooter}>
-              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+              <Pagination currentPage={currentPageIndex + 1} totalPages={totalPages} onPageChange={handlePageChange} />
             </div>
           </>
         )}

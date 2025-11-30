@@ -20,13 +20,22 @@ const hasProductImage = (product: Product): boolean => {
     return true;
 };
 
-const normalizeProductResponse = (payload: any): ProductResponse => {
+type NormalizeProductResponseOptions = {
+    filterProductsWithoutImage?: boolean;
+};
+
+const normalizeProductResponse = (
+    payload: any,
+    options: NormalizeProductResponseOptions = {},
+): ProductResponse => {
+    const { filterProductsWithoutImage = true } = options;
+
     const rawContent = Array.isArray(payload?.content) ? payload.content : [];
     const normalizedContent = rawContent
         .map((item: Record<string, unknown>) => normalizeProduct(item))
-        .filter((product) => hasProductImage(product));
+        .filter((product) => (filterProductsWithoutImage ? hasProductImage(product) : true));
 
-    const filteredCount = rawContent.length - normalizedContent.length;
+    const filteredCount = filterProductsWithoutImage ? rawContent.length - normalizedContent.length : 0;
     const totalElements =
         typeof payload?.totalElements === 'number'
             ? Math.max(0, payload.totalElements - filteredCount)
@@ -39,6 +48,22 @@ const normalizeProductResponse = (payload: any): ProductResponse => {
         totalElements,
         empty: normalizedContent.length === 0,
     } as ProductResponse;
+};
+
+export interface FetchProductApiOptions {
+    includeProductsWithoutImage?: boolean;
+}
+
+const appendSortParams = (params: URLSearchParams, sort?: string) => {
+    if (!sort) {
+        return;
+    }
+    if (sort === 'likesCount,desc') {
+        params.append('sort', 'likesCount,desc');
+        params.append('sort', 'productName,asc');
+    } else {
+        params.append('sort', sort);
+    }
 };
 
 export interface FetchCategoryProductsParams {
@@ -65,7 +90,7 @@ const buildCategoryQuery = ({
     const query = new URLSearchParams();
     query.set('page', String(page));
     query.set('size', String(size));
-    query.set('sort', sort);
+    appendSortParams(query, sort);
 
     if (typeof isNew === 'boolean') {
         const value = String(isNew);
@@ -87,6 +112,7 @@ const buildCategoryQuery = ({
 export async function fetchCategoryProducts(
     params: FetchCategoryProductsParams,
     init?: RequestInit,
+    options?: FetchProductApiOptions,
 ): Promise<ProductResponse> {
     const { categoryNo, ...rest } = params;
     const query = buildCategoryQuery(rest);
@@ -151,7 +177,9 @@ export async function fetchCategoryProducts(
     }
 
     const payload = await response.json();
-    return normalizeProductResponse(payload);
+    return normalizeProductResponse(payload, {
+        filterProductsWithoutImage: !options?.includeProductsWithoutImage,
+    });
 }
 
 interface FetchNutritionProductsParams {
@@ -172,7 +200,7 @@ const buildNutritionQuery = ({
     const query = new URLSearchParams();
     query.set('page', String(page));
     query.set('size', String(size));
-    query.set('sort', sort);
+    appendSortParams(query, sort);
 
     if (keyword) {
         query.set('keyword', keyword);
@@ -191,6 +219,7 @@ export async function fetchNutritionProducts(
     nutritionSlug: NutritionSlug,
     params: FetchNutritionProductsParams,
     init?: RequestInit,
+    options?: FetchProductApiOptions,
 ): Promise<ProductResponse> {
     const query = buildNutritionQuery(params);
     const endpoint = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product/${nutritionSlug}?${query.toString()}`;
@@ -221,7 +250,9 @@ export async function fetchNutritionProducts(
         }
 
         const payload = await response.json();
-        return normalizeProductResponse(payload);
+        return normalizeProductResponse(payload, {
+            filterProductsWithoutImage: !options?.includeProductsWithoutImage,
+        });
     }
 
     let headers: HeadersInit = {
@@ -286,7 +317,9 @@ export async function fetchNutritionProducts(
     }
 
     const payload = await response.json();
-    return normalizeProductResponse(payload);
+    return normalizeProductResponse(payload, {
+        filterProductsWithoutImage: !options?.includeProductsWithoutImage,
+    });
 }
 
 export interface FetchProductSearchParams {
@@ -318,7 +351,7 @@ const buildSearchQuery = ({
     const params = new URLSearchParams();
     params.set('page', String(page));
     params.set('size', String(size));
-    params.set('sort', sort);
+    appendSortParams(params, sort);
 
     if (query) {
         params.set('q', query);
@@ -352,6 +385,7 @@ const buildSearchQuery = ({
 export async function fetchProductSearch(
     params: FetchProductSearchParams,
     init?: RequestInit,
+    options?: FetchProductApiOptions,
 ): Promise<ProductResponse> {
     const query = buildSearchQuery(params);
     const endpoint = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product/search?${query.toString()}`;
@@ -422,6 +456,8 @@ export async function fetchProductSearch(
     }
 
     const payload = await response.json();
-    return normalizeProductResponse(payload);
+    return normalizeProductResponse(payload, {
+        filterProductsWithoutImage: !options?.includeProductsWithoutImage,
+    });
 }
 

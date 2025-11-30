@@ -271,7 +271,7 @@ export default function AdminUserManagePage() {
   }
 
   const handlePageChange = (nextPage: number) => {
-    setPage(nextPage)
+    setPage(Math.max(nextPage - 1, 0))
   }
 
   const handlePageSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -621,7 +621,7 @@ export default function AdminUserManagePage() {
             </table>
             {!loading && totalPages > 1 && (
               <div className={styles.paginationWrapper}>
-                <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
+                <Pagination currentPage={page + 1} totalPages={totalPages} onPageChange={handlePageChange} />
               </div>
             )}
           </>

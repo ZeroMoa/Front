@@ -45,7 +45,9 @@ export default async function AdminProductsPage({
         }
       : NUTRITION_CONFIG[activeCollection]
 
-  const page = parseNumberParam(parseSingleValue(params.page), 0, 0)
+  const pageParamRaw = parseSingleValue(params.page)
+  const parsedPage = pageParamRaw ? Number.parseInt(pageParamRaw, 10) : 1
+  const page = Number.isNaN(parsedPage) ? 0 : Math.max(parsedPage - 1, 0)
   const size = parseNumberParam(parseSingleValue(params.size), baseConfig.pageSizeOptions[0] ?? 30, 1)
   const sort = parseSingleValue(params.sort) ?? baseConfig.defaultSort
   const keyword = parseSingleValue(params.keyword) ?? ''
@@ -91,7 +93,8 @@ export default async function AdminProductsPage({
           isNew: isNewParam,
           filters,
         },
-        { cache: 'no-store' }
+        { cache: 'no-store' },
+        { includeProductsWithoutImage: true }
       )
     : categoryConfig
     ? await fetchCategoryProducts(
@@ -103,7 +106,8 @@ export default async function AdminProductsPage({
           isNew: isNewParam,
           filters: activeFilters,
         },
-        { cache: 'no-store' }
+        { cache: 'no-store' },
+        { includeProductsWithoutImage: true }
       )
     : activeCollection === 'all'
     ? await fetchProductSearch(
@@ -115,7 +119,8 @@ export default async function AdminProductsPage({
           isNew: isNewParam,
           filters,
         },
-        { cache: 'no-store' }
+        { cache: 'no-store' },
+        { includeProductsWithoutImage: true }
       )
     : await fetchNutritionProducts(
         baseConfig.slug,
@@ -126,13 +131,16 @@ export default async function AdminProductsPage({
           keyword: keyword || undefined,
           isNew: isNewParam,
         },
-        { cache: 'no-store' }
+        { cache: 'no-store' },
+        { includeProductsWithoutImage: true }
       )
+
+  const pageMode = hasKeyword ? 'search' : 'nutrition'
 
   return (
     <div className={styles.pageWrapper}>
       <AdminProductPageClient
-        mode="nutrition"
+        mode={pageMode}
         categorySlug={categorySlug}
         collectionSlug={activeCollection}
         config={baseConfig}

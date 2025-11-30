@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch } from '../../../store/slices/store';
@@ -136,16 +136,16 @@ export default function FindIdPage() {
                                 <label htmlFor="findIdEmail">이메일</label>
                                 <div className={styles.boxEmail}>
                                     <div className={`${styles.boxInput} ${findIdEmailFront ? styles.hasValue : ''}`}>
-                                        <input
+                                <input
                                             type="text"
-                                            id="findIdEmail"
+                                    id="findIdEmail"
                                             className={`${styles.inputInfo} ${styles.emailInput}`}
                                             placeholder="이메일 앞자리 입력"
                                             value={findIdEmailFront}
                                             onChange={(e) => setFindIdEmailFront(e.target.value)}
-                                            required
-                                        />
-                                    </div>
+                                    required
+                                />
+                            </div>
                                     <div className={styles.textAt}>@</div>
                                     <div ref={emailDropdownRef} className={styles.boxSelect}>
                                         {isEmailDirectInput ? (

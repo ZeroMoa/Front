@@ -14,6 +14,8 @@ import {
     ProductPageConfig,
     SubCategoryConfig,
     CATEGORY_LABELS,
+    CATEGORY_CONFIG,
+    CATEGORY_SLUG_ORDER,
     PRODUCT_FILTER_KEYS,
 } from '../config';
 import type { ProductResponse } from '@/types/productTypes';
@@ -91,6 +93,7 @@ interface ProductPageClientProps {
     productCardVariant?: 'default' | 'admin';
     onDeleteProduct?: (product: Product) => Promise<void>;
     getProductHref?: (product: Product) => string;
+    showParentCategoryActive?: boolean;
 }
 
 const PAGE_PARAM_KEYS: Array<
@@ -139,6 +142,7 @@ export default function ProductPageClient({
     productCardVariant = 'default',
     onDeleteProduct,
     getProductHref,
+    showParentCategoryActive,
 }: ProductPageClientProps) {
     const router = useRouter();
     const pathname = usePathname();
@@ -217,6 +221,27 @@ export default function ProductPageClient({
     const baseParamValue =
         mode === 'nutrition' || mode === 'search' ? collectionSlug : activeCategorySlug;
 
+    const resolvedSidebarCategorySlug = useMemo(() => {
+        if (mode === 'category') {
+            return undefined;
+        }
+        if (activeCategorySlug) {
+            return activeCategorySlug;
+        }
+        if (!showParentCategoryActive) {
+            return undefined;
+        }
+        if (!selectedSubCategory || selectedSubCategory.categoryNo <= 0) {
+            return undefined;
+        }
+        const matchedSlug = CATEGORY_SLUG_ORDER.find((slug) =>
+            CATEGORY_CONFIG[slug].subCategories.some(
+                (subCategory) => subCategory.categoryNo === selectedSubCategory.categoryNo,
+            ),
+        );
+        return matchedSlug;
+    }, [mode, activeCategorySlug, showParentCategoryActive, selectedSubCategory]);
+
     const commitUpdates = (updates: Record<string, string | number | boolean | undefined | null>) => {
         const nextParams = new URLSearchParams(searchParams.toString());
 
@@ -263,7 +288,7 @@ export default function ProductPageClient({
     };
 
     const handlePageChange = (nextPage: number) => {
-        commitUpdates({ page: ensurePositiveInteger(nextPage, 0) });
+        commitUpdates({ page: ensurePositiveInteger(nextPage - 1, 0) });
     };
 
     const handlePageSizeChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
@@ -302,11 +327,11 @@ export default function ProductPageClient({
     };
 
     const handleCollectionNavigate = (nextCollection: NutritionSlug | 'all') => {
-        if (collectionSlug === nextCollection && (mode === 'nutrition' || mode === 'search')) {
-            return;
-        }
-
         const nextParams = new URLSearchParams(searchParams.toString());
+
+        if (collectionSlug === nextCollection && (mode === 'nutrition' || mode === 'search')) {
+            nextCollection = 'all';
+        }
 
         if (nextCollection === 'all') {
             nextParams.set('collection', 'all');
@@ -675,11 +700,16 @@ export default function ProductPageClient({
                 onFilterToggle={handleFilterToggle}
                 onResetFilters={handleResetFilters}
                 lockedFilters={lockedFilters}
-                selectedCategorySlug={mode === 'nutrition' || mode === 'new' || mode === 'search' ? activeCategorySlug : undefined}
+                selectedCategorySlug={
+                    mode === 'nutrition' || mode === 'new' || mode === 'search'
+                        ? resolvedSidebarCategorySlug
+                        : undefined
+                }
                 categoryConfig={mode === 'category' ? (config as CategoryPageConfig) : undefined}
                 selectedSubCategory={selectedSubCategory}
                 onCategorySelect={mode === 'nutrition' || mode === 'new' || mode === 'search' ? handleCategorySelect : undefined}
                 onSubCategoryChange={mode === 'category' ? handleSubCategoryChange : undefined}
+                highlightParentCategory={showParentCategoryActive}
             />
             <section className={styles.content}>
                 <header className={styles.header}>
@@ -749,7 +779,7 @@ export default function ProductPageClient({
                     getProductHref={getProductHref}
                 />
 
-                <ProductPagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
+                <ProductPagination currentPage={page + 1} totalPages={totalPages} onPageChange={handlePageChange} />
             </section>
         </div>
     );

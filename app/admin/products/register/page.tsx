@@ -50,7 +50,6 @@ export default function AdminProductCreatePage() {
       <header className={styles.header}>
         <div>
           <h1 className={styles.pageTitle}>제품 등록</h1>
-          <p className={styles.pageSubtitle}>새로운 제품을 등록하고 건강 분류를 자동으로 추천받아보세요.</p>
         </div>
       </header>
       <ProductCreateClient categoryTree={CATEGORY_TREE} />

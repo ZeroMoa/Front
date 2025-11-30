@@ -63,7 +63,7 @@ export default function BoardPage() {
     const notices: BoardResponse[] = data?.content ?? [];
     const totalElements = data?.totalElements ?? 0;
     const totalPages = data?.totalPages ?? 1;
-    const currentPage = (data?.number ?? 0);
+    const currentPageIndex = data?.number ?? 0;
 
     const handleSearch = () => {
         const trimmed = searchQuery.trim();
@@ -90,11 +90,11 @@ export default function BoardPage() {
     };
 
     const getDisplayNumber = (index: number) => {
-        return totalElements - (currentPage * PAGE_SIZE + index);
+        return totalElements - (currentPageIndex * PAGE_SIZE + index);
     };
 
     const handlePageChange = (pageIndex: number) => {
-        setPage(pageIndex);
+        setPage(Math.max(pageIndex - 1, 0));
     };
 
     const emptyMessage = isSearchMode ? '조건에 맞는 게시글이 없습니다.' : '등록된 게시글이 없습니다.';
@@ -132,7 +132,7 @@ export default function BoardPage() {
 
                 {totalPages > 0 && (
                     <Pagination
-                        currentPage={currentPage}
+                        currentPage={currentPageIndex + 1}
                         totalPages={totalPages}
                         onPageChange={handlePageChange}
                         pageGroupSize={MAX_VISIBLE_PAGES}
@@ -159,7 +159,7 @@ export default function BoardPage() {
             <div className={styles.headerSection}>
                 <h1>공지사항</h1>
                 <div className={styles.topInfo}>
-                    <span>Total {totalElements}건 / {currentPage + 1}페이지</span>
+                    <span>Total {totalElements}건 / {currentPageIndex + 1}페이지</span>
                 </div>
             </div>
 

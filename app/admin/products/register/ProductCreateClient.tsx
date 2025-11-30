@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import styles from './page.module.css'
 import { createAdminProduct } from '@/app/admin/store/api/adminProductApi'
+import { getCdnUrl } from '@/lib/cdn'
 
 export interface CategoryGroup {
   parent: { id: number; name: string }
@@ -71,6 +72,27 @@ const parseNumber = (value: string): number | null => {
   return Number.isNaN(parsed) ? null : parsed
 }
 
+const sanitizeImageFileName = (rawName: string): string => {
+  const trimmed = rawName.trim()
+  if (!trimmed) {
+    return 'image.jpeg'
+  }
+  const lastDot = trimmed.lastIndexOf('.')
+  const extension = lastDot >= 0 ? trimmed.slice(lastDot).toLowerCase() : ''
+  const baseName = lastDot >= 0 ? trimmed.slice(0, lastDot) : trimmed
+  const cleanedBase = baseName
+    .replace(/#/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return `${cleanedBase || 'image'}${extension}`
+}
+
+const createSafeImageFile = (file: File): File => {
+  const sanitizedName = sanitizeImageFileName(file.name)
+  return new File([file], sanitizedName, { type: file.type, lastModified: file.lastModified })
+}
+
 const calculateHealthFlags = (energy: number | null, sugar: number | null): Record<HealthFlagKey, boolean> => {
   const safeEnergy = energy ?? 0
   const safeSugar = sugar ?? 0
@@ -131,7 +153,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const clearPreview = useCallback(() => {
-    if (imagePreview) {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreview)
     }
   }, [imagePreview])
@@ -139,8 +161,9 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   const updateImageFile = useCallback(
     (file: File | null) => {
       clearPreview()
-      setImageFile(file)
-      setImagePreview(file ? URL.createObjectURL(file) : null)
+      const safeFile = file ? createSafeImageFile(file) : null
+      setImageFile(safeFile)
+      setImagePreview(safeFile ? URL.createObjectURL(safeFile) : null)
     },
     [clearPreview]
   )
@@ -150,6 +173,16 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       clearPreview()
     }
   }, [clearPreview])
+
+  const resolvedImagePreview = useMemo(() => {
+    if (!imagePreview) {
+      return null
+    }
+    if (imagePreview.startsWith('blob:') || imagePreview.startsWith('data:')) {
+      return imagePreview
+    }
+    return getCdnUrl(imagePreview)
+  }, [imagePreview])
 
   const selectedParentGroup = useMemo(
     () => categoryTree.find((group) => String(group.parent.id) === categoryParentId),
@@ -331,7 +364,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
     })
 
     if (imageFile) {
-      payload.append('image', imageFile)
+      payload.append('attachments', imageFile)
     }
 
     try {
@@ -354,12 +387,20 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>기본 정보</h2>
+          <div className={styles.sectionHeaderTop}>
+            <h2 className={styles.sectionTitle}>기본 정보</h2>
+            <span className={styles.requiredNotice}>
+              <span className={styles.requiredMark}>*</span>
+              은 필수 입력 항목입니다.
+            </span>
+          </div>
           <p className={styles.sectionDescription}>제품명, 대표 이미지, 제조/유통사를 입력해주세요.</p>
         </div>
         <div className={styles.fieldGrid}>
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>제품명 *</span>
+            <span className={styles.fieldLabel}>
+              제품명 <span className={styles.requiredMark}>*</span>
+            </span>
             <input
               required
               name="productName"
@@ -407,7 +448,9 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
 
         <div className={styles.categoryRow}>
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>상위 카테고리 *</span>
+            <span className={styles.fieldLabel}>
+              상위 카테고리 <span className={styles.requiredMark}>*</span>
+            </span>
             <select
               value={categoryParentId}
               onChange={handleCategoryParentChange}
@@ -423,7 +466,9 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
             </select>
           </label>
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>세부 카테고리 *</span>
+            <span className={styles.fieldLabel}>
+              세부 카테고리 <span className={styles.requiredMark}>*</span>
+            </span>
             <select
               value={categoryId}
               onChange={handleCategoryChange}
@@ -463,13 +508,13 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
               </button>
             )}
           </div>
-          {imagePreview && (
+          {resolvedImagePreview && (
             <div className={styles.previewContainer}>
               <div className={styles.previewBox}>
-                <img src={imagePreview} alt="제품 이미지 미리보기" className={styles.imagePreview} />
+                <img src={resolvedImagePreview} alt="제품 이미지 미리보기" className={styles.imagePreview} />
               </div>
               <div className={styles.previewMeta}>
-                <span className={styles.previewName}>{imageFile?.name ?? '선택된 파일'}</span>
+                <span className={styles.previewName}>{imageFile?.name ?? '업로드된 이미지'}</span>
                 <span className={styles.previewSize}>{formatFileSize(imageFile?.size)}</span>
               </div>
             </div>

@@ -32,6 +32,7 @@ export default function AdminProductPageClient(props: AdminProductPageClientProp
     <ProductPageClient
       {...props}
       productCardVariant="admin"
+      showParentCategoryActive
       onDeleteProduct={handleDelete}
       getProductHref={(product) => `/admin/products/${product.productNo}`}
     />

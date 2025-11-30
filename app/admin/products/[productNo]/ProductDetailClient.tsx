@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation'
 import styles from './adminDetail.module.css'
 import { getCdnUrl } from '@/lib/cdn'
 import type { Product } from '@/types/productTypes'
-import { updateAdminProduct, type AdminProductUpdatePayload } from '@/app/admin/store/api/adminProductApi'
-import FavoriteToggleButton from '@/app/(user)/product/components/FavoriteToggleButton'
+import { updateAdminProduct, deleteAdminProduct, type AdminProductUpdatePayload } from '@/app/admin/store/api/adminProductApi'
 
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png')
 
@@ -28,7 +27,125 @@ const SWEETENER_KEYWORDS = [
 
 const CAFFEINE_KEYWORDS = ['카페인']
 
+type IngredientHighlightType = 'sweetener' | 'caffeine'
+
+const INGREDIENT_HIGHLIGHT_RULES: Array<{ keywords: readonly string[]; type: IngredientHighlightType }> = [
+  { keywords: SWEETENER_KEYWORDS, type: 'sweetener' },
+  { keywords: CAFFEINE_KEYWORDS, type: 'caffeine' },
+]
+
+type IngredientSegment = {
+  text: string
+  highlight?: IngredientHighlightType
+}
+
+const segmentIngredientText = (value: string): IngredientSegment[] => {
+  if (!value) {
+    return []
+  }
+
+  const segments: IngredientSegment[] = []
+  let cursor = 0
+
+  while (cursor < value.length) {
+    let bestMatch: { start: number; end: number; highlight: IngredientHighlightType } | null = null
+
+    for (const rule of INGREDIENT_HIGHLIGHT_RULES) {
+      for (const keyword of rule.keywords) {
+        if (!keyword) {
+          continue
+        }
+        const index = value.indexOf(keyword, cursor)
+        if (index === -1) {
+          continue
+        }
+        if (
+          bestMatch === null ||
+          index < bestMatch.start ||
+          (index === bestMatch.start && keyword.length > bestMatch.end - bestMatch.start)
+        ) {
+          bestMatch = {
+            start: index,
+            end: index + keyword.length,
+            highlight: rule.type,
+          }
+        }
+      }
+    }
+
+    if (!bestMatch) {
+      segments.push({ text: value.slice(cursor) })
+      break
+    }
+
+    if (bestMatch.start > cursor) {
+      segments.push({ text: value.slice(cursor, bestMatch.start) })
+    }
+
+    segments.push({
+      text: value.slice(bestMatch.start, bestMatch.end),
+      highlight: bestMatch.highlight,
+    })
+
+    cursor = bestMatch.end
+  }
+
+  return segments
+}
+
 const fixUnencodedPercents = (value: string) => value.replace(/%(?![0-9A-Fa-f]{2})/g, '%25')
+
+const splitIngredients = (value: string): string[] => {
+  if (!value) {
+    return []
+  }
+  const raw = value.trim()
+  if (!raw) {
+    return []
+  }
+
+  const result: string[] = []
+  let buffer = ''
+  let depth = 0
+  let isBalanced = true
+
+  for (const char of raw) {
+    if (char === '(') {
+      depth += 1
+      buffer += char
+      continue
+    }
+    if (char === ')') {
+      depth -= 1
+      if (depth < 0) {
+        isBalanced = false
+      }
+      buffer += char
+      continue
+    }
+    if (char === ',' && depth === 0) {
+      if (buffer.trim()) {
+        result.push(buffer.trim())
+      }
+      buffer = ''
+      continue
+    }
+    buffer += char
+  }
+
+  if (buffer.trim()) {
+    result.push(buffer.trim())
+  }
+
+  if (!isBalanced || depth !== 0) {
+    return raw
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+
+  return result
+}
 
 const resolveImageUrl = (url?: string | null) => {
   if (!url) {
@@ -41,19 +158,23 @@ const resolveImageUrl = (url?: string | null) => {
   if (/^https?:\/\//i.test(trimmed)) {
     const corrected = fixUnencodedPercents(trimmed)
     try {
-      const parsed = new URL(corrected)
+      const encodeSegment = (segment: string) => {
+        if (!segment) {
+          return segment
+        }
+        try {
+          const decoded = decodeURIComponent(segment)
+          const trimmedSegment = decoded.trim()
+          return encodeURIComponent(trimmedSegment)
+        } catch {
+          const trimmedSegment = segment.trim()
+          return trimmedSegment ? encodeURIComponent(trimmedSegment) : ''
+        }
+      }
+
       const encodedPath = parsed.pathname
         .split('/')
-        .map((segment) => {
-          if (!segment) {
-            return segment
-          }
-          try {
-            return encodeURIComponent(decodeURIComponent(segment))
-          } catch {
-            return encodeURIComponent(segment)
-          }
-        })
+        .map((segment) => encodeSegment(segment))
         .join('/')
       return `${parsed.origin}${encodedPath}${parsed.search}${parsed.hash}`
     } catch {
@@ -276,14 +397,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     >
   }, [formState.nutrition, editingNutritionKey])
 
-  const ingredientTokens = useMemo(
-    () =>
-      formState.ingredients
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean),
-    [formState.ingredients]
-  )
+  const ingredientTokens = useMemo(() => splitIngredients(formState.ingredients), [formState.ingredients])
 
   const handleHighlightChange = (field: 'totalContent' | 'allergens', value: string) => {
     setFormState((prev) => ({
@@ -336,19 +450,23 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     }
   }
 
-  const [favoriteState, setFavoriteState] = useState({
-    isFavorite: Boolean(product.isFavorite),
-    likesCount: product.likesCount ?? 0,
-  })
+  const handleDelete = async () => {
+    const confirmed = window.confirm('정말로 이 제품을 삭제하시겠습니까?')
+    if (!confirmed) {
+      return
+    }
+    try {
+      await deleteAdminProduct(product.productNo)
+      alert('제품이 삭제되었습니다.')
+      router.replace('/admin/products')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '제품 삭제 중 오류가 발생했습니다.'
+      alert(message)
+    }
+  }
 
   const infoCardRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    setFavoriteState({
-      isFavorite: Boolean(product.isFavorite),
-      likesCount: product.likesCount ?? 0,
-    })
-  }, [product.productNo, product.isFavorite, product.likesCount])
+  const likesCount = product.likesCount ?? 0
 
   useEffect(() => {
     if (!editingHighlight && !editingNutritionKey) {
@@ -374,13 +492,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       <main className={styles.productContainer}>
         <div className={styles.imageSection}>
           <div className={styles.imageFavoriteOverlay}>
-            <span className={styles.imageFavoriteCount}>{favoriteState.likesCount.toLocaleString()}</span>
-            <FavoriteToggleButton
-              productNo={product.productNo}
-              initialIsFavorite={favoriteState.isFavorite}
-              initialLikesCount={favoriteState.likesCount}
-              onChange={setFavoriteState}
-            />
+            <span className={styles.imageFavoriteCount}>좋아요 {likesCount.toLocaleString()}</span>
           </div>
           <Image
             src={imageSrc}
@@ -541,6 +653,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 <textarea
                   className={styles.editableTextArea}
                   value={formState.ingredients}
+                autoFocus
                   onChange={(event) =>
                     setFormState((prev) => ({
                       ...prev,
@@ -565,16 +678,39 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     if (!ingredient) {
                       return null
                     }
-                    const isSweetener = SWEETENER_KEYWORDS.some((keyword) => ingredient.includes(keyword))
-                    const isCaffeine = CAFFEINE_KEYWORDS.some((keyword) => ingredient.includes(keyword))
-                    const highlightClass = isSweetener
-                      ? styles.ingredientHighlightSweetener
-                      : isCaffeine
-                      ? styles.ingredientHighlightCaffeine
-                      : ''
+
+                    const segments = segmentIngredientText(ingredient)
+                    const resolvedSegments = segments.length > 0 ? segments : [{ text: ingredient }]
+
                     return (
-                      <span key={`${ingredient}-${index}`} className={`${styles.ingredient} ${highlightClass}`.trim()}>
-                        {ingredient}
+                      <span key={`${ingredient}-${index}`} className={styles.ingredient}>
+                        {resolvedSegments.map((segment, segmentIndex) => {
+                          if (!segment.text) {
+                            return null
+                          }
+                          if (segment.highlight) {
+                            const highlightClass =
+                              segment.highlight === 'sweetener'
+                                ? styles.ingredientKeywordSweetener
+                                : styles.ingredientKeywordCaffeine
+                            return (
+                              <span
+                                key={`${ingredient}-${index}-segment-${segmentIndex}`}
+                                className={`${styles.ingredientKeyword} ${highlightClass}`}
+                              >
+                                {segment.text}
+                              </span>
+                            )
+                          }
+                          return (
+                            <span
+                              key={`${ingredient}-${index}-segment-${segmentIndex}`}
+                              className={styles.ingredientText}
+                            >
+                              {segment.text}
+                            </span>
+                          )
+                        })}
                       </span>
                     )
                   })}
@@ -585,6 +721,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         </section>
       </main>
       <div className={styles.saveButtonBar}>
+        <button type="button" className={styles.deleteButton} onClick={handleDelete} disabled={isSaving}>
+          삭제
+        </button>
         <button type="button" className={styles.saveButton} onClick={handleSave} disabled={isSaving}>
           {isSaving ? '저장 중...' : '수정 완료'}
         </button>

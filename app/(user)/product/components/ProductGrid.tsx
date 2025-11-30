@@ -83,18 +83,23 @@ const prepareImageUrl = (url?: string | null) => {
         const corrected = fixUnencodedPercents(trimmed);
         try {
             const parsed = new URL(corrected);
+            const encodeSegment = (segment: string) => {
+                if (!segment) {
+                    return segment;
+                }
+                try {
+                    const decoded = decodeURIComponent(segment);
+                    const trimmedSegment = decoded.trim();
+                    return encodeURIComponent(trimmedSegment);
+                } catch {
+                    const trimmedSegment = segment.trim();
+                    return trimmedSegment ? encodeURIComponent(trimmedSegment) : '';
+                }
+            };
+
             const encodedPath = parsed.pathname
                 .split('/')
-                .map((segment) => {
-                    if (!segment) {
-                        return segment;
-                    }
-                    try {
-                        return encodeURIComponent(decodeURIComponent(segment));
-                    } catch {
-                        return encodeURIComponent(segment);
-                    }
-                })
+                .map((segment) => encodeSegment(segment))
                 .join('/');
             return `${parsed.origin}${encodedPath}${parsed.search}${parsed.hash}`;
         } catch {

@@ -30,6 +30,7 @@ interface ProductSidebarProps {
     categoryConfig?: CategoryPageConfig;
     selectedSubCategory?: SubCategoryConfig;
     onSubCategoryChange?: (slug: string) => void;
+    highlightParentCategory?: boolean;
 }
 
 export default function ProductSidebar({
@@ -45,6 +46,7 @@ export default function ProductSidebar({
     categoryConfig,
     selectedSubCategory,
     onSubCategoryChange,
+    highlightParentCategory = false,
 }: ProductSidebarProps) {
     const [inputValue, setInputValue] = useState(keyword);
 
@@ -62,17 +64,35 @@ export default function ProductSidebar({
         [],
     );
 
+    const resolvedActiveCategorySlug = useMemo(() => {
+        if (selectedCategorySlug) {
+            return selectedCategorySlug;
+        }
+        if (!highlightParentCategory || !selectedSubCategory) {
+            return undefined;
+        }
+        if (!selectedSubCategory.categoryNo || selectedSubCategory.categoryNo <= 0) {
+            return undefined;
+        }
+        const matchedSlug = CATEGORY_SLUG_ORDER.find((slug) =>
+            CATEGORY_CONFIG[slug].subCategories.some(
+                (subCategory) => subCategory.categoryNo === selectedSubCategory.categoryNo,
+            ),
+        );
+        return matchedSlug;
+    }, [selectedCategorySlug, highlightParentCategory, selectedSubCategory]);
+
     const [expandedCategories, setExpandedCategories] = useState<CategorySlug[]>(
-        selectedCategorySlug ? [selectedCategorySlug] : [],
+        resolvedActiveCategorySlug ? [resolvedActiveCategorySlug] : [],
     );
 
     useEffect(() => {
-        if (selectedCategorySlug) {
+        if (resolvedActiveCategorySlug) {
             setExpandedCategories((prev) =>
-                prev.includes(selectedCategorySlug) ? prev : [...prev, selectedCategorySlug],
+                prev.includes(resolvedActiveCategorySlug) ? prev : [...prev, resolvedActiveCategorySlug],
             );
         }
-    }, [selectedCategorySlug]);
+    }, [resolvedActiveCategorySlug]);
 
     const handleCategoryToggle = (slug: CategorySlug) => {
         setExpandedCategories((prev) =>
@@ -94,10 +114,10 @@ export default function ProductSidebar({
         onCategorySelect?.(parentSlug, subSlug);
     };
 
-    const isCategoryActive = (slug: CategorySlug) => selectedCategorySlug === slug;
+    const isCategoryActive = (slug: CategorySlug) => resolvedActiveCategorySlug === slug;
 
     const isSubCategoryActive = (parentSlug: CategorySlug, subSlug: string) =>
-        selectedCategorySlug === parentSlug && selectedSubCategory?.slug === subSlug;
+        resolvedActiveCategorySlug === parentSlug && selectedSubCategory?.slug === subSlug;
 
     const activeFilterCount = useMemo(
         () =>
@@ -128,24 +148,22 @@ export default function ProductSidebar({
 
     return (
         <aside className={styles.sidebar}>
-            {mode !== 'search' && (
-                <div className={styles.sidebarSection}>
-                    <h3 className={styles.sidebarTitle}>검색</h3>
-                    <div className={styles.searchBox}>
-                        <input
-                            type="text"
-                            value={inputValue}
-                            onChange={(event) => setInputValue(event.target.value)}
-                            onKeyDown={handleKeyPress}
-                            placeholder={SEARCH_PLACEHOLDER}
-                            className={styles.searchInput}
-                        />
-                        <button type="button" className={styles.searchButton} onClick={handleSubmit}>
-                            <Image src={getCdnUrl('/images/search.png')} alt="검색" width={18} height={18} />
-                        </button>
-                    </div>
+            <div className={styles.sidebarSection}>
+                <h3 className={styles.sidebarTitle}>검색</h3>
+                <div className={styles.searchBox}>
+                    <input
+                        type="text"
+                        value={inputValue}
+                        onChange={(event) => setInputValue(event.target.value)}
+                        onKeyDown={handleKeyPress}
+                        placeholder={SEARCH_PLACEHOLDER}
+                        className={styles.searchInput}
+                    />
+                    <button type="button" className={styles.searchButton} onClick={handleSubmit}>
+                        <Image src={getCdnUrl('/images/search.png')} alt="검색" width={18} height={18} />
+                    </button>
                 </div>
-            )}
+            </div>
 
             {(mode === 'nutrition' || mode === 'new' || mode === 'search') && onCategorySelect && (
                 <div className={styles.sidebarSection}>
@@ -156,7 +174,7 @@ export default function ProductSidebar({
                                 <button
                                     type="button"
                                     className={`${styles.categoryAllButton} ${
-                                        !selectedCategorySlug ? styles.categoryButtonActive : ''
+                                        !resolvedActiveCategorySlug ? styles.categoryButtonActive : ''
                                     }`}
                                     onClick={handleAllCategoryClick}
                                 >
