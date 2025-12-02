@@ -1,12 +1,16 @@
 'use client'
 
-import { useMemo, useState, useEffect, useTransition, useRef } from 'react'
+import { useMemo, useState, useEffect, useTransition, useRef, useCallback } from 'react'
+import type { ChangeEvent } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import styles from './adminDetail.module.css'
 import { getCdnUrl } from '@/lib/cdn'
 import type { Product } from '@/types/productTypes'
-import { updateAdminProduct, deleteAdminProduct, type AdminProductUpdatePayload } from '@/app/admin/store/api/adminProductApi'
+import { updateAdminProduct, deleteAdminProduct } from '@/app/admin/store/api/adminProductApi'
+import { createSafeImageFile, extractStoredPathFromUrl } from '@/lib/utils/imageUtils'
+import { ADMIN_PRODUCT_CATEGORY_TREE } from '@/constants/adminProductCategories'
+import type { AdminProductCategoryGroup } from '@/types/adminCategoryTypes'
 
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png')
 
@@ -158,6 +162,7 @@ const resolveImageUrl = (url?: string | null) => {
   if (/^https?:\/\//i.test(trimmed)) {
     const corrected = fixUnencodedPercents(trimmed)
     try {
+      const parsed = new URL(corrected)
       const encodeSegment = (segment: string) => {
         if (!segment) {
           return segment
@@ -228,8 +233,13 @@ const NUTRITION_FIELDS: Array<{ key: NutritionKey; label: string; unit: string; 
 ]
 
 type FormState = {
+  productName: string
+  companyName: string
+  parentCategoryNo: string
+  categoryNo: string
   totalContent: string
   allergens: string
+  crossContaminationWarning: string
   ingredients: string
   nutrition: Record<NutritionKey, string>
 }
@@ -241,57 +251,37 @@ const toNumericString = (value?: number | null) => {
   return String(value)
 }
 
-const createInitialFormState = (product: Product): FormState => ({
-  totalContent: product.totalContent ?? '',
-  allergens: product.allergens ?? '',
-  ingredients: product.ingredients ?? '',
-  nutrition: {
-    energyKcal: toNumericString(product.energyKcal),
-    carbohydrateG: toNumericString(product.carbohydrateG),
-    sugarG: toNumericString(product.sugarG),
-    proteinG: toNumericString(product.proteinG),
-    fatG: toNumericString(product.fatG),
-    saturatedFattyAcidsG: toNumericString(product.saturatedFattyAcidsG),
-    transFattyAcidsG: toNumericString(product.transFattyAcidsG),
-    cholesterolMg: toNumericString(product.cholesterolMg),
-    sodiumMg: toNumericString(product.sodiumMg),
-    caffeineMg: toNumericString(product.caffeineMg),
-    taurineMg: toNumericString(product.taurineMg),
-    sugarAlcoholG: toNumericString(product.sugarAlcoholG),
-    alluloseG: toNumericString(product.alluloseG),
-    erythritolG: toNumericString(product.erythritolG),
-  },
-})
+const createInitialFormState = (product: Product): FormState => {
+  const resolvedParentCategoryNo =
+    (product as Product & { parentCategoryNo?: number }).parentCategoryNo ?? product.categoryNo ?? 0
+  const resolvedCategoryNo = product.categoryNo ?? 0
 
-const getCategoryNames = (parentCategoryNo: number, categoryNo: number) => {
-  const parentCategories: Record<number, string> = {
-    1: '음료',
-    2: '과자',
-    3: '아이스크림',
-    4: '카페',
+  return {
+    productName: product.productName ?? '',
+    companyName: product.companyName ?? '',
+    parentCategoryNo: resolvedParentCategoryNo ? String(resolvedParentCategoryNo) : '',
+    categoryNo: resolvedCategoryNo ? String(resolvedCategoryNo) : '',
+    totalContent: product.totalContent ?? '',
+    allergens: product.allergens ?? '',
+    crossContaminationWarning: product.crossContaminationWarning ?? '',
+    ingredients: product.ingredients ?? '',
+    nutrition: {
+      energyKcal: toNumericString(product.energyKcal),
+      carbohydrateG: toNumericString(product.carbohydrateG),
+      sugarG: toNumericString(product.sugarG),
+      proteinG: toNumericString(product.proteinG),
+      fatG: toNumericString(product.fatG),
+      saturatedFattyAcidsG: toNumericString(product.saturatedFattyAcidsG),
+      transFattyAcidsG: toNumericString(product.transFattyAcidsG),
+      cholesterolMg: toNumericString(product.cholesterolMg),
+      sodiumMg: toNumericString(product.sodiumMg),
+      caffeineMg: toNumericString(product.caffeineMg),
+      taurineMg: toNumericString(product.taurineMg),
+      sugarAlcoholG: toNumericString(product.sugarAlcoholG),
+      alluloseG: toNumericString(product.alluloseG),
+      erythritolG: toNumericString(product.erythritolG),
+    },
   }
-
-  const subCategories: Record<number, string> = {
-    4: '탄산',
-    5: '주스',
-    6: '유제품',
-    7: '차',
-    8: '커피',
-    9: '에너지 드링크',
-    10: '주류',
-    11: '기타',
-    12: '과자',
-    13: '사탕',
-    14: '젤리',
-    15: '초콜릿',
-    16: '시리얼',
-    17: '기타',
-  }
-
-  const parentName = parentCategories[parentCategoryNo] || '기타'
-  const subName = subCategories[categoryNo] || '기타'
-
-  return `${parentName} | ${subName}`
 }
 
 const toNullableNumber = (value: string) => {
@@ -310,12 +300,45 @@ type ProductDetailClientProps = {
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
   const router = useRouter()
   const [formState, setFormState] = useState<FormState>(() => createInitialFormState(product))
-  const [editingHighlight, setEditingHighlight] = useState<'totalContent' | 'allergens' | null>(null)
+  const [editingHighlight, setEditingHighlight] = useState<
+    'totalContent' | 'allergens' | 'crossContaminationWarning' | null
+  >(null)
   const [editingNutritionKey, setEditingNutritionKey] = useState<NutritionKey | null>(null)
   const [isEditingIngredients, setIsEditingIngredients] = useState(false)
+  const [isEditingBasicInfo, setIsEditingBasicInfo] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [, startTransition] = useTransition()
   const initialFormRef = useRef<FormState>(createInitialFormState(product))
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const previewUrlRef = useRef<string | null>(null)
+  const productNameInputRef = useRef<HTMLInputElement | null>(null)
+  const companyNameInputRef = useRef<HTMLInputElement | null>(null)
+
+  const clearImagePreview = useCallback(() => {
+    if (previewUrlRef.current && previewUrlRef.current.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrlRef.current)
+    }
+    previewUrlRef.current = null
+    setImagePreview(null)
+  }, [])
+
+  const updateImageSelection = useCallback(
+    (file: File | null) => {
+      clearImagePreview()
+      if (file) {
+        const safeFile = createSafeImageFile(file)
+        const objectUrl = URL.createObjectURL(safeFile)
+        previewUrlRef.current = objectUrl
+        setImageFile(safeFile)
+        setImagePreview(objectUrl)
+      } else {
+        setImageFile(null)
+      }
+    },
+    [clearImagePreview]
+  )
 
   useEffect(() => {
     const initial = createInitialFormState(product)
@@ -324,45 +347,160 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     setEditingHighlight(null)
     setEditingNutritionKey(null)
     setIsEditingIngredients(false)
-  }, [product])
+    setIsEditingBasicInfo(false)
+    setImageFile(null)
+    clearImagePreview()
+  }, [product, clearImagePreview])
 
-  const imageSrc = resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)
-  const categoryLabel = useMemo(
-    () => getCategoryNames((product as Product & { parentCategoryNo?: number }).parentCategoryNo ?? product.categoryNo, product.categoryNo),
-    [product.categoryNo, (product as Product & { parentCategoryNo?: number }).parentCategoryNo]
+  useEffect(() => {
+    return () => {
+      clearImagePreview()
+    }
+  }, [clearImagePreview])
+
+  useEffect(() => {
+    if (isEditingBasicInfo) {
+      productNameInputRef.current?.focus()
+    }
+  }, [isEditingBasicInfo])
+
+  const originalImageUrl = resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)
+  const imageSrc = imagePreview ?? originalImageUrl
+  const existingStoredPath = useMemo(
+    () => extractStoredPathFromUrl((product as any).imageUrl ?? (product as any).imageurl),
+    [product],
   )
+  const existingAttachmentNo = useMemo(() => (product.attachmentNo ?? null), [product])
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleImageInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null
+    updateImageSelection(file)
+    event.target.value = ''
+  }
+
+  const handleResetSelectedImage = () => {
+    updateImageSelection(null)
+  }
+  const parentOptions = useMemo(
+    () =>
+      ADMIN_PRODUCT_CATEGORY_TREE.map((group) => ({
+        value: String(group.parent.id),
+        label: group.parent.name,
+      })),
+    []
+  )
+
+  const selectedParentGroup = useMemo<AdminProductCategoryGroup | undefined>(() => {
+    const parentId =
+      Number(formState.parentCategoryNo) ||
+      (product as Product & { parentCategoryNo?: number }).parentCategoryNo ||
+      product.categoryNo ||
+      0
+    if (!parentId) {
+      return undefined
+    }
+    const directMatch = ADMIN_PRODUCT_CATEGORY_TREE.find((group) => group.parent.id === parentId)
+    if (directMatch) {
+      return directMatch
+    }
+    const childMatch = ADMIN_PRODUCT_CATEGORY_TREE.find((group) =>
+      group.children.some((child) => child.id === parentId)
+    )
+    return childMatch
+  }, [formState.parentCategoryNo, product])
+
+  const childOptions = useMemo(() => {
+    if (!selectedParentGroup) {
+      return []
+    }
+    return [
+      {
+        value: String(selectedParentGroup.parent.id),
+        label: `${selectedParentGroup.parent.name} 전체`,
+      },
+      ...selectedParentGroup.children.map((child) => ({
+        value: String(child.id),
+        label: child.name,
+      })),
+    ]
+  }, [selectedParentGroup])
+
+  const categoryLabel = useMemo(() => {
+    const parentName = selectedParentGroup?.parent.name ?? '카테고리 미지정'
+    const categoryId = Number(
+      formState.categoryNo ||
+        selectedParentGroup?.parent.id ||
+        (product as Product & { parentCategoryNo?: number }).parentCategoryNo ||
+        product.categoryNo ||
+        0
+    )
+
+    if (!selectedParentGroup) {
+      return parentName
+    }
+    if (categoryId === selectedParentGroup.parent.id) {
+      return `${parentName} | 전체`
+    }
+    const child = selectedParentGroup.children.find((item) => item.id === categoryId)
+    return child ? `${parentName} | ${child.name}` : `${parentName} | 전체`
+  }, [formState.categoryNo, product, selectedParentGroup])
 
   const servingSizeLabel =
     hasNumberValue(product.servingSize) && product.servingSize > 0
       ? `${product.servingSize}${(product.servingUnit ?? '').trim()}`
       : undefined
 
-  const highlightItems = [
-    formState.totalContent
-      ? {
-          label: '총 내용량',
-          value: formState.totalContent,
-          editable: true as const,
-          field: 'totalContent' as const,
-          isModified: formState.totalContent !== initialFormRef.current.totalContent,
+  const initialSnapshot = initialFormRef.current
+
+  const highlightItems = useMemo(() => {
+    const items: Array<
+      | {
+          label: string
+          value: string
+          editable: true
+          field: 'totalContent' | 'allergens' | 'crossContaminationWarning'
+          isModified: boolean
         }
-      : null,
-    servingSizeLabel
-      ? { label: '1회 제공량', value: servingSizeLabel, editable: false as const, isModified: false }
-      : null,
-    formState.allergens
-      ? {
-          label: '알레르기',
-          value: formState.allergens,
-          editable: true as const,
-          field: 'allergens' as const,
-          isModified: formState.allergens !== initialFormRef.current.allergens,
-        }
-      : null,
-  ].filter(Boolean) as Array<
-    | { label: string; value: string; editable: true; field: 'totalContent' | 'allergens'; isModified: boolean }
-    | { label: string; value: string; editable: false; isModified: boolean }
-  >
+      | { label: string; value: string; editable: false; isModified: boolean }
+    > = [
+      {
+        label: '총 내용량',
+        value: formState.totalContent.trim() || '정보 없음',
+        editable: true as const,
+        field: 'totalContent' as const,
+        isModified: formState.totalContent !== initialSnapshot.totalContent,
+      },
+      {
+        label: '알레르기',
+        value: formState.allergens.trim() || '정보 없음',
+        editable: true as const,
+        field: 'allergens' as const,
+        isModified: formState.allergens !== initialSnapshot.allergens,
+      },
+      {
+        label: '교차 오염',
+        value: formState.crossContaminationWarning.trim() || '정보 없음',
+        editable: true as const,
+        field: 'crossContaminationWarning' as const,
+        isModified: formState.crossContaminationWarning !== initialSnapshot.crossContaminationWarning,
+      },
+    ]
+
+    if (servingSizeLabel) {
+      items.push({
+        label: '1회 제공량',
+        value: servingSizeLabel,
+        editable: false as const,
+        isModified: false,
+      })
+    }
+
+    return items
+  }, [formState, initialSnapshot, servingSizeLabel])
 
   const nutritionRows = useMemo(() => {
     return NUTRITION_FIELDS.map((field) => {
@@ -399,7 +537,54 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   const ingredientTokens = useMemo(() => splitIngredients(formState.ingredients), [formState.ingredients])
 
-  const handleHighlightChange = (field: 'totalContent' | 'allergens', value: string) => {
+  const handleBasicInfoToggle = () => {
+    setIsEditingBasicInfo((prev) => !prev)
+  }
+
+  const handleBasicInputChange =
+    (field: 'productName' | 'companyName') =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const { value } = event.target
+      setFormState((prev) => ({
+        ...prev,
+        [field]: value,
+      }))
+    }
+
+  const handleParentCategoryChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const { value } = event.target
+    setFormState((prev) => {
+      if (!value) {
+        return {
+          ...prev,
+          parentCategoryNo: '',
+          categoryNo: '',
+        }
+      }
+
+      const group = ADMIN_PRODUCT_CATEGORY_TREE.find((item) => String(item.parent.id) === value)
+      const nextCategoryNo = group ? String(group.parent.id) : value
+
+      return {
+        ...prev,
+        parentCategoryNo: value,
+        categoryNo: nextCategoryNo,
+      }
+    })
+  }
+
+  const handleCategoryChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const { value } = event.target
+    setFormState((prev) => ({
+      ...prev,
+      categoryNo: value,
+    }))
+  }
+
+  const handleHighlightChange = (
+    field: 'totalContent' | 'allergens' | 'crossContaminationWarning',
+    value: string
+  ) => {
     setFormState((prev) => ({
       ...prev,
       [field]: value,
@@ -416,21 +601,59 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     }))
   }
 
+  const isProductNameModified = formState.productName !== initialSnapshot.productName
+  const isCompanyNameModified = formState.companyName !== initialSnapshot.companyName
+  const isCategoryModified =
+    formState.parentCategoryNo !== initialSnapshot.parentCategoryNo ||
+    formState.categoryNo !== initialSnapshot.categoryNo
+
   const handleSave = async () => {
     if (isSaving) return
     setIsSaving(true)
     try {
-      const payload: AdminProductUpdatePayload = {
-        totalContent: formState.totalContent.trim(),
-        allergens: formState.allergens.trim(),
-        ingredients: formState.ingredients.trim(),
+      const payload = new FormData()
+      payload.append('productName', formState.productName.trim())
+      payload.append('companyName', formState.companyName.trim())
+
+      const parentCategoryFallback =
+        formState.parentCategoryNo ||
+        String(
+          (product as Product & { parentCategoryNo?: number }).parentCategoryNo ??
+            formState.categoryNo ??
+            product.categoryNo ??
+            ''
+        )
+      const categoryFallback = formState.categoryNo || String(product.categoryNo ?? '')
+
+      if (parentCategoryFallback) {
+        payload.append('parentCategoryNo', parentCategoryFallback)
       }
+      if (categoryFallback) {
+        payload.append('categoryNo', categoryFallback)
+      }
+
+      payload.append('totalContent', formState.totalContent.trim())
+      payload.append('allergens', formState.allergens.trim())
+      payload.append('crossContaminationWarning', formState.crossContaminationWarning.trim())
+      payload.append('ingredients', formState.ingredients.trim())
 
       NUTRITION_FIELDS.forEach(({ key }) => {
         const value = formState.nutrition[key] ?? ''
         const parsed = toNullableNumber(value)
-        ;(payload as Record<NutritionKey, number | null>)[key] = parsed
+        payload.append(key, parsed !== null ? String(parsed) : '')
       })
+
+      if (imageFile) {
+        payload.append('newAttachments', imageFile)
+        if (existingAttachmentNo !== null) {
+          payload.append('deleteAttachmentNos', String(existingAttachmentNo))
+        }
+        if (existingStoredPath) {
+          payload.append('existingStoredPath', existingStoredPath)
+        }
+      } else if (existingStoredPath) {
+        payload.append('existingStoredPath', existingStoredPath)
+      }
 
       const updated = await updateAdminProduct(product.productNo, payload)
 
@@ -438,6 +661,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       setEditingHighlight(null)
       setEditingNutritionKey(null)
       setIsEditingIngredients(false)
+      setIsEditingBasicInfo(false)
+      updateImageSelection(null)
       startTransition(() => {
         router.refresh()
       })
@@ -494,18 +719,40 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           <div className={styles.imageFavoriteOverlay}>
             <span className={styles.imageFavoriteCount}>좋아요 {likesCount.toLocaleString()}</span>
           </div>
-          <Image
-            src={imageSrc}
-            alt={product.productName || '제품 이미지'}
-            width={300}
-            height={300}
+          <button type="button" className={styles.imageUploadButton} onClick={handleImageClick}>
+            <Image
+              src={imageSrc}
+              alt={product.productName || '제품 이미지'}
+              width={300}
+              height={300}
               className={styles.detailProductImage}
-            unoptimized
-            onError={(event) => {
-              const target = event.target as HTMLImageElement
-              target.src = DEFAULT_IMAGE
-            }}
+              unoptimized
+              onError={(event) => {
+                const target = event.target as HTMLImageElement
+                target.src = DEFAULT_IMAGE
+              }}
+            />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className={styles.imageUploadInput}
+            onChange={handleImageInputChange}
           />
+          <div className={styles.imageActions}>
+            <p className={styles.imageChangeHint}>
+              이미지를 클릭하면 교체할 수 있습니다.
+              
+            </p>
+            {imageFile ? <span className={styles.imageFileName}>파일명 : {imageFile.name}</span> : null}
+
+            {imageFile ? (
+              <button type="button" className={styles.imageResetButton} onClick={handleResetSelectedImage}>
+                선택 취소
+              </button>
+            ) : null}
+          </div>
         </div>
 
         <section className={styles.infoSection}>
@@ -513,16 +760,105 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             <div className={styles.productHeader}>
               <div className={styles.productMeta}>
                 <div className={styles.metaTopRow}>
-                  <span className={styles.category}>{categoryLabel}</span>
+                  {isEditingBasicInfo ? (
+                    <div className={styles.categoryEditor}>
+                      <label className={styles.categoryField}>
+                        <span className={styles.categoryFieldLabel}>상위 카테고리</span>
+                        <select
+                          className={styles.categorySelect}
+                          value={formState.parentCategoryNo || ''}
+                          onChange={handleParentCategoryChange}
+                        >
+                          <option value="">상위를 선택하세요</option>
+                          {parentOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className={styles.categoryField}>
+                        <span className={styles.categoryFieldLabel}>세부 카테고리</span>
+                        <select
+                          className={styles.categorySelect}
+                          value={formState.categoryNo || ''}
+                          onChange={handleCategoryChange}
+                          disabled={!formState.parentCategoryNo}
+                        >
+                          <option value="">
+                            {formState.parentCategoryNo ? '세부를 선택하세요' : '상위를 먼저 선택하세요'}
+                          </option>
+                          {childOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  ) : (
+                    <span
+                      className={`${styles.category} ${isCategoryModified ? styles.modifiedText : ''}`.trim()}
+                    >
+                      {categoryLabel}
+                    </span>
+                  )}
+                  <div className={styles.metaActionGroup}>
+                    <button
+                      type="button"
+                      className={styles.metaEditButton}
+                      onClick={handleBasicInfoToggle}
+                    >
+                      {isEditingBasicInfo ? '닫기' : '필수 기본 정보 수정'}
+                    </button>
+                  </div>
                 </div>
                 <div className={styles.productTitleGroup}>
                   <div className={styles.productTitleRow}>
-                    <h1 className={styles.productName}>{product.productName}</h1>
+                    {isEditingBasicInfo ? (
+                      <input
+                        ref={productNameInputRef}
+                        className={`${styles.productNameInput} ${
+                          isProductNameModified ? styles.modifiedText : ''
+                        }`.trim()}
+                        value={formState.productName}
+                        onChange={handleBasicInputChange('productName')}
+                        placeholder="제품명을 입력하세요"
+                      />
+                    ) : (
+                      <h1
+                        className={`${styles.productName} ${
+                          isProductNameModified ? styles.modifiedText : ''
+                        }`.trim()}
+                      >
+                        {formState.productName || '제품명 미입력'}
+                      </h1>
+                    )}
                   </div>
-                  {product.companyName?.trim() && (
+                  {(isEditingBasicInfo || formState.companyName.trim()) && (
                     <>
                       <span className={styles.productHeaderDivider} aria-hidden="true" />
-                      <p className={styles.companyNameDetail}>{product.companyName.trim()}</p>
+                      <div className={styles.companyRow}>
+                        {isEditingBasicInfo ? (
+                          <input
+                            ref={companyNameInputRef}
+                            className={`${styles.companyNameInput} ${
+                              isCompanyNameModified ? styles.modifiedText : ''
+                            }`.trim()}
+                            value={formState.companyName}
+                            onChange={handleBasicInputChange('companyName')}
+                            placeholder="회사명을 입력하세요"
+                          />
+                        ) : (
+                          <p
+                            className={`${styles.companyNameDetail} ${
+                              isCompanyNameModified ? styles.modifiedText : ''
+                            }`.trim()}
+                          >
+                            {formState.companyName?.trim() || '회사명 정보 없음'}
+                          </p>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
@@ -554,6 +890,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                             className={styles.editableInput}
                             value={formState[item.field]}
                             onChange={(event) => handleHighlightChange(item.field, event.target.value)}
+                            autoFocus
                             onBlur={() => setEditingHighlight(null)}
                           />
                         ) : (

@@ -29,17 +29,23 @@
       "static/chunks/main-app.js",
       "static/chunks/app/_not-found/page.js"
     ],
+    "/admin/products/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/products/page.css",
+      "static/chunks/app/admin/products/page.js"
+    ],
     "/admin/products/register/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/admin/products/register/page.css",
       "static/chunks/app/admin/products/register/page.js"
     ],
-    "/admin/products/page": [
+    "/admin/boards/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/admin/products/page.css",
-      "static/chunks/app/admin/products/page.js"
+      "static/css/app/admin/boards/page.css",
+      "static/chunks/app/admin/boards/page.js"
     ]
   }
 }

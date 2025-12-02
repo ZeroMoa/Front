@@ -15,8 +15,8 @@
     width: 300px;
     flex-shrink: 0;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
 }
 
 .detailProductImage {
@@ -28,6 +28,74 @@
     box-shadow: 0 18px 34px rgba(40, 63, 110, 0.12);
     background: #fff;
     padding: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.detailProductImage:hover,
+.imageUploadButton:focus-visible .detailProductImage {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 36px rgba(40, 63, 110, 0.16);
+}
+
+.imageUploadButton {
+    border: none;
+    background: transparent;
+    padding: 0;
+    display: inline-flex;
+    border-radius: 20px;
+}
+
+.imageUploadButton:focus-visible {
+    outline: 2px solid rgba(79, 124, 255, 0.6);
+    outline-offset: 4px;
+}
+
+.imageUploadInput {
+    display: none;
+}
+
+.imageActions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 12px;
+    width: inherit;
+}
+
+.imageChangeHint {
+    margin: 0;
+    font-size: 13px;
+    color: #5b6b94;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.imageFileName {
+    font-weight: 600;
+    color: #2f3a68;
+
+}
+
+.imageResetButton {
+    border: none;
+    background: rgba(79, 124, 255, 0.14);
+    color: #2f4070;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.18s ease;
+    place-self: end;
+}
+
+.imageResetButton:hover,
+.imageResetButton:focus-visible {
+    background: rgba(79, 124, 255, 0.24);
+    transform: translateY(-1px);
 }
 
 .imageFavoriteOverlay {
@@ -92,6 +160,31 @@
     gap: 12px;
 }
 
+.metaActionGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.metaEditButton {
+    border: none;
+    background: rgba(255, 255, 255, 0.22);
+    color: #1f2f5c;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.18s ease;
+    text-decoration-line: underline;
+}
+
+.metaEditButton:hover,
+.metaEditButton:focus-visible {
+    background: rgba(255, 255, 255, 0.32);
+    transform: translateY(-1px);
+}
+
 .category {
     display: inline-flex;
     align-items: center;
@@ -101,6 +194,44 @@
     text-transform: uppercase;
     color: #5c6bc0;
     font-weight: 600;
+}
+
+.categoryEditor {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.categoryField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 180px;
+}
+
+.categoryFieldLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(42, 53, 102, 0.8);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.categorySelect {
+    border-radius: 12px;
+    padding: 8px 12px;
+    border: 1px solid rgba(184, 202, 238, 0.8);
+    background: rgba(255, 255, 255, 0.9);
+    color: #1f2f5c;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 180px;
+}
+
+.categorySelect:focus-visible {
+    outline: 2px solid rgba(79, 124, 255, 0.4);
+    outline-offset: 2px;
 }
 
 .productTitleRow {
@@ -136,6 +267,22 @@
     margin: 0;
 }
 
+.productNameInput {
+    width: 100%;
+    font-size: 28px;
+    font-weight: 600;
+    color: #1e2749;
+    border: 1px solid rgba(184, 202, 238, 0.7);
+    border-radius: 16px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.productNameInput:focus-visible {
+    outline: 2px solid rgba(79, 124, 255, 0.45);
+    outline-offset: 2px;
+}
+
 .companyNameInline {
     font-size: 18px;
     font-weight: 500;
@@ -150,6 +297,27 @@
     font-size: 18px;
     font-weight: 600;
     color: #455074;
+}
+
+.companyRow {
+    display: flex;
+    align-items: center;
+}
+
+.companyNameInput {
+    width: 100%;
+    font-size: 16px;
+    font-weight: 600;
+    color: #455074;
+    border: 1px solid rgba(184, 202, 238, 0.7);
+    border-radius: 14px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.94);
+}
+
+.companyNameInput:focus-visible {
+    outline: 2px solid rgba(79, 124, 255, 0.4);
+    outline-offset: 2px;
 }
 
 .description {
@@ -174,8 +342,8 @@
 }
 
 .servingHighlights {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 14px;
     margin-bottom: 28px;
 }
@@ -189,6 +357,7 @@
     background: rgba(239, 244, 255, 0.88);
     border: 1px solid rgba(184, 202, 238, 0.7);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    flex: 1 1 220px;
 }
 
 .servingHighlightLabel {
@@ -322,7 +491,7 @@
 .ingredientKeyword {
     display: inline-flex;
     align-items: center;
-    padding: 3px 4px;
+    padding: 4px 2.5px;
     border-radius: 999px;
     font-weight: 600;
     line-height: 1.2;

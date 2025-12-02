@@ -36,13 +36,10 @@ export type AdminProductUpdatePayload = Partial<{
   allergens: string
 }>
 
-export async function updateAdminProduct(
-  productNo: number,
-  payload: AdminProductUpdatePayload
-): Promise<Product> {
+export async function updateAdminProduct(productNo: number, payload: FormData): Promise<Product> {
   const response = await fetchWithAuth(`${ADMIN_PRODUCT_PATH}/${productNo}`, {
     method: 'PATCH',
-    body: JSON.stringify(payload),
+    body: payload,
   })
   const data = await response.json()
   return normalizeProduct(data)

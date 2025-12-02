@@ -125,6 +125,7 @@ export interface Product {
     isNew?: boolean;
     likesCount?: number;
     isFavorite?: boolean;
+    attachmentNo?: number;
   }
   
   export interface Sort {
@@ -302,6 +303,40 @@ export const normalizeProduct = (rawProduct: RawProduct): Product => {
                 rawProduct['isValid'] as RawValue,
             ),
         );
+    }
+
+    if ('attachmentNo' in rawProduct || 'attachment_no' in rawProduct) {
+        const attachmentNo = coerceNumber(
+            coalesce(rawProduct['attachmentNo'] as RawValue, rawProduct['attachment_no'] as RawValue),
+            NaN,
+        )
+        normalized.attachmentNo = Number.isNaN(attachmentNo) ? undefined : attachmentNo;
+    }
+
+    if (Array.isArray(rawProduct.attachments) && rawProduct.attachments.length > 0) {
+        const [firstAttachment] = rawProduct.attachments as Array<Record<string, unknown>>;
+        if (firstAttachment) {
+            const attachmentNo = coerceNumber(
+                coalesce(firstAttachment['attachmentNo'] as RawValue, firstAttachment['attachment_no'] as RawValue),
+                NaN,
+            );
+            if (!Number.isNaN(attachmentNo)) {
+                normalized.attachmentNo = attachmentNo;
+            }
+
+            if (!normalized.imageUrl) {
+                const storedPath = coerceString(
+                    coalesce(
+                        firstAttachment['storedPath'] as RawValue,
+                        firstAttachment['stored_path'] as RawValue,
+                        firstAttachment['url'] as RawValue,
+                    ),
+                );
+                if (storedPath) {
+                    normalized.imageUrl = storedPath;
+                }
+            }
+        }
     }
 
     if (

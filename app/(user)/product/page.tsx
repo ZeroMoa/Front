@@ -12,7 +12,15 @@ import {
     isNutritionSlug,
 } from './config';
 import type { CategorySlug, NutritionSlug } from './config';
-import { fetchCategoryProducts, fetchNutritionProducts, fetchProductSearch } from '../store/api/userProductApi';
+import {
+    fetchCategoryProducts,
+    fetchNutritionProducts,
+    fetchProductSearch,
+    type FetchProductApiOptions,
+} from '../store/api/userProductApi';
+const PRODUCT_FETCH_OPTIONS: FetchProductApiOptions = {
+    includeProductsWithoutImage: true,
+};
 import ProductPageClient from './components/ProductPageClient';
 
 interface ProductSearchParams {
@@ -145,6 +153,7 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
                   filters,
               },
               { cache: 'no-store' },
+              PRODUCT_FETCH_OPTIONS,
           )
         : await fetchCategoryProducts(
               {
@@ -156,6 +165,7 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
                   filters: activeFilters,
               },
               { cache: 'no-store' },
+              PRODUCT_FETCH_OPTIONS,
           );
     } catch (error) {
         const fallbackMessage = '제품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
@@ -250,32 +260,35 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
                     filters: activeFilters,
                 },
                 { cache: 'no-store' },
+                PRODUCT_FETCH_OPTIONS,
             );
         } else if (shouldUseSearch) {
             productResponse = await fetchProductSearch(
-              {
-                  query: keyword,
-                  categoryNo: searchCategoryNo,
-                  page,
-                  size,
-                  sort,
-                  isNew: isNewParam,
-                  filters,
-              },
-              { cache: 'no-store' },
+                {
+                    query: keyword,
+                    categoryNo: searchCategoryNo,
+                    page,
+                    size,
+                    sort,
+                    isNew: isNewParam,
+                    filters,
+                },
+                { cache: 'no-store' },
+                PRODUCT_FETCH_OPTIONS,
             );
         } else {
             productResponse = await fetchNutritionProducts(
-              config.endpoint,
-              {
-                  page,
-                  size,
-                  sort,
-                  keyword: keyword || undefined,
-                  isNew: isNewParam,
-              },
-              { cache: 'no-store' },
-          );
+                config.endpoint,
+                {
+                    page,
+                    size,
+                    sort,
+                    keyword: keyword || undefined,
+                    isNew: isNewParam,
+                },
+                { cache: 'no-store' },
+                PRODUCT_FETCH_OPTIONS,
+            );
         }
     } catch (error) {
         const fallbackMessage = '제품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';

@@ -174,9 +174,11 @@ function ProductCard({
             if (!onDeleteProduct) {
                 return;
             }
-            const confirmed = window.confirm('정말로 삭제하시겠습니까?');
-            if (!confirmed) {
-                return;
+            if (variant !== 'admin') {
+                const confirmed = window.confirm('정말로 삭제하시겠습니까?');
+                if (!confirmed) {
+                    return;
+                }
             }
             try {
                 await onDeleteProduct(product);
@@ -185,7 +187,7 @@ function ProductCard({
                 alert(message);
             }
         },
-        [onDeleteProduct, product],
+        [onDeleteProduct, product, variant],
     );
 
     return (
@@ -280,12 +282,7 @@ export default function ProductGrid({
     onDeleteProduct,
     getProductHref,
 }: ProductGridProps) {
-    const visibleProducts = products.filter((product) => {
-        const image = typeof product.imageUrl === 'string' ? product.imageUrl.trim() : '';
-        return image.length > 0 && !isDefaultImage(image);
-    });
-
-    if (visibleProducts.length === 0) {
+    if (products.length === 0) {
         return (
             <div className={styles.emptyState}>
                 <p>{emptyMessage ?? '조건에 맞는 제품이 없습니다. 필터를 조정해보세요.'}</p>
@@ -295,7 +292,7 @@ export default function ProductGrid({
 
     return (
         <div className={`${styles.grid} ${className ?? ''}`.trim()}>
-            {visibleProducts.map((product) => (
+            {products.map((product) => (
                 <ProductCard
                     key={product.productNo}
                     product={product}

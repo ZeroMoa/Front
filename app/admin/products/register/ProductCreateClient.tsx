@@ -6,11 +6,8 @@ import { useDropzone } from 'react-dropzone'
 import styles from './page.module.css'
 import { createAdminProduct } from '@/app/admin/store/api/adminProductApi'
 import { getCdnUrl } from '@/lib/cdn'
-
-export interface CategoryGroup {
-  parent: { id: number; name: string }
-  children: Array<{ id: number; name: string }>
-}
+import { createSafeImageFile } from '@/lib/utils/imageUtils'
+import type { AdminProductCategoryGroup } from '@/types/adminCategoryTypes'
 
 type HealthFlagKey = 'isZeroCalorie' | 'isLowCalorie' | 'isZeroSugar' | 'isLowSugar'
 
@@ -57,7 +54,7 @@ const NUMERIC_KEYS = [
 type NumericKey = (typeof NUMERIC_KEYS)[number]
 
 interface ProductCreateClientProps {
-  categoryTree: CategoryGroup[]
+  categoryTree: AdminProductCategoryGroup[]
 }
 
 const parseNumber = (value: string): number | null => {
@@ -70,27 +67,6 @@ const parseNumber = (value: string): number | null => {
   }
   const parsed = Number(sanitized)
   return Number.isNaN(parsed) ? null : parsed
-}
-
-const sanitizeImageFileName = (rawName: string): string => {
-  const trimmed = rawName.trim()
-  if (!trimmed) {
-    return 'image.jpeg'
-  }
-  const lastDot = trimmed.lastIndexOf('.')
-  const extension = lastDot >= 0 ? trimmed.slice(lastDot).toLowerCase() : ''
-  const baseName = lastDot >= 0 ? trimmed.slice(0, lastDot) : trimmed
-  const cleanedBase = baseName
-    .replace(/#/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  return `${cleanedBase || 'image'}${extension}`
-}
-
-const createSafeImageFile = (file: File): File => {
-  const sanitizedName = sanitizeImageFileName(file.name)
-  return new File([file], sanitizedName, { type: file.type, lastModified: file.lastModified })
 }
 
 const calculateHealthFlags = (energy: number | null, sugar: number | null): Record<HealthFlagKey, boolean> => {
@@ -149,7 +125,6 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   const [autoHealthFlags, setAutoHealthFlags] = useState<Record<HealthFlagKey, boolean>>({ ...DEFAULT_HEALTH_FLAGS })
   const [manualOverrides, setManualOverrides] = useState<Record<HealthFlagKey, boolean>>({ ...DEFAULT_MANUAL_OVERRIDES })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const clearPreview = useCallback(() => {
@@ -323,16 +298,20 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       return
     }
 
-    setErrorMessage(null)
     setSuccessMessage(null)
 
     if (!formValues.productName.trim()) {
-      setErrorMessage('제품명을 입력해주세요.')
+      alert('제품명을 입력해주세요.')
       return
     }
 
     if (!categoryId) {
-      setErrorMessage('카테고리를 선택해주세요.')
+      alert('카테고리를 선택해주세요.')
+      return
+    }
+
+    if (!imageFile) {
+      alert('대표 이미지를 등록해주세요.')
       return
     }
 
@@ -363,9 +342,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       payload.append(key, String(healthFlags[key]))
     })
 
-    if (imageFile) {
-      payload.append('attachments', imageFile)
-    }
+    payload.append('attachments', imageFile)
 
     try {
       setIsSubmitting(true)
@@ -374,7 +351,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       router.push(`/admin/products/${product.productNo}`)
     } catch (error) {
       const message = error instanceof Error ? error.message : '제품 등록에 실패했습니다.'
-      setErrorMessage(message)
+      alert(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -382,7 +359,6 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      {errorMessage && <div className={styles.errorBanner}>{errorMessage}</div>}
       {successMessage && <div className={styles.successBanner}>{successMessage}</div>}
 
       <section className={styles.section}>
@@ -520,6 +496,10 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
             </div>
           )}
         </div>
+        <p className={styles.imageRequiredNotice}>
+          <span className={styles.requiredMark}>*</span>
+          대표 이미지는 반드시 등록해야 합니다.
+        </p>
       </section>
 
       <section className={styles.section}>

@@ -625,6 +625,10 @@ export default function ProductPageClient({
 
     useEffect(() => {
         setClientContent(data.content);
+        if (process.env.NODE_ENV !== 'production') {
+            // eslint-disable-next-line no-console
+            console.log('[ProductPageClient] rendering products', data.content.map((item) => item.productNo));
+        }
     }, [data.content]);
 
     useEffect(() => {

@@ -202,6 +202,15 @@
   border-radius: 18px;
 }
 
+.imageRequiredNotice {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #d65154;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .categoryRow {
   display: grid;
   gap: 18px;
