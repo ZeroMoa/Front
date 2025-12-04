@@ -18,3 +18,13 @@ export interface PageResponse<T> {
   size: number
 }
 
+export interface WithdrawSurveyStatistics {
+  reasonCounts: Array<{ code: string; count: number }>
+  earliestCreatedDate?: string
+  latestCreatedDate?: string
+}
+
+export interface WithdrawSurveyPage extends PageResponse<WithdrawSurvey> {
+  statistics?: WithdrawSurveyStatistics
+}
+

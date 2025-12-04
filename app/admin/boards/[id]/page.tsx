@@ -3,9 +3,13 @@
 import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import styles from './page.module.css';
-import { useAdminBoardDetail } from '@/app/admin/hooks/boardHooks';
+import { useAdminBoardDetail, useDeleteAdminBoard } from '@/app/admin/hooks/boardHooks';
 import { BOARD_TYPE_LABELS } from '@/constants/boardConstants';
 import Link from 'next/link';
+import Image from 'next/image';
+import CircularProgress from '@mui/material/CircularProgress';
+import { getCdnUrl } from '@/lib/cdn';
+import { ensureAuthSession } from '@/lib/common/api/fetchWithAuth';
 import { BoardType } from '@/types/boardTypes';
 
 const tabClassMap: Record<BoardType, string> = {
@@ -21,6 +25,7 @@ export default function BoardDetailPage() {
     const boardNo = Number(boardIdParam);
 
     const { data, isLoading, isError, error } = useAdminBoardDetail(boardNo);
+    const deleteMutation = useDeleteAdminBoard();
 
     const handleBackClick = () => {
         router.push('/admin/boards');
@@ -34,6 +39,34 @@ export default function BoardDetailPage() {
             </button>
         </div>
     );
+
+    const handleEditClick = async () => {
+        try {
+            await ensureAuthSession({ showAlertOnFail: true });
+            router.push(`/admin/boards/write?boardNo=${boardNo}`);
+        } catch (sessionError) {
+            if (sessionError instanceof Error) {
+                console.error('세션 갱신 중 오류:', sessionError);
+            }
+        }
+    };
+
+    const handleDeleteClick = async () => {
+        if (!data) return;
+        const confirmed = window.confirm('이 게시글을 삭제하시겠습니까?');
+        if (!confirmed) {
+            return;
+        }
+        try {
+            await deleteMutation.mutateAsync(data.boardNo);
+            alert('게시글이 삭제되었습니다.');
+            router.replace('/admin/boards');
+        } catch (mutationError) {
+            alert(mutationError instanceof Error ? mutationError.message : '게시글 삭제 중 오류가 발생했습니다.');
+        }
+    };
+
+    const isDeleting = deleteMutation.status === 'pending';
 
     const formattedDate = useMemo(() => {
         if (!data?.createdAt) return '';
@@ -49,7 +82,10 @@ export default function BoardDetailPage() {
         return (
             <div className={styles.wrapper}>
                 {renderBackButton()}
-                <div className={styles.errorBox}>잘못된 접근입니다.</div>
+                <div className={styles.errorBox}>
+                    <Image src={getCdnUrl('/images/error.jpg')} alt="오류" width={600} height={600} className={styles.statusIcon} />
+                    <span>잘못된 접근입니다.</span>
+                </div>
                 <div className={styles.actionRow}>
                     <button className={styles.listButton} onClick={handleBackClick}>목록</button>
                 </div>
@@ -61,16 +97,27 @@ export default function BoardDetailPage() {
         return (
             <div className={styles.wrapper}>
                 {renderBackButton()}
-                <div className={styles.loadingBox}>게시글을 불러오는 중입니다...</div>
+                <div className={styles.loadingBox}>
+                    <CircularProgress size={26} />
+                    <span>게시글을 불러오는 중입니다...</span>
+                </div>
             </div>
         );
     }
 
     if (isError || !data) {
+        const rawMessage = error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.';
+        const normalizedMessage = rawMessage.toLowerCase();
+        const isNotFound = normalizedMessage.includes('404') || normalizedMessage.includes('not found');
+        const displayMessage = isNotFound ? '잘못된 접근입니다.' : rawMessage;
+
         return (
             <div className={styles.wrapper}>
                 {renderBackButton()}
-                <div className={styles.errorBox}>{error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.'}</div>
+                <div className={styles.errorBox}>
+                    <Image src={getCdnUrl('/images/error.jpg')} alt="오류" width={600} height={600} className={styles.statusIcon} />
+                    <span>{displayMessage}</span>
+                </div>
                 <div className={styles.actionRow}>
                     <button className={styles.listButton} onClick={handleBackClick}>목록</button>
                 </div>
@@ -84,12 +131,27 @@ export default function BoardDetailPage() {
     return (
         <div className={styles.wrapper}>
             {renderBackButton()}
-            <div className={styles.tabWrap}>
-                <ul className={styles.tabList}>
-                    <li className={`${styles.tabItem} ${styles.activeTab} ${data ? tabClassMap[data.boardType] : ''}`}>
-                        <span>{boardTypeLabel}</span>
-                    </li>
-                </ul>
+            <div className={styles.metaRow}>
+                <div className={styles.tabWrap}>
+                    <ul className={styles.tabList}>
+                        <li className={`${styles.tabItem} ${styles.activeTab} ${data ? tabClassMap[data.boardType] : ''}`}>
+                            <span>{boardTypeLabel}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div className={styles.primaryActions}>
+                    <button type="button" className={styles.editButton} onClick={handleEditClick}>
+                        수정
+                    </button>
+                    <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={handleDeleteClick}
+                        disabled={isDeleting}
+                    >
+                        {isDeleting ? '삭제 중...' : '삭제'}
+                    </button>
+                </div>
             </div>
 
             <div className={styles.detailCard}>

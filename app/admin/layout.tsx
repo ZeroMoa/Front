@@ -110,6 +110,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
+  const isLoginPage = pathname === '/admin/login'
 
   useEffect(() => {
     const parentWithChild = NAV_ITEMS.find((item) =>
@@ -136,6 +137,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   )
 
   useEffect(() => {
+    if (isLoginPage) {
+      return
+    }
     let isMounted = true
     const loadHeaderStats = async () => {
       try {
@@ -150,11 +154,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         console.error('헤더 카드 통계 로딩 중 오류', statsError)
       }
     }
-    loadHeaderStats()
+    void loadHeaderStats()
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [isLoginPage])
 
   const handleToggleSidebar = () => {
     setIsSidebarCollapsed((prev) => !prev)
@@ -209,7 +213,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     setIsProfileMenuOpen((prev) => !prev)
   }
 
-  if (pathname === '/admin/login') {
+  if (isLoginPage) {
     return <>{children}</>
   }
 

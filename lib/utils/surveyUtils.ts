@@ -108,9 +108,12 @@ export function buildWithdrawSurveyParams(options: WithdrawSurveyQueryParams) {
   if (options.sort) {
     params.set('sort', options.sort)
   }
-  options.reasonCodes?.forEach((code) => {
-    params.append('reasonCodes', code)
-  })
+  if (options.reasonCodes && options.reasonCodes.length > 0) {
+    options.reasonCodes.forEach((code) => {
+      const label = REASON_LABEL_MAP[code] ?? code
+      params.append('reasonCodes', label)
+    })
+  }
   if (options.username) {
     params.set('username', options.username)
   }

@@ -4,6 +4,7 @@ import {
   commonFetchBoardDetail,
   commonFetchBoards,
   commonUpdateBoard,
+  ADMIN_BOARD_BASE_PATH,
 } from '@/lib/common/api/boardApi'
 import { createBoardSearchParams, isBoardSearchMode, type BoardQueryOptions } from '@/lib/utils/boardUtils'
 import type { BoardListResponse, BoardResponse } from '@/types/boardTypes'

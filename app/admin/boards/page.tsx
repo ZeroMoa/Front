@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, MouseEvent } from 'react'
 import Link from 'next/link'
 import styles from './page.module.css'
 import Image from 'next/image'
-import { useAdminBoards } from '@/app/admin/hooks/boardHooks'
+import { useAdminBoards, useDeleteAdminBoard } from '@/app/admin/hooks/boardHooks'
 import {
   BOARD_DEFAULT_SORT,
   BOARD_MAX_VISIBLE_PAGES,
@@ -16,6 +16,9 @@ import {
 import { BoardResponse, BoardSearchType, BoardType } from '@/types/boardTypes'
 import { getCdnUrl } from '@/lib/cdn'
 import Pagination from '@/components/pagination/Pagination'
+import CircularProgress from '@mui/material/CircularProgress'
+import { useRouter } from 'next/navigation'
+import { ensureAuthSession } from '@/lib/common/api/fetchWithAuth'
 
 const badgeClassMap: Record<BoardType, string> = {
     NOTICE: styles.badgeNOTICE,
@@ -24,11 +27,14 @@ const badgeClassMap: Record<BoardType, string> = {
 };
 
 export default function BoardPage() {
+  const router = useRouter()
   const [page, setPage] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [keyword, setKeyword] = useState('')
   const [searchType, setSearchType] = useState<BoardSearchType>('TITLE_OR_CONTENT')
   const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | BoardType>('ALL')
+  const [isPreparingWrite, setIsPreparingWrite] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
   const isSearchMode = keyword.trim().length > 0
 
@@ -45,6 +51,7 @@ export default function BoardPage() {
   )
 
   const { data, isLoading, isError, error } = useAdminBoards(listParams)
+  const deleteMutation = useDeleteAdminBoard()
 
   const notices: BoardResponse[] = data?.content ?? []
   const totalElements = data?.totalElements ?? 0
@@ -79,52 +86,121 @@ export default function BoardPage() {
         setPage(Math.max(pageIndex - 1, 0));
     };
 
-    const listContent = () => {
-        if (notices.length === 0) {
-      return <div className={styles.noNotices}>{emptyMessage}</div>
-        }
+  const handleWriteClick = async () => {
+    if (isPreparingWrite) {
+      return
+    }
+    setIsPreparingWrite(true)
+    try {
+      await ensureAuthSession({ showAlertOnFail: true })
+      router.push('/admin/boards/write')
+    } catch (sessionError) {
+      if (sessionError instanceof Error) {
+        console.error('세션 갱신 중 오류:', sessionError)
+      }
+    } finally {
+      setIsPreparingWrite(false)
+    }
+  }
 
-        return (
-            <>
-                <div className={styles.noticeTable}>
-                    <div className={styles.tableHeader}>
-                        <span className={styles.headerNo}>번호</span>
-                        <span className={styles.headerTitle}>제목</span>
-                        <span className={styles.headerDate}>작성일자</span>
-                    </div>
-                    {notices.map((notice, index) => (
-                        <Link href={`/admin/boards/${notice.boardNo}`} key={notice.boardNo} className={styles.noticeLink}>
-                            <div className={styles.noticeItem}>
-                                <span className={styles.itemNo}>{getDisplayNumber(index)}</span>
-                                <div className={styles.itemTitle}>
+  const handleEditBoard = (event: MouseEvent<HTMLButtonElement>, boardNo: number) => {
+    event.preventDefault()
+    event.stopPropagation()
+    router.push(`/admin/boards/write?boardNo=${boardNo}`)
+  }
+
+  const handleDeleteBoard = async (event: MouseEvent<HTMLButtonElement>, notice: BoardResponse) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (pendingDeleteId !== null) {
+      return
+    }
+    const confirmed = window.confirm('이 게시글을 삭제하시겠습니까?')
+    if (!confirmed) {
+      return
+    }
+    setPendingDeleteId(notice.boardNo)
+    try {
+      await deleteMutation.mutateAsync(notice.boardNo)
+      alert('게시글이 삭제되었습니다.')
+    } catch (mutationError) {
+      alert(mutationError instanceof Error ? mutationError.message : '게시글 삭제 중 오류가 발생했습니다.')
+    } finally {
+      setPendingDeleteId(null)
+    }
+  }
+
+  const listContent = () => {
+    if (isLoading) {
+      return (
+        <div className={styles.loadingState}>
+          <CircularProgress size={22} />
+          <span>게시글을 불러오는 중입니다...</span>
+        </div>
+      )
+    }
+
+    if (notices.length === 0) {
+      return <div className={styles.noNotices}>{emptyMessage}</div>
+    }
+
+    return (
+      <>
+        <div className={styles.noticeTable}>
+          <div className={styles.tableHeader}>
+            <span className={styles.headerNo}>번호</span>
+            <span className={styles.headerTitle}>제목</span>
+            <span className={styles.headerDate}>작성일자</span>
+            <span className={styles.headerManage}>관리</span>
+          </div>
+          {notices.map((notice, index) => (
+            <Link href={`/admin/boards/${notice.boardNo}`} key={notice.boardNo} className={styles.noticeLink}>
+              <div className={styles.noticeItem}>
+                <span className={styles.itemNo}>{getDisplayNumber(index)}</span>
+                <div className={styles.itemTitle}>
                   <span className={`${styles.noticeBadge} ${badgeClassMap[notice.boardType] ?? ''}`}>
-                                        {BOARD_TYPE_LABELS[notice.boardType] ?? notice.boardType}
-                                    </span>
-                                    <span className={styles.itemTitleText}>{notice.title}</span>
-                                </div>
+                    {BOARD_TYPE_LABELS[notice.boardType] ?? notice.boardType}
+                  </span>
+                  <span className={styles.itemTitleText}>{notice.title}</span>
+                </div>
                 <span className={styles.itemDate}>
                   {new Date(notice.createdAt).toLocaleDateString('ko-KR')}
                 </span>
-                            </div>
-                        </Link>
-                    ))}
+                <div className={styles.itemActions}>
+                  <button
+                    type="button"
+                    className={styles.actionButton}
+                    onClick={(event) => handleEditBoard(event, notice.boardNo)}
+                    aria-label="게시글 수정"
+                  >
+                    <Image src={getCdnUrl('/images/write.png')} alt="수정" width={20} height={20} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.actionButton}
+                    onClick={(event) => handleDeleteBoard(event, notice)}
+                    aria-label="게시글 삭제"
+                    disabled={pendingDeleteId === notice.boardNo}
+                  >
+                    <Image src={getCdnUrl('/images/delete.png')} alt="삭제" width={20} height={20} />
+                  </button>
                 </div>
+              </div>
+            </Link>
+          ))}
+        </div>
 
-                {totalPages > 0 && (
-                    <Pagination
-                        currentPage={currentPageIndex + 1}
-                        totalPages={totalPages}
-                        onPageChange={handlePageChange}
-                        pageGroupSize={BOARD_MAX_VISIBLE_PAGES}
-                    />
-                )}
-            </>
+        {totalPages > 0 && (
+          <Pagination
+            currentPage={currentPageIndex + 1}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            pageGroupSize={BOARD_MAX_VISIBLE_PAGES}
+          />
+        )}
+      </>
     )
   }
-
-    if (isLoading) {
-    return null
-    }
 
     if (isError) {
         return (
@@ -139,9 +215,19 @@ export default function BoardPage() {
     return (
         <div className={styles.container}>
             <div className={styles.headerSection}>
-                <h1>공지사항</h1>
-                <div className={styles.topInfo}>
-                    <span>Total {totalElements}건 / {currentPageIndex + 1}페이지</span>
+                <div className={styles.headerTitleGroup}>
+                    <h1>공지사항</h1>
+                    <span className={styles.topInfo}>Total {totalElements}건 / {currentPageIndex + 1}페이지</span>
+                </div>
+                <div className={styles.headerActions}>
+                    <button
+                      type="button"
+                      className={styles.writeButton}
+                      onClick={handleWriteClick}
+                      disabled={isPreparingWrite}
+                    >
+                      {isPreparingWrite ? '준비 중...' : '글쓰기'}
+                    </button>
                 </div>
             </div>
 
@@ -192,9 +278,7 @@ export default function BoardPage() {
                         </select>
                     </div>
                 </div>
-                <Link href="/admin/boards/write">
-                    <button className={styles.writeButton}>글쓰기</button>
-                </Link>
+                
             </div>
 
             {listContent()}

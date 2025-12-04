@@ -3,6 +3,8 @@ export interface NotificationListQueryOptions {
   size: number
   sort?: string
   isActive?: 'true' | 'false'
+  boardTitle?: string
+  boardNo?: string
 }
 
 export function createNotificationQueryParams(options: NotificationListQueryOptions) {
@@ -16,6 +18,14 @@ export function createNotificationQueryParams(options: NotificationListQueryOpti
 
   if (options.isActive) {
     params.set('isActive', options.isActive)
+  }
+
+  if (options.boardTitle) {
+    params.set('boardTitle', options.boardTitle)
+  }
+
+  if (options.boardNo) {
+    params.set('boardNo', options.boardNo)
   }
 
   return params

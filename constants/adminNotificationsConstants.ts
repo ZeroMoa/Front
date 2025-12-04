@@ -15,7 +15,7 @@ export type SortState = {
 }
 
 export type FiltersState = {
-  title: string
+  boardTitle: string
   boardNo: string
   isActive: 'all' | 'true' | 'false'
 }
@@ -52,7 +52,7 @@ export const INITIAL_SORT_STATE: SortState = {
 }
 
 export const INITIAL_FILTERS: FiltersState = {
-  title: '',
+  boardTitle: '',
   boardNo: '',
   isActive: 'all',
 }

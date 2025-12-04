@@ -15,6 +15,7 @@ interface UserNotificationResponse {
 interface AdminNotificationResponse {
     adminNotificationNo: number;
     boardNo: number; // boardNo 추가
+    boardTitle?: string | null;
     title: string;
     content: string;
     sentAt: string;

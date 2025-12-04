@@ -174,8 +174,10 @@ export default function ProductSidebar({
                                 <button
                                     type="button"
                                     className={`${styles.categoryAllButton} ${
-                                        !resolvedActiveCategorySlug ? styles.categoryButtonActive : ''
-                                    }`}
+                                        !resolvedActiveCategorySlug
+                                            ? `${styles.categoryButtonActive} ${styles.heroCardActive}`
+                                            : ''
+                                    }`.trim()}
                                     onClick={handleAllCategoryClick}
                                 >
                                     전체
@@ -189,8 +191,10 @@ export default function ProductSidebar({
                                             <button
                                                 type="button"
                                                 className={`${styles.categoryButton} ${
-                                                    isCategoryActive(item.slug) ? styles.categoryButtonActive : ''
-                                                }`}
+                                                    isCategoryActive(item.slug)
+                                                        ? `${styles.categoryButtonActive} ${styles.heroCardActive}`
+                                                        : ''
+                                                }`.trim()}
                                                 onClick={() => handleCategoryButtonClick(item.slug)}
                                             >
                                                 {item.label}

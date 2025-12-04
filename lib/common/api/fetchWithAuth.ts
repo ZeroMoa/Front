@@ -203,3 +203,56 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
 
   return response
 }
+
+type EnsureAuthSessionOptions = {
+  showAlertOnFail?: boolean
+}
+
+export async function ensureAuthSession(options: EnsureAuthSessionOptions = {}): Promise<boolean> {
+  if (!API_BASE_URL) {
+    throw new Error('API 기본 경로가 설정되지 않았습니다.')
+  }
+
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  const { showAlertOnFail = false } = options
+  const originPathname = window.location.pathname
+  const isAdminScope = originPathname.startsWith('/admin')
+  const loginRedirectTarget = isAdminScope ? '/admin/login' : '/'
+
+  const xsrfToken = Cookies.get('XSRF-TOKEN')
+  const refreshHeaders = buildHeaders({}, xsrfToken)
+
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE_URL}/jwt/refresh`, {
+      method: 'POST',
+      headers: refreshHeaders,
+      credentials: 'include',
+    })
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('세션 갱신 중 알 수 없는 오류가 발생했습니다.')
+  }
+
+  if (response.ok) {
+    return true
+  }
+
+  const errorDetails = await parseErrorResponse(response)
+  const normalizedMessage = (errorDetails.message ?? '').toLowerCase()
+  const shouldAlert =
+    showAlertOnFail ||
+    response.status === 401 ||
+    response.status === 403 ||
+    normalizedMessage.includes('refresh')
+
+  if (response.status === 401 || response.status === 403) {
+    handleSessionExpiry(originPathname, loginRedirectTarget, shouldAlert)
+  } else if (shouldAlert && errorDetails.message) {
+    window.alert(errorDetails.message)
+  }
+
+  throw new Error(errorDetails.message || '세션을 갱신하지 못했습니다. 다시 로그인해주세요.')
+}

@@ -364,7 +364,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <div className={styles.sectionHeaderTop}>
-            <h2 className={styles.sectionTitle}>기본 정보</h2>
+          <h2 className={styles.sectionTitle}>기본 정보</h2>
             <span className={styles.requiredNotice}>
               <span className={styles.requiredMark}>*</span>
               은 필수 입력 항목입니다.

@@ -25,6 +25,7 @@ function normalizeAdminNotification(raw: any): AdminNotificationResponse {
   return {
     adminNotificationNo: raw.adminNotificationNo ?? raw.admin_notification_no ?? 0,
     boardNo: raw.boardNo ?? raw.board_no ?? 0,
+    boardTitle: raw.boardTitle ?? raw.board_title ?? null,
     title: raw.title ?? '',
     content: raw.content ?? '',
     sentAt: raw.sentAt ?? raw.sent_at ?? '',
