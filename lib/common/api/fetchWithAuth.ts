@@ -154,14 +154,7 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
       }
 
       const refreshError = await parseErrorResponse(refreshResponse)
-      const refreshErrorMessage = refreshError.message ?? ''
-      const normalizedRefresh = refreshErrorMessage.toLowerCase()
-      const shouldAlert =
-        refreshResponse.status === 401 ||
-        refreshResponse.status === 403 ||
-        normalizedRefresh.includes('refresh')
-
-      handleSessionExpiry(originPathname, loginRedirectTarget, shouldAlert)
+      handleSessionExpiry(originPathname, loginRedirectTarget, false)
       const errorMessage =
         refreshError.message || '리프레시 토큰이 만료되었거나 유효하지 않습니다. 다시 로그인하십시오.'
       throw new Error(errorMessage)
@@ -249,7 +242,7 @@ export async function ensureAuthSession(options: EnsureAuthSessionOptions = {}):
     normalizedMessage.includes('refresh')
 
   if (response.status === 401 || response.status === 403) {
-    handleSessionExpiry(originPathname, loginRedirectTarget, shouldAlert)
+    handleSessionExpiry(originPathname, loginRedirectTarget, false)
   } else if (shouldAlert && errorDetails.message) {
     window.alert(errorDetails.message)
   }

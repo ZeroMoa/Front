@@ -13,7 +13,7 @@ import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth';
 const PRODUCT_API_BASE_URL =
     process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL ||
     process.env.NEXT_PUBLIC_API_BASE_URL ||
-    'http://localhost:8080';
+    'https://localhost:8443';
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
 
 const SWEETENER_KEYWORDS = [

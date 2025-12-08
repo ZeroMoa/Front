@@ -4,7 +4,7 @@ import { UserResponseDTO } from '@/types/authTypes'
 
 // 사용자 정보 조회 React Query hook
 export const useUserData = () => {
-    const shouldFetch = typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true'
+    const shouldFetch = typeof window !== 'undefined'
 
     return useQuery<UserResponseDTO, Error>({
         queryKey: ['user'], // 캐시 키

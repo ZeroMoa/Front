@@ -7,7 +7,7 @@ interface AuthState {
     user: { id: string; username: string; } | null; // 사용자 정보 추가
 }
 
-// localStorage에서 초기 로그인 상태를 로드하는 대신, 초기값은 false로 설정합니다.
+// 초기 로그인 상태는 항상 false에서 시작합니다.
 const initialState: AuthState = {
     isLoginModalOpen: false,
     isLoggedIn: false,
@@ -26,31 +26,13 @@ const authSlice = createSlice({
         },
         setLoggedIn: (state, action: PayloadAction<boolean>) => {
             state.isLoggedIn = action.payload;
-            if (typeof window !== 'undefined') {
-                if (action.payload) {
-                    localStorage.setItem('isLoggedIn', 'true');
-                } else {
-                    localStorage.removeItem('isLoggedIn');
-                }
-            }
         },
         setUser: (state, action: PayloadAction<{ id: string; username: string; } | null>) => {
             state.user = action.payload;
-            if (typeof window !== 'undefined') {
-                if (action.payload) {
-                    localStorage.setItem('user', JSON.stringify(action.payload));
-                } else {
-                    localStorage.removeItem('user');
-                }
-            }
         },
         logout: (state) => {
             state.isLoggedIn = false;
             state.user = null;
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('user');
-            }
         },
     },
 });

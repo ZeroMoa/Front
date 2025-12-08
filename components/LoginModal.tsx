@@ -10,6 +10,9 @@ import { setLoggedIn, setUser } from '../app/(user)/store/slices/authSlice'; // 
 import { useQueryClient } from '@tanstack/react-query'; // useQueryClient import
 import { getCdnUrl } from '@/lib/cdn'
 
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://localhost:8443').replace(/\/$/, '');
+type SocialProvider = 'google' | 'naver';
+
 interface LoginModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -36,7 +39,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         console.log('로그인 시도:', { username, password, autoLogin });
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/login`, { // URL 수정: /user/login -> /login
+            const response = await fetch(`${API_BASE_URL}/login`, { // URL 수정: /user/login -> /login
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -81,9 +84,19 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         }
     };
 
-    const handleSocialLogin = (provider: string) => {
-        console.log(`${provider} 소셜 로그인 시도`);
-        // 여기에 각 소셜 로그인 제공업체별 로직 구현
+    const handleSocialLogin = (provider: SocialProvider) => {
+        if (typeof window === 'undefined') {
+            setLoginError('브라우저 환경에서만 소셜 로그인을 사용할 수 있습니다.');
+            return;
+        }
+
+        const targetUrl = `${API_BASE_URL}/oauth2/authorization/${provider}`;
+        try {
+            window.location.href = targetUrl;
+        } catch (error) {
+            console.error('소셜 로그인 리다이렉트 실패:', error);
+            setLoginError('소셜 로그인 페이지로 이동하지 못했습니다. 잠시 후 다시 시도해주세요.');
+        }
     };
 
     const handleSignup = () => {
@@ -198,12 +211,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     </div>
                 </form>
 
+                <div className={styles.sectionDivider} aria-hidden="true" />
+
                 <p className={styles.socialLoginTitle}>간편 로그인</p>
                 <div className={styles.socialIcons}>
-                    <div className={styles.socialIconContainer} onClick={() => handleSocialLogin('Google')}>
+                    <div className={styles.socialIconContainer} onClick={() => handleSocialLogin('google')}>
                         <Image src={getCdnUrl('/images/google.png')} alt="Google" width={20} height={20} className={styles.socialIcon} />
                     </div>
-                    <div className={styles.socialIconContainer} onClick={() => handleSocialLogin('Naver')}>
+                    <div className={styles.socialIconContainer} onClick={() => handleSocialLogin('naver')}>
                         <Image src={getCdnUrl('/images/naver.png')} alt="Naver" width={20} height={20} className={styles.socialIcon} />
                     </div>
                 </div>

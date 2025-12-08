@@ -2,7 +2,7 @@ import { ProductResponse, Product, normalizeProduct } from '@/types/productTypes
 import type { NutritionSlug } from '@/app/(user)/product/config';
 
 const PRODUCT_API_BASE_URL =
-    process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+    process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://localhost:8443';
 
 const hasProductImage = (product: Product): boolean => {
     const url = product.imageUrl?.trim();

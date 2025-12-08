@@ -285,3 +285,10 @@
         justify-content: center;
     }
 }
+
+.sectionDivider {
+    width: 60%;
+    height: 1px;
+    background: rgba(200, 210, 235, 0.6);
+    margin-bottom: 20px;
+}

@@ -11,14 +11,93 @@ import {
     ResetPasswordRequest,
     LoginRequest,
     LoginResponse
-} from '../../../types/auth';
+} from '../../../../types/authTypes';
 import { fetchWithAuth } from '../../../../lib/common/api/fetchWithAuth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
 
-// 1. GET /user (사용자 정보 가져오기)
+type HttpError = Error & { status?: number };
+
+const ensureApiBaseUrl = () => {
+    if (!API_BASE_URL) {
+        throw new Error('API 기본 경로가 설정되지 않았습니다.');
+    }
+};
+
+const buildJsonHeaders = (headers?: HeadersInit): HeadersInit => {
+    const merged = new Headers(headers ?? {});
+    if (!merged.has('Content-Type')) {
+        merged.set('Content-Type', 'application/json');
+    }
+    return merged;
+};
+
+const extractErrorMessage = async (response: Response): Promise<string | null> => {
+    try {
+        const cloned = response.clone();
+        const data = await cloned.json();
+        if (data && typeof data === 'object' && 'message' in data) {
+            return (data as { message?: string }).message ?? null;
+        }
+    } catch {
+        // ignore json parse failure
+    }
+
+    try {
+        const text = await response.text();
+        if (text) {
+            return text;
+        }
+    } catch {
+        // ignore text parse failure
+    }
+
+    return null;
+};
+
+const createUnauthorizedError = (status: number): HttpError => {
+    const error = new Error(`${status} Unauthorized`) as HttpError;
+    error.status = status;
+    return error;
+};
+
+// 1. GET /user/me (사용자 정보 가져오기)
 export const getUserData = async (): Promise<UserResponseDTO> => {
-    const response = await fetchWithAuth('/user', { method: 'GET' });
+    ensureApiBaseUrl();
+
+    const requestUser = () =>
+        fetch(`${API_BASE_URL}/user/me`, {
+            method: 'GET',
+            headers: buildJsonHeaders(),
+            credentials: 'include',
+            cache: 'no-store',
+        });
+
+    let response = await requestUser();
+
+    if (response.status === 401 || response.status === 403) {
+        const refreshResponse = await fetch(`${API_BASE_URL}/jwt/refresh`, {
+            method: 'POST',
+            headers: buildJsonHeaders(),
+            credentials: 'include',
+        });
+
+        if (!refreshResponse.ok) {
+            throw createUnauthorizedError(refreshResponse.status);
+        }
+
+        response = await requestUser();
+    }
+
+    if (response.status === 401 || response.status === 403) {
+        throw createUnauthorizedError(response.status);
+    }
+
+    if (!response.ok) {
+        const message = (await extractErrorMessage(response)) ?? '사용자 정보를 불러오지 못했습니다.';
+        throw new Error(message);
+    }
+
     return response.json();
 };
 

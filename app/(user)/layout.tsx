@@ -6,8 +6,9 @@ import MainHeader from '../../components/MainHeader'; // React Query를 사용�
 import LoginModal from '../../components/LoginModal';
 import SearchHeader from '../../components/SearchHeader';
 import { useAppSelector, useAppDispatch } from './store/slices/store';
-import { closeLoginModal, selectIsLoggedIn } from './store/slices/authSlice';
+import { closeLoginModal, setLoggedIn, setUser } from './store/slices/authSlice';
 import { useEffect } from 'react';
+import { useIsLoggedIn } from './hooks/useAuth';
 
 export default function UserLayout({
   children,
@@ -15,10 +16,13 @@ export default function UserLayout({
   children: React.ReactNode
 }) {
   const dispatch = useAppDispatch();    
-  const isLoginModalOpen = useAppSelector((state) => state.auth.isLoginModalOpen);
-  const isLoggedIn = useAppSelector(selectIsLoggedIn);
+  const authState = useAppSelector((state) => state.auth);
+  const isLoginModalOpen = authState.isLoginModalOpen;
+  const storedIsLoggedIn = authState.isLoggedIn;
+  const storedUser = authState.user;
   const pathname = usePathname();
   const router = useRouter();
+  const { isLoggedIn: queryIsLoggedIn, userData, isLoading: authLoading } = useIsLoggedIn();
 
   const handleCloseLoginModal = () => {
     dispatch(closeLoginModal());
@@ -27,17 +31,39 @@ export default function UserLayout({
   const shouldRenderSearchHeader = pathname !== '/';
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (queryIsLoggedIn && userData) {
+      const nextUser = { id: userData.username, username: userData.username };
+      const shouldUpdateUser = !storedUser || storedUser.username !== userData.username;
+      if (!storedIsLoggedIn) {
+        dispatch(setLoggedIn(true));
+      }
+      if (shouldUpdateUser) {
+        dispatch(setUser(nextUser));
+      }
+    } else if (storedIsLoggedIn || storedUser) {
+      dispatch(setUser(null));
+      dispatch(setLoggedIn(false));
+    }
+  }, [authLoading, queryIsLoggedIn, userData, dispatch, storedIsLoggedIn, storedUser]);
+
+  useEffect(() => {
     if (!pathname || typeof window === 'undefined') return;
     const protectedPrefixes = ['/mypage/profile', '/notifications', '/favorites'];
-    const requiresAuth = protectedPrefixes.some((prefix) =>
-      pathname === prefix || pathname.startsWith(`${prefix}/`),
-    );
+    const requiresAuth =
+      protectedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
-    const storedLogin = window.localStorage.getItem('isLoggedIn') === 'true';
-    if (!isLoggedIn && !storedLogin && requiresAuth) {
+    if (!requiresAuth || authLoading) {
+      return;
+    }
+
+    if (!queryIsLoggedIn) {
       router.replace('/');
     }
-  }, [isLoggedIn, pathname, router]);
+  }, [authLoading, pathname, queryIsLoggedIn, router]);
 
   return (
     <>

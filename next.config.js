@@ -3,17 +3,16 @@ const nextConfig = {
     images: {
         remotePatterns: [
             {
-                protocol: 'http',
-                hostname: 'localhost',
-                port: '8080',
-                pathname: '/images/**',
-            },
-            {
                 protocol: 'https',
-                hostname: process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN || '',
-                port: '',
+                hostname: 'localhost',
+                port: '8443',
                 pathname: '/images/**',
-            },
+              },
+              {
+                protocol: 'https',
+                hostname: process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN,
+                pathname: '/images/**',
+              },
         ],
         unoptimized: true,
         dangerouslyAllowSVG: true,

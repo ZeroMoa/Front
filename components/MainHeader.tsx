@@ -5,7 +5,8 @@ import Link from 'next/link'
 import styles from './MainHeader.module.css'
 import { useAppDispatch, useAppSelector } from '../app/(user)/store/slices/store';
 import { resetState } from '../app/(user)/store/slices/productSlice';
-import { openLoginModal, logout, setLoggedIn, setUser, selectIsLoggedIn } from '../app/(user)/store/slices/authSlice';
+import { openLoginModal, logout, selectIsLoggedIn } from '../app/(user)/store/slices/authSlice';
+import { getUserData } from '../app/(user)/store/api/userAuthApi';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react'; // useState, useRef, useEffect 임포트
 import Cookies from 'js-cookie'; // Cookies 임포트
@@ -32,7 +33,7 @@ export default function Header() {
     const pathname = usePathname();
     const queryClient = useQueryClient();
     
-    const { isLoggedIn: queryIsLoggedIn, userData, isLoading: authLoading } = useIsLoggedIn();
+    const { isLoading: authLoading } = useIsLoggedIn();
     const { data: notifications, isLoading: notificationsLoading, refetch: refetchNotifications } = useUserNotifications();
     const markAsReadMutation = useMarkNotificationAsRead();
     const deleteNotificationMutation = useDeleteUserNotification();
@@ -52,21 +53,6 @@ export default function Header() {
     useEffect(() => {
         setIsHydrated(true);
     }, []);
-
-    // React Query 로딩 완료 후 UI 상태 업데이트
-    useEffect(() => {
-        if (isHydrated && !authLoading) {
-            // 로딩이 완료되면 실제 로그인 상태를 UI에 반영
-            
-            // Redux와 동기화
-            if (userData && queryIsLoggedIn) {
-                dispatch(setUser({ id: userData.username, username: userData.username }));
-                dispatch(setLoggedIn(true));
-            } else {
-                dispatch(setLoggedIn(false));
-            }
-        }
-    }, [dispatch, userData, queryIsLoggedIn, isHydrated, authLoading]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -180,12 +166,14 @@ export default function Header() {
         const protectedPrefixes = ['/mypage/profile', '/notifications', '/favorites'];
         try {
             const xsrfToken = Cookies.get('XSRF-TOKEN');
+            const refreshToken = Cookies.get('refreshToken') || '';
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/logout`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(xsrfToken && { 'X-XSRF-TOKEN': xsrfToken }),
+                    ...(xsrfToken && { 'X-XSRF-TOKEN': xsrfToken, 'X-CSRF-TOKEN': xsrfToken }),
                 },
+                body: JSON.stringify({ refreshToken }),
                 credentials: 'include',
             });
 
@@ -213,7 +201,16 @@ export default function Header() {
             alert(`로그아웃 처리 중 오류 발생: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
         } finally {
             dispatch(logout()); // Redux 상태에서 로그아웃 처리
+            await queryClient.cancelQueries({ queryKey: ['userNotifications'] });
+            await queryClient.cancelQueries({ queryKey: ['userNotification'] });
             queryClient.removeQueries({ queryKey: ['user'], exact: true });
+            queryClient.removeQueries({ queryKey: ['userNotifications'] });
+            queryClient.removeQueries({ queryKey: ['userNotification'] });
+            try {
+                await getUserData();
+            } catch {
+                // logout 후 인증 API에 access/refresh 쿠키가 없는지 확인하기 위한 호출, 실패해도 무시
+            }
             setIsProfileTooltipOpen(false); // 툴팁 닫기
             const requiresAuth = protectedPrefixes.some(
                 (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),

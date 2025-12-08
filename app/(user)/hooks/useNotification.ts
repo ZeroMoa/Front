@@ -8,6 +8,8 @@ import {
     // getUnreadNotificationCount, // 제거
 } from '../store/api/userNotificationApi';
 import { UserNotificationResponse } from '@/types/notificationTypes';
+import { useAppSelector } from '../store/slices/store';
+import { selectIsLoggedIn } from '../store/slices/authSlice';
 
 const queryOptions = {
     staleTime: 60 * 1000, // 1분 동안 캐시 유효
@@ -18,26 +20,26 @@ const queryOptions = {
 
 // 사용자 알림 목록 조회 hook
 export const useUserNotifications = () => {
-    const shouldFetch = typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true'
+    const isLoggedIn = useAppSelector(selectIsLoggedIn)
 
     return useQuery<UserNotificationResponse[], Error>({
         queryKey: ['userNotifications'],
         queryFn: getUserNotifications,
         ...queryOptions,
-        enabled: shouldFetch,
+        enabled: isLoggedIn,
         select: (data) => data.filter(notification => notification.isValid), // isValid가 true인 알림만 필터링
     });
 };
 
 // 특정 사용자 알림 상세 조회 hook
 export const useUserNotificationDetail = (userNotificationNo: number) => {
-    const shouldFetch = typeof window !== 'undefined' && localStorage.getItem('isLoggedIn') === 'true'
+    const isLoggedIn = useAppSelector(selectIsLoggedIn)
 
     return useQuery<UserNotificationResponse, Error>({
         queryKey: ['userNotification', userNotificationNo],
         queryFn: () => getUserNotificationDetail(userNotificationNo),
         ...queryOptions,
-        enabled: shouldFetch && !!userNotificationNo, // 로그인되어 있고 userNotificationNo가 있을 때만 실행
+        enabled: isLoggedIn && !!userNotificationNo, // 로그인되어 있고 userNotificationNo가 있을 때만 실행
     });
 };
 
