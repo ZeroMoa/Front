@@ -104,7 +104,7 @@ export default function ProfilePage() {
                     const data: UserResponseDTO = await getUserData();
                     setUserData(data);
                     setNickname(data.nickname);
-                    setIsSocialUser(data.social);
+                    setIsSocialUser(Boolean(data.isSocial ?? data.social));
                     if (data.email) {
                         const [id, domain] = data.email.split('@');
                         setEmailFront(id);
@@ -394,6 +394,12 @@ export default function ProfilePage() {
                                 />
                             </div>
                         </div>
+
+                        {isSocialUser && (
+                            <div className={styles.socialNotice}>
+                                소셜 로그인으로 가입한 계정은 비밀번호를 변경할 수 없습니다.
+                            </div>
+                        )}
 
                         {!isSocialUser && (
                             <>

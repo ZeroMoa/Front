@@ -101,11 +101,21 @@ export default function Header() {
     };
 
     const handleNotificationIconClick = () => {
-        setIsNotificationTooltipOpen(prev => !prev);
+        if (!isLoggedIn) {
+            alert('로그인 후 이용해주세요~.~');
+            dispatch(openLoginModal());
+            return;
+        }
+
+        const willOpen = !isNotificationTooltipOpen;
+        setIsNotificationTooltipOpen(willOpen);
         setIsProfileTooltipOpen(false); // 다른 툴팁 닫기
-        // 알림 아이콘 클릭 시, 툴팁이 열리고 읽지 않은 알림이 있다면 모두 읽음 처리
-        if (!isNotificationTooltipOpen && (notifications?.some(n => !n.isRead) ?? false)) {
-            markAllAsReadMutation.mutate();
+
+        if (willOpen) {
+            void refetchNotifications();
+            if (notifications?.some((notification) => !notification.isRead)) {
+                markAllAsReadMutation.mutate();
+            }
         }
     };
 
