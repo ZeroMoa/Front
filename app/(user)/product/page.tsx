@@ -139,34 +139,36 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
         ? selectedSubCategory.categoryNo
         : undefined;
 
+    const shouldUseSearch = hasKeyword || Boolean(isNewParam);
+
     let productResponse;
     try {
-        productResponse = hasKeyword
-        ? await fetchProductSearch(
-              {
-                  query: keyword,
-                  categoryNo: searchCategoryNo,
-                  page,
-                  size,
-                  sort,
-                  isNew: isNewParam,
-                  filters,
-              },
-              { cache: 'no-store' },
-              PRODUCT_FETCH_OPTIONS,
-          )
-        : await fetchCategoryProducts(
-              {
-                  categoryNo: selectedSubCategory.categoryNo,
-                  page,
-                  size,
-                  sort,
-                  isNew: isNewParam,
-                  filters: activeFilters,
-              },
-              { cache: 'no-store' },
-              PRODUCT_FETCH_OPTIONS,
-          );
+        productResponse = shouldUseSearch
+            ? await fetchProductSearch(
+                  {
+                      query: keyword,
+                      categoryNo: searchCategoryNo,
+                      page,
+                      size,
+                      sort,
+                      isNew: isNewParam,
+                      filters,
+                  },
+                  { cache: 'no-store' },
+                  PRODUCT_FETCH_OPTIONS,
+              )
+            : await fetchCategoryProducts(
+                  {
+                      categoryNo: selectedSubCategory.categoryNo,
+                      page,
+                      size,
+                      sort,
+                      isNew: isNewParam,
+                      filters: activeFilters,
+                  },
+                  { cache: 'no-store' },
+                  PRODUCT_FETCH_OPTIONS,
+              );
     } catch (error) {
         const fallbackMessage = '제품 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
         const message =
