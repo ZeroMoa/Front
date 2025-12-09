@@ -54,6 +54,14 @@ export interface FetchProductApiOptions {
     includeProductsWithoutImage?: boolean;
 }
 
+export interface FetchProductSearchOptions extends FetchProductApiOptions {
+    /**
+     * If true, client-side requests will go through `fetchWithAuth` to ensure JWT cookies
+     * are sent and refreshed when necessary. For public pages this should stay false.
+     */
+    requireAuth?: boolean;
+}
+
 const appendSortParams = (params: URLSearchParams, sort?: string) => {
     if (!sort) {
         return;
@@ -385,12 +393,13 @@ const buildSearchQuery = ({
 export async function fetchProductSearch(
     params: FetchProductSearchParams,
     init?: RequestInit,
-    options?: FetchProductApiOptions,
+    options?: FetchProductSearchOptions,
 ): Promise<ProductResponse> {
     const query = buildSearchQuery(params);
     const endpoint = `${PRODUCT_API_BASE_URL.replace(/\/$/, '')}/product/search?${query.toString()}`;
 
     const isBrowser = typeof window !== 'undefined';
+    const requireAuth = Boolean(options?.requireAuth);
 
     const performServerRequest = async () => {
         let headers: HeadersInit = {
@@ -430,11 +439,23 @@ export async function fetchProductSearch(
     };
 
     const performClientRequest = async () => {
-        const { fetchWithAuth } = await import('../../../../lib/common/api/fetchWithAuth');
-        return fetchWithAuth(`/product/search?${query.toString()}`, {
-            method: init?.method ?? 'GET',
+        if (requireAuth) {
+            const { fetchWithAuth } = await import('../../../../lib/common/api/fetchWithAuth');
+            return fetchWithAuth(`/product/search?${query.toString()}`, {
+                method: init?.method ?? 'GET',
+                cache: init?.cache ?? 'no-store',
+                ...init,
+            });
+        }
+
+        return fetch(endpoint, {
             cache: init?.cache ?? 'no-store',
             ...init,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(init?.headers ?? {}),
+            },
+            credentials: 'include',
         });
     };
 

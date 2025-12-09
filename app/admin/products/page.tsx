@@ -83,19 +83,19 @@ export default async function AdminProductsPage({
       : undefined
 
   const productResponse = hasKeyword
-    ? await fetchProductSearch(
-        {
-          query: keyword,
-          categoryNo: searchCategoryNo,
-          page,
-          size,
-          sort,
-          isNew: isNewParam,
-          filters,
-        },
-        { cache: 'no-store' },
-        { includeProductsWithoutImage: true }
-      )
+      ? await fetchProductSearch(
+          {
+            query: keyword,
+            categoryNo: searchCategoryNo,
+            page,
+            size,
+            sort,
+            isNew: isNewParam,
+            filters,
+          },
+          { cache: 'no-store' },
+          { includeProductsWithoutImage: true, requireAuth: true }
+        )
     : categoryConfig
     ? await fetchCategoryProducts(
         {
@@ -110,18 +110,18 @@ export default async function AdminProductsPage({
         { includeProductsWithoutImage: true }
       )
     : activeCollection === 'all'
-    ? await fetchProductSearch(
-        {
-          page,
-          size,
-          sort,
-          keyword: keyword || undefined,
-          isNew: isNewParam,
-          filters,
-        },
-        { cache: 'no-store' },
-        { includeProductsWithoutImage: true }
-      )
+      ? await fetchProductSearch(
+          {
+            page,
+            size,
+            sort,
+            keyword: keyword || undefined,
+            isNew: isNewParam,
+            filters,
+          },
+          { cache: 'no-store' },
+          { includeProductsWithoutImage: true, requireAuth: true }
+        )
     : await fetchNutritionProducts(
         baseConfig.slug,
         {
