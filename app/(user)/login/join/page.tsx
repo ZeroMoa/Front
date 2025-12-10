@@ -105,8 +105,9 @@ export default function JoinPage() {
             return false; // 예상치 못한 경우
         } catch (error: any) {
             console.error('중복 확인 중 오류 발생:', error);
-            if (field === 'username') { setUsernameError(error.message || '중복 확인 중 오류가 발생했습니다.'); setUsernameSuccess(null); setIsUsernameValidState(false); }
-            if (field === 'email') { setEmailError(error.message || '중복 확인 중 오류가 발생했습니다.'); setEmailSuccess(null); setIsEmailValidState(false); }
+            const fallback = field === 'username' ? DUPLICATE_USERNAME_MESSAGE : DUPLICATE_EMAIL_MESSAGE;
+            if (field === 'username') { setUsernameError(error.message || fallback); setUsernameSuccess(null); setIsUsernameValidState(false); }
+            if (field === 'email') { setEmailError(error.message || fallback); setEmailSuccess(null); setIsEmailValidState(false); }
             return false; // 네트워크 또는 기타 오류 시 유효하지 않음
         }
     }, []);
@@ -174,8 +175,8 @@ export default function JoinPage() {
         }
 
         // 2. 최종 제출 시점에 중복 확인 강제 트리거 및 결과 대기
-        const usernameResponse = await checkExistence('username', username);
-        const emailResponse = await checkExistence('email', `${emailFront}@${emailBack}`);
+        const usernameResponse = await checkExistence('username', username).catch(() => ({ isExist: true }));
+        const emailResponse = await checkExistence('email', `${emailFront}@${emailBack}`).catch(() => ({ isExist: true }));
 
         // `checkExistence` 호출 후 상태 업데이트를 기다립니다.
         // 이 부분이 중요합니다. `checkExistence`는 상태를 비동기적으로 업데이트하므로,
@@ -188,8 +189,12 @@ export default function JoinPage() {
 
         // 3. 최종 유효성 상태 확인
         // 디바운스된 상태가 아닌, 제출 시점에 직접 검사한 결과를 사용합니다.
-        if (usernameResponse.isExist || emailResponse.isExist) {
-            alert('아이디 또는 이메일 중복/형식 확인이 필요합니다. 잠시 후 다시 시도해주세요.');
+        if (usernameResponse.isExist) {
+            alert(DUPLICATE_USERNAME_MESSAGE);
+            return;
+        }
+        if (emailResponse.isExist) {
+            alert(DUPLICATE_EMAIL_MESSAGE);
             return;
         }
 

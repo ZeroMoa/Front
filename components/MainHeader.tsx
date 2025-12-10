@@ -8,12 +8,13 @@ import { resetState } from '../app/(user)/store/slices/productSlice';
 import { openLoginModal, logout, selectIsLoggedIn } from '../app/(user)/store/slices/authSlice';
 import { getUserData } from '../app/(user)/store/api/userAuthApi';
 import { useRouter, usePathname } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react'; // useState, useRef, useEffect 임포트
+import { useState, useRef, useEffect, useId } from 'react'; // useState, useRef, useEffect 임포트
 import Cookies from 'js-cookie'; // Cookies 임포트
 import { useIsLoggedIn } from '../app/(user)/hooks/useAuth'; // React Query hook import
 import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotification, useMarkAllNotificationsAsRead } from '../app/(user)/hooks/useNotification'; // 알림 훅 import
 import type { CategorySlug } from '../app/(user)/product/config';
 import { getCdnUrl } from '../lib/cdn';
+import { suppressSessionExpiryAlert } from '../lib/common/api/fetchWithAuth';
 import type { UserNotificationResponse } from '@/types/notificationTypes'
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -41,6 +42,8 @@ export default function Header() {
 
     const [isHydrated, setIsHydrated] = useState(false);
     const isLoggedIn = useAppSelector(selectIsLoggedIn); // Redux의 isLoggedIn 상태 사용
+    const profileTooltipId = useId();
+    const notificationTooltipId = useId();
     
     const [isProfileTooltipOpen, setIsProfileTooltipOpen] = useState(false); // 프로필 툴팁 상태
     const [isNotificationTooltipOpen, setIsNotificationTooltipOpen] = useState(false); // 알림 툴팁 상태
@@ -48,6 +51,8 @@ export default function Header() {
     // 툴팁 외부 클릭 감지를 위한 ref
     const profileTooltipRef = useRef<HTMLDivElement>(null);
     const notificationTooltipRef = useRef<HTMLDivElement>(null);
+    const profileButtonRef = useRef<HTMLButtonElement>(null);
+    const notificationButtonRef = useRef<HTMLButtonElement>(null);
 
     // hydration 완료 감지
     useEffect(() => {
@@ -56,19 +61,21 @@ export default function Header() {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (
-                profileTooltipRef.current && !profileTooltipRef.current.contains(event.target as Node) &&
-                notificationTooltipRef.current && !notificationTooltipRef.current.contains(event.target as Node)
-            ) {
-                setIsProfileTooltipOpen(false);
-                setIsNotificationTooltipOpen(false);
+            const target = event.target as Node;
+            if (profileTooltipRef.current && profileTooltipRef.current.contains(target)) {
+                return;
             }
-            if (isProfileTooltipOpen && profileTooltipRef.current && !profileTooltipRef.current.contains(event.target as Node)) {
-                setIsProfileTooltipOpen(false);
+            if (notificationTooltipRef.current && notificationTooltipRef.current.contains(target)) {
+                return;
             }
-            if (isNotificationTooltipOpen && notificationTooltipRef.current && !notificationTooltipRef.current.contains(event.target as Node)) {
-                setIsNotificationTooltipOpen(false);
+            if (profileButtonRef.current && profileButtonRef.current.contains(target)) {
+                return;
             }
+            if (notificationButtonRef.current && notificationButtonRef.current.contains(target)) {
+                return;
+            }
+            setIsProfileTooltipOpen(false);
+            setIsNotificationTooltipOpen(false);
         };
 
         document.addEventListener('mousedown', handleClickOutside);
@@ -107,16 +114,18 @@ export default function Header() {
             return;
         }
 
-        const willOpen = !isNotificationTooltipOpen;
-        setIsNotificationTooltipOpen(willOpen);
-        setIsProfileTooltipOpen(false); // 다른 툴팁 닫기
-
-        if (willOpen) {
-            void refetchNotifications();
-            if (notifications?.some((notification) => !notification.isRead)) {
-                markAllAsReadMutation.mutate();
+        const hasUnread = notifications?.some((notification) => !notification.isRead);
+        setIsNotificationTooltipOpen((prev) => {
+            const next = !prev;
+            if (next) {
+                void refetchNotifications();
+                if (hasUnread) {
+                    markAllAsReadMutation.mutate();
+                }
             }
-        }
+            return next;
+        });
+        setIsProfileTooltipOpen(false); // 다른 툴팁 닫기
     };
 
     const handleNotificationItemClick = (notification: UserNotificationResponse) => {
@@ -190,6 +199,7 @@ export default function Header() {
             if (response.ok) {
                 console.log('로그아웃 성공');
                 alert('로그아웃 되었습니다.'); // 로그아웃 성공 메시지
+                suppressSessionExpiryAlert(4000);
             } else {
                 let errorData: { message?: string } = {};
                 try {
@@ -259,23 +269,39 @@ export default function Header() {
                             <div style={{ width: '200px', height: '50px' }}></div>
                         ) : isLoggedIn ? (
                             <div className={styles.iconGroup}>
-                                <div className={styles.profileButtonContainer}>
-                                    <button onClick={handleProfileIconClick} className={styles.iconButton}>
-                                        <Image src={getCdnUrl('/images/profile.png')} alt="프로필" width={50} height={50} className={styles.headerIcon} />
-                                    </button>
-                                    {isProfileTooltipOpen && (
-                                        <div ref={profileTooltipRef} className={styles.profileTooltip}>
-                                            <button onClick={handleProfileClick} className={styles.tooltipItem}>내 정보 확인</button>
-                                            <button onClick={handleLogoutClick} className={`${styles.tooltipItem} ${styles.logoutItem}`}>로그아웃</button>
-                                        </div>
-                                    )}
+                                <div className={styles.iconWithLabel}>
+                                    <div className={styles.profileButtonContainer}>
+                                        <button
+                                            type="button"
+                                            onClick={handleProfileIconClick}
+                                            className={styles.iconButton}
+                                            aria-haspopup="menu"
+                                            aria-expanded={isProfileTooltipOpen}
+                                            aria-controls={isProfileTooltipOpen ? profileTooltipId : undefined}
+                                            ref={profileButtonRef}
+                                        >
+                                            <Image src={getCdnUrl('/images/profile.png')} alt="프로필" width={50} height={50} className={styles.headerIcon} />
+                                        </button>
+                                        {isProfileTooltipOpen && (
+                                            <div ref={profileTooltipRef} className={styles.profileTooltip} id={profileTooltipId}>
+                                                <button onClick={handleProfileClick} className={styles.tooltipItem}>내 정보 확인</button>
+                                                <button onClick={handleLogoutClick} className={`${styles.tooltipItem} ${styles.logoutItem}`}>로그아웃</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className={styles.iconLabel}>프로필</span>
                                 </div>
 
-                                <div
-                                    className={styles.notificationIconContainer}
-                                    onClick={handleNotificationIconClick}
-                                >
-                                    <button className={styles.iconButton}>
+                                <div className={`${styles.notificationIconContainer} ${styles.iconWithLabel}`}>
+                                    <button
+                                        type="button"
+                                        className={styles.iconButton}
+                                        ref={notificationButtonRef}
+                                        onClick={handleNotificationIconClick}
+                                        aria-haspopup="dialog"
+                                        aria-expanded={isNotificationTooltipOpen}
+                                        aria-controls={isNotificationTooltipOpen ? notificationTooltipId : undefined}
+                                    >
                                         <Image
                                             src={getCdnUrl(notifications?.some(n => !n.isRead) ? '/images/bell4.png' : '/images/bell.png')}
                                             alt="알림" width={30} height={30} className={styles.headerIcon}
@@ -285,7 +311,7 @@ export default function Header() {
                                         )} */}
                                 </button>
                                     {isNotificationTooltipOpen && (
-                                        <div ref={notificationTooltipRef} className={styles.notificationTooltip}>
+                                        <div ref={notificationTooltipRef} className={styles.notificationTooltip} id={notificationTooltipId}>
                                             <div className={styles.notificationHeader}>
                                                 <h3>알림</h3>
                                                 {/* <button onClick={handleMarkAllAsRead} className={styles.markAllReadButton}>모두 읽기</button> */}
@@ -340,11 +366,15 @@ export default function Header() {
                                             </div>
                                         </div>
                                     )}
+                                    <span className={styles.iconLabel}>알림</span>
                                 </div>
 
-                                <button onClick={handleFavoritesClick} className={styles.iconButton} aria-label="좋아요한 상품">
-                                    <Image src={getCdnUrl('/images/heart3.png')} alt="좋아요" width={30} height={30} className={styles.headerIcon} />
-                                </button>
+                                <div className={styles.iconWithLabel}>
+                                    <button type="button" onClick={handleFavoritesClick} className={styles.iconButton} aria-label="좋아요한 상품">
+                                        <Image src={getCdnUrl('/images/favorite2.png')} alt="좋아요" width={30} height={30} className={styles.headerIcon} />
+                                    </button>
+                                    <span className={styles.iconLabel}>좋아요</span>
+                                </div>
                             </div>
                         ) : (
                             <div className={styles.authLinks}>

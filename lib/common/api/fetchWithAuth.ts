@@ -3,17 +3,47 @@
 import Cookies from 'js-cookie'
 
 let sessionRedirectScheduled = false
+let lastSessionAlertAt = 0
+let sessionAlertMutedUntil = 0
+const SESSION_ALERT_DEBOUNCE_MS = 1500
+
+function displaySessionAlert(message: string) {
+  const now = Date.now()
+  if (now < sessionAlertMutedUntil) {
+    return
+  }
+  if (now - lastSessionAlertAt < SESSION_ALERT_DEBOUNCE_MS) {
+    return
+  }
+  lastSessionAlertAt = now
+  window.alert(message)
+}
+
+export function suppressSessionExpiryAlert(durationMs = 3000) {
+  const now = Date.now()
+  sessionAlertMutedUntil = Math.max(sessionAlertMutedUntil, now + Math.max(0, durationMs))
+}
 
 function handleSessionExpiry(originPathname: string, loginTarget: string, showAlert = false) {
-  if (typeof window === 'undefined' || sessionRedirectScheduled) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const isAdminScope = originPathname.startsWith('/admin')
+  const alertMessage = '로그인이 풀렸습니다! 다시 로그인 부탁드립니다~'
+  const maybeAlert = () => {
+    if (showAlert) {
+      displaySessionAlert(alertMessage)
+    }
+  }
+
+  if (sessionRedirectScheduled) {
+    maybeAlert()
     return
   }
 
   sessionRedirectScheduled = true
   window.stop()
-
-  const isAdminScope = originPathname.startsWith('/admin')
-  const alertMessage = '로그인이 풀렸습니다! 다시 로그인 부탁드립니다~'
 
   const logoutEndpoint = isAdminScope ? '/admin/logout' : '/logout'
 
@@ -26,9 +56,7 @@ function handleSessionExpiry(originPathname: string, loginTarget: string, showAl
       // ignore logout failure
     })
     .finally(() => {
-      if (showAlert) {
-        window.alert(alertMessage)
-      }
+      maybeAlert()
 
       setTimeout(() => {
         window.location.replace(loginTarget)
@@ -154,13 +182,13 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}, ret
       }
 
       const refreshError = await parseErrorResponse(refreshResponse)
-      handleSessionExpiry(originPathname, loginRedirectTarget, false)
+      handleSessionExpiry(originPathname, loginRedirectTarget, true)
       const errorMessage =
         refreshError.message || '리프레시 토큰이 만료되었거나 유효하지 않습니다. 다시 로그인하십시오.'
       throw new Error(errorMessage)
     } catch (error) {
       console.error('토큰 재발급 중 오류 발생:', error)
-      handleSessionExpiry(originPathname, loginRedirectTarget, false)
+      handleSessionExpiry(originPathname, loginRedirectTarget, true)
       throw error instanceof Error
         ? error
         : new Error('토큰 재발급 중 알 수 없는 오류가 발생했습니다.')

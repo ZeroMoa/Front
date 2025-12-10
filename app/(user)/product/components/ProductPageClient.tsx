@@ -71,8 +71,7 @@ const HERO_BANNER_ITEMS: HeroBannerItem[] = [
     },
 ];
 
-const NEW_HERO_ITEMS: Array<{ slug: 'all' | NutritionSlug; label: string; accentClass: HeroAccentClass }> = [
-    { slug: 'all', label: '전체 신제품', accentClass: 'heroCardNeutral' },
+const NEW_HERO_ITEMS: Array<{ slug: NutritionSlug; label: string; accentClass: HeroAccentClass }> = [
     ...HERO_BANNER_ITEMS,
 ];
 
@@ -153,6 +152,7 @@ export default function ProductPageClient({
     const pageSizeOptions = config.pageSizeOptions ?? [30, 60, 90];
     const totalPages = data.totalPages ?? 0;
     const totalElements = data.totalElements ?? data.content.length;
+    const totalCountLabel = totalElements.toLocaleString();
 
     const selectedPageSize = pageSizeOptions.includes(size) ? size : pageSizeOptions[0];
 
@@ -307,29 +307,45 @@ export default function ProductPageClient({
 
     const handleCategorySelect = (nextCategory: CategorySlug | 'all', nextSubSlug?: string) => {
         if (nextCategory === 'all') {
-            if (!searchParams.get('category') && !searchParams.get('sub')) {
-                return;
-            }
-            commitUpdates({ category: null, sub: null, page: 0 });
+            commitUpdates({
+                category: null,
+                sub: null,
+                type: undefined,
+                page: 0,
+            });
             return;
         }
 
         const targetSub = nextSubSlug ?? 'all';
+        const nextParams = new URLSearchParams(searchParams.toString());
+        const currentCategory = searchParams.get('category') ?? searchParams.get('type');
+        const currentSub = searchParams.get('sub') ?? 'all';
 
-        if (activeCategorySlug === nextCategory) {
-            const currentSub = searchParams.get('sub') ?? 'all';
-            if (currentSub === targetSub) {
-                return;
-            }
+        const isSameSelection = currentCategory === nextCategory && currentSub === targetSub;
+        if (isSameSelection) {
+            commitUpdates({ category: null, sub: null, type: undefined, page: 0 });
+            return;
         }
 
-        commitUpdates({ category: nextCategory, sub: targetSub, page: 0 });
+        nextParams.set('category', nextCategory);
+        nextParams.set('sub', targetSub);
+        nextParams.delete('type');
+        nextParams.set('page', '1');
+
+        PRODUCT_FILTER_KEYS.forEach((key) => {
+            nextParams.delete(key);
+        });
+
+        startTransition(() => {
+            router.replace(`${pathname}?${nextParams.toString()}`, { scroll: true });
+        });
     };
 
     const handleCollectionNavigate = (nextCollection: NutritionSlug | 'all') => {
         const nextParams = new URLSearchParams(searchParams.toString());
 
-        if (collectionSlug === nextCollection && (mode === 'nutrition' || mode === 'search')) {
+        const allowToggleToAll = mode === 'search';
+        if (allowToggleToAll && collectionSlug === nextCollection) {
             nextCollection = 'all';
         }
 
@@ -389,7 +405,7 @@ export default function ProductPageClient({
         handleHeroFilterToggle(slug);
     };
 
-    const handleNewHeroSelect = (slug: 'all' | NutritionSlug) => {
+    const handleNewHeroSelect = (slug: NutritionSlug) => {
         const baseUpdates: Record<string, string | null> = {
             isZeroCalorie: null,
             isZeroSugar: null,
@@ -397,14 +413,8 @@ export default function ProductPageClient({
             isLowSugar: null,
         };
 
-        if (slug === 'all') {
-            commitUpdates({ ...baseUpdates, isNew: 'true', page: 0 });
-            return;
-        }
-
         const filterKey = HERO_FILTER_MAP[slug];
         const isActive = currentFilters[filterKey];
-
         if (lockedFilters?.includes(filterKey)) {
             return;
         }
@@ -526,6 +536,7 @@ export default function ProductPageClient({
         }
 
         if (mode === 'new' && config.kind === 'new') {
+            const heroItems = NEW_HERO_ITEMS;
             return (
                 <div className={styles.heroInline}>
                     <button
@@ -539,7 +550,7 @@ export default function ProductPageClient({
                         신제품
                     </button>
                     <span className={styles.heroDivider} aria-hidden="true" />
-                    {NEW_HERO_ITEMS.map((item) => {
+                    {heroItems.map((item) => {
                         const isActive = activeHeroSlug === item.slug;
                         const accentClass = styles[item.accentClass];
                         return (
@@ -614,7 +625,6 @@ export default function ProductPageClient({
         if (mode === 'category') {
             return (
                 <div className={styles.subCategoryHeader}>
-                    <div className={styles.categoryCount}>{totalElements.toLocaleString()}개</div>
                     {renderSubCategoryButtons(true)}
                 </div>
             );
@@ -721,21 +731,20 @@ export default function ProductPageClient({
                         <h1 className={styles.title}>{config.title}</h1>
                         <p className={styles.description}>{config.description}</p>
                     </div>
+                    <div className={styles.headerMeta}>
+                        <span className={styles.headerMetaLabel}>총 제품</span>
+                        <span className={styles.totalCount}>{totalCountLabel}개</span>
+                    </div>
                 </header>
                 {renderSubCategorySection()}
 
                 {mode !== 'category' && (
                     <div className={styles.listSummary}>
-                        <span>
-                            {summaryLabel} · {totalElements.toLocaleString()}개
-                        </span>
+                        <span>{summaryLabel}</span>
                         {renderHeroInline()}
                     </div>
                 )}
                 <div className={styles.listActions}>
-                    {mode === 'category' && activeCategorySlug === 'icecream' && (
-                        <span className={styles.categoryCount}>{totalElements.toLocaleString()}개</span>
-                    )}
                     <div className={styles.listActionsControls}>
                         {mode === 'category' && activeCategorySlug === 'icecream' && (
                             <>

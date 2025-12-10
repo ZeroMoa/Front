@@ -130,6 +130,10 @@ export default function BoardPage() {
     }
   }
 
+  const handleHeadingClick = () => {
+    router.push('/admin/boards')
+  }
+
   const listContent = () => {
     if (isLoading) {
       return (
@@ -216,7 +220,16 @@ export default function BoardPage() {
         <div className={styles.container}>
             <div className={styles.headerSection}>
                 <div className={styles.headerTitleGroup}>
-                    <h1>공지사항</h1>
+                    <h1>
+                      <button
+                        type="button"
+                        className={styles.headingButton}
+                        onClick={handleHeadingClick}
+                        aria-label="공지사항 메인으로 이동"
+                      >
+                        공지사항
+                      </button>
+                    </h1>
                     <span className={styles.topInfo}>Total {totalElements}건 / {currentPageIndex + 1}페이지</span>
                 </div>
                 <div className={styles.headerActions}>

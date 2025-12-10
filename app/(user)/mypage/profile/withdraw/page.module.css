@@ -58,9 +58,27 @@
 }
 
 .noticeContentWrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
     line-height: 1.6;
     color: #555;
     font-size: 14px;
+}
+
+.noticeImageContainer {
+    flex-shrink: 0;
+}
+
+.noticeImage {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+}
+
+.noticeParagraph {
+    margin: 0 0 12px;
+    color: #4a4a4a;
 }
 
 .strongText {
@@ -131,6 +149,17 @@
 }
 .inputError {
     border-color: #ff6666;
+}
+
+.passwordToggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    padding: 4px;
+    cursor: pointer;
 }
 
 .errorMessage {

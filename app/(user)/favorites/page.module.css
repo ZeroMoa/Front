@@ -88,6 +88,15 @@
     text-align: center;
 }
 
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    color: #5a6787;
+}
+
 .errorMessage {
     font-size: 0.95rem;
     color: #d9534f;

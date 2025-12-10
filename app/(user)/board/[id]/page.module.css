@@ -51,9 +51,16 @@
     font-size: 0.95rem;
 }
 
+.metaRow {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
 .tabWrap {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     margin-bottom: 0;
 }
 
@@ -199,6 +206,16 @@
     background: rgba(255, 255, 255, 0.85);
     border: 1px solid rgba(189, 205, 232, 0.4);
     box-shadow: 0 15px 35px rgba(60, 80, 110, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+    justify-content: center;
+}
+
+.statusIcon {
+    width: 600px;
+    height: 600px;
 }
 
 .actionRow {

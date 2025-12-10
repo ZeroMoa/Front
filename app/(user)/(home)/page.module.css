@@ -235,7 +235,7 @@
 
 .favoriteSection {
     max-width: 1400px;
-    margin: 60px auto 100px;
+    margin: 20px auto 100px;
     padding: 0 20px 20px;
     display: flex;
     flex-direction: column;
@@ -253,6 +253,50 @@
     font-weight: 700;
     color: #1f2f5c;
     margin: 0;
+}
+
+.highlightNew {
+    color: #f0b400;
+}
+
+.highlightFavorite {
+    color: #ff4d4f;
+}
+
+.loadingState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px 0;
+    color: #4a5778;
+    font-size: 0.95rem;
+}
+
+.sectionLoadingBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    color: #4a5875;
+    padding: 40px 20px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(189, 205, 232, 0.45);
+    box-shadow: 0 12px 28px rgba(60, 80, 110, 0.12);
+}
+
+.sectionErrorBox {
+    border: 1px solid rgba(217, 83, 79, 0.4);
+    background: rgba(217, 83, 79, 0.08);
+    color: #c0392b;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 .favoriteViewAllButton {
@@ -286,7 +330,7 @@
 
 .newSection {
     max-width: 1400px;
-    margin: 0 auto 120px;
+    margin: 0 auto 20px;
     padding: 0 20px 20px;
     display: flex;
     flex-direction: column;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import CircularProgress from '@mui/material/CircularProgress';
 import styles from './page.module.css';
 import ProductGrid from '../product/components/ProductGrid';
 import ProductPagination from '../product/components/ProductPagination';
@@ -61,6 +62,7 @@ export default function FavoritesPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasHydrated, setHasHydrated] = useState(false);
+    const [hasCompletedInitialFetch, setHasCompletedInitialFetch] = useState(false);
 
     useEffect(() => {
         setHasHydrated(true);
@@ -83,10 +85,12 @@ export default function FavoritesPage() {
 
         const load = async () => {
             if (authLoading || !isLoggedIn) {
+                setHasCompletedInitialFetch(true);
                 return;
             }
 
             setIsLoading(true);
+            setHasCompletedInitialFetch(false);
             setError(null);
 
             try {
@@ -123,6 +127,7 @@ export default function FavoritesPage() {
             } finally {
                 if (!cancelled) {
                     setIsLoading(false);
+                    setHasCompletedInitialFetch(true);
                 }
             }
         };
@@ -138,11 +143,11 @@ export default function FavoritesPage() {
     const totalPages = data?.totalPages ?? 0;
     const currentContent = data?.content ?? [];
     const isFetching = authLoading || isLoading;
-    const effectiveIsFetching = hasHydrated && isFetching;
+    const showLoadingState = !hasHydrated || isFetching || !hasCompletedInitialFetch;
 
     const headerDescription = error
         ? '좋아요한 제품을 불러오지 못했습니다.'
-        : effectiveIsFetching
+        : showLoadingState
         ? '좋아요 목록 불러오는 중...'
         : totalElements > 0
         ? `총 ${totalElements.toLocaleString()}개의 제품을 확인할 수 있어요.`
@@ -150,13 +155,17 @@ export default function FavoritesPage() {
 
     const handlePageChange = useCallback(
         (nextPage: number) => {
+            const safePage = Math.max(PAGE_MIN, Math.floor(nextPage));
+            if (safePage === displayPage) {
+                return;
+            }
             const params = new URLSearchParams(searchParams.toString());
-            params.set('page', String(nextPage + 1));
+            params.set('page', String(safePage));
             params.set('size', String(currentSize));
             params.set('sort', normalizedSort);
             router.replace(`/favorites?${params.toString()}`, { scroll: true });
         },
-        [currentSize, normalizedSort, router, searchParams],
+        [currentSize, normalizedSort, router, searchParams, displayPage],
     );
 
     const handlePageSizeChange = useCallback(
@@ -219,8 +228,11 @@ export default function FavoritesPage() {
             <section className={styles.content}>
                 {error ? (
                     <p className={styles.errorMessage}>{error}</p>
-                ) : effectiveIsFetching ? (
-                    <p className={styles.message}>좋아요 목록 불러오는 중...</p>
+                ) : showLoadingState ? (
+                    <div className={styles.loadingState}>
+                        <CircularProgress size={32} />
+                        <span>좋아요 목록 불러오는 중...</span>
+                    </div>
                 ) : currentContent.length === 0 ? (
                     <p className={styles.message}>아직 좋아요한 제품이 없어요.</p>
                 ) : (
@@ -228,7 +240,7 @@ export default function FavoritesPage() {
                 )}
 
                 {currentContent.length > 0 && totalPages > 1 && (
-                    <ProductPagination currentPage={currentPageIndex} totalPages={totalPages} onPageChange={handlePageChange} />
+                    <ProductPagination currentPage={displayPage} totalPages={totalPages} onPageChange={handlePageChange} />
                 )}
             </section>
         </div>

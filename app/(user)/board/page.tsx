@@ -4,11 +4,13 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import Image from 'next/image';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useBoards } from '../hooks/useBoard';
 import { BOARD_TYPE_LABELS, BOARD_TYPE_OPTIONS, BOARD_SEARCH_TYPE_OPTIONS } from '@/constants/boardConstants';
 import { BoardResponse, BoardSearchType, BoardType } from '@/types/boardTypes';
 import { getCdnUrl } from '@/lib/cdn';
 import Pagination from '@/components/pagination/Pagination';
+import { useRouter } from 'next/navigation';
 
 const PAGE_SIZE = 10;
 const MAX_VISIBLE_PAGES = 7;
@@ -31,6 +33,7 @@ const resolveErrorMessage = (error: unknown) => {
 };
 
 export default function BoardPage() {
+    const router = useRouter();
     const [page, setPage] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [keyword, setKeyword] = useState('');
@@ -99,7 +102,30 @@ export default function BoardPage() {
 
     const emptyMessage = isSearchMode ? '조건에 맞는 게시글이 없습니다.' : '등록된 게시글이 없습니다.';
 
+    const handleHeadingClick = () => {
+        if (isLoading) {
+            return;
+        }
+        setSearchQuery('');
+        setKeyword('');
+        setSearchType('TITLE_OR_CONTENT');
+        setAppliedSearchType('TITLE_OR_CONTENT');
+        setBoardTypeFilter('ALL');
+        setAppliedBoardType('ALL');
+        setPage(0);
+        router.replace('/board');
+    };
+
     const listContent = () => {
+        if (isLoading) {
+            return (
+                <div className={styles.loadingBox}>
+                    <CircularProgress size={24} />
+                    <span>게시글을 불러오는 중입니다...</span>
+                </div>
+            );
+        }
+
         if (notices.length === 0) {
             return <div className={styles.noNotices}>{emptyMessage}</div>;
         }
@@ -142,14 +168,19 @@ export default function BoardPage() {
         );
     };
 
-    if (isLoading) {
-        return null; // 데이터 로딩 중에는 아무것도 표시하지 않음
-    }
-
     if (isError) {
         return (
             <div className={styles.container}>
-                <div className={styles.errorBox}>{resolveErrorMessage(error)}</div>
+                <div className={styles.errorBox}>
+                    <Image
+                        src={getCdnUrl('/images/error.jpg')}
+                        alt="에러"
+                        width={420}
+                        height={320}
+                        className={styles.statusIcon}
+                    />
+                    <span>{resolveErrorMessage(error)}</span>
+                </div>
             </div>
         );
     }
@@ -157,7 +188,16 @@ export default function BoardPage() {
     return (
         <div className={styles.container}>
             <div className={styles.headerSection}>
-                <h1>공지사항</h1>
+                <h1>
+                    <button
+                        type="button"
+                        className={styles.headingButton}
+                        onClick={handleHeadingClick}
+                        aria-label="공지사항 메인으로 이동"
+                    >
+                        공지사항
+                    </button>
+                </h1>
                 <div className={styles.topInfo}>
                     <span>Total {totalElements}건 / {currentPageIndex + 1}페이지</span>
                 </div>

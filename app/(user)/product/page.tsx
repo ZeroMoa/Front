@@ -144,29 +144,29 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
     let productResponse;
     try {
         productResponse = shouldUseSearch
-            ? await fetchProductSearch(
-                  {
-                      query: keyword,
-                      categoryNo: searchCategoryNo,
-                      page,
-                      size,
-                      sort,
-                      isNew: isNewParam,
-                      filters,
-                  },
-                  { cache: 'no-store' },
+        ? await fetchProductSearch(
+              {
+                  query: keyword,
+                  categoryNo: searchCategoryNo,
+                  page,
+                  size,
+                  sort,
+                  isNew: isNewParam,
+                  filters,
+              },
+              { cache: 'no-store' },
                   PRODUCT_FETCH_OPTIONS,
-              )
-            : await fetchCategoryProducts(
-                  {
-                      categoryNo: selectedSubCategory.categoryNo,
-                      page,
-                      size,
-                      sort,
-                      isNew: isNewParam,
-                      filters: activeFilters,
-                  },
-                  { cache: 'no-store' },
+          )
+        : await fetchCategoryProducts(
+              {
+                  categoryNo: selectedSubCategory.categoryNo,
+                  page,
+                  size,
+                  sort,
+                  isNew: isNewParam,
+                  filters: activeFilters,
+              },
+              { cache: 'no-store' },
                   PRODUCT_FETCH_OPTIONS,
               );
     } catch (error) {
@@ -181,7 +181,7 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
                     <div className={styles.emptyState}>{message}</div>
                 </section>
             </div>
-        );
+          );
     }
 
     return (
@@ -266,29 +266,29 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
             );
         } else if (shouldUseSearch) {
             productResponse = await fetchProductSearch(
-                {
-                    query: keyword,
-                    categoryNo: searchCategoryNo,
-                    page,
-                    size,
-                    sort,
-                    isNew: isNewParam,
-                    filters,
-                },
-                { cache: 'no-store' },
+              {
+                  query: keyword,
+                  categoryNo: searchCategoryNo,
+                  page,
+                  size,
+                  sort,
+                  isNew: isNewParam,
+                  filters,
+              },
+              { cache: 'no-store' },
                 PRODUCT_FETCH_OPTIONS,
             );
         } else {
             productResponse = await fetchNutritionProducts(
-                config.endpoint,
-                {
-                    page,
-                    size,
-                    sort,
-                    keyword: keyword || undefined,
-                    isNew: isNewParam,
-                },
-                { cache: 'no-store' },
+              config.endpoint,
+              {
+                  page,
+                  size,
+                  sort,
+                  keyword: keyword || undefined,
+                  isNew: isNewParam,
+              },
+              { cache: 'no-store' },
                 PRODUCT_FETCH_OPTIONS,
             );
         }
@@ -304,7 +304,7 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
                     <div className={styles.emptyState}>{message}</div>
                 </section>
             </div>
-        );
+          );
     }
  
     return (

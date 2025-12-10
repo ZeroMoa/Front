@@ -35,6 +35,24 @@
     margin-bottom: 8px;
 }
 
+.headingButton {
+    all: unset;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    transition: color 0.2s ease;
+}
+
+.headingButton:hover {
+    color: #4f7cff;
+}
+
+.headingButton:focus-visible {
+    outline: 2px solid rgba(79, 124, 255, 0.4);
+    outline-offset: 4px;
+    border-radius: 6px;
+}
+
 .headerSection span {
     font-size: 0.95rem;
     color: #566689;

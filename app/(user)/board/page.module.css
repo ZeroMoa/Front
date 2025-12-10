@@ -27,6 +27,24 @@
     margin-bottom: 8px;
 }
 
+.headingButton {
+    all: unset;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    transition: color 0.2s ease;
+}
+
+.headingButton:focus-visible {
+    outline: 2px solid rgba(79, 124, 255, 0.4);
+    outline-offset: 4px;
+    border-radius: 6px;
+}
+
+.headingButton:hover {
+    color: #4f7cff;
+}
+
 .headerSection span {
     font-size: 0.95rem;
     color: #566689;
@@ -160,9 +178,26 @@
     color: #4a5875;
 }
 
+.loadingBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
 .errorBox {
     color: #c0392b;
     border-color: rgba(255, 99, 71, 0.45);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.statusIcon {
+    width: 600px;
+    height: 600px;
 }
 
 .noticeTable {

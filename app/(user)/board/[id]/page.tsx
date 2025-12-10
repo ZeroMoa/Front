@@ -1,12 +1,15 @@
 'use client'
 
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import styles from './page.module.css';
 import { useBoardDetail } from '../../hooks/useBoard';
 import { BOARD_TYPE_LABELS } from '@/constants/boardConstants';
 import Link from 'next/link';
 import { BoardType } from '@/types/boardTypes';
+import Image from 'next/image';
+import CircularProgress from '@mui/material/CircularProgress';
+import { getCdnUrl } from '@/lib/cdn';
 
 const tabClassMap: Record<BoardType, string> = {
     NOTICE: styles.tabNOTICE,
@@ -24,26 +27,25 @@ export default function BoardDetailPage() {
     const boardTypeLabel = data ? BOARD_TYPE_LABELS[data.boardType] ?? data.boardType : undefined;
     const activeTabClass = data ? tabClassMap[data.boardType] : '';
 
-    useEffect(() => {
-        if (!isError || !(error instanceof Error)) {
-            return;
-        }
-        if (error.message.includes('404')) {
-            router.replace('/404');
-        }
-    }, [isError, error, router]);
-
     const handleBackClick = () => {
         router.push('/board');
     };
 
-    const renderBackRow = () => (
+    const renderBackButton = () => (
         <div className={styles.backButtonRow}>
             <button type="button" className={styles.backButton} onClick={handleBackClick} aria-label="목록 페이지로 이동">
                 <span className={styles.backIcon} aria-hidden="true" />
                 <span className={styles.backText}>목록으로</span>
             </button>
-            {data?.boardType && boardTypeLabel && (
+        </div>
+    );
+
+    const renderTabSection = () => {
+        if (!data?.boardType || !boardTypeLabel) {
+            return null;
+        }
+        return (
+            <div className={styles.metaRow}>
                 <div className={styles.tabWrap}>
                     <ul className={styles.tabList}>
                         <li className={`${styles.tabItem} ${styles.activeTab} ${activeTabClass}`}>
@@ -51,9 +53,9 @@ export default function BoardDetailPage() {
                         </li>
                     </ul>
                 </div>
-            )}
-        </div>
-    );
+            </div>
+        );
+    };
 
     const formattedDate = useMemo(() => {
         if (!data?.createdAt) return '';
@@ -68,8 +70,11 @@ export default function BoardDetailPage() {
     if (!boardIdParam || Number.isNaN(boardNo)) {
         return (
             <div className={styles.wrapper}>
-                {renderBackRow()}
-                <div className={styles.errorBox}>잘못된 접근입니다.</div>
+                {renderBackButton()}
+                <div className={styles.errorBox}>
+                    <Image src={getCdnUrl('/images/error.jpg')} alt="오류" width={600} height={600} className={styles.statusIcon} />
+                    <span>잘못된 접근입니다.</span>
+                </div>
                 <div className={styles.actionRow}>
                     <button className={styles.listButton} onClick={handleBackClick}>목록</button>
                 </div>
@@ -80,21 +85,27 @@ export default function BoardDetailPage() {
     if (isLoading) {
         return (
             <div className={styles.wrapper}>
-                {renderBackRow()}
-                <div className={styles.loadingBox}>게시글을 불러오는 중입니다...</div>
+                {renderBackButton()}
+                <div className={styles.loadingBox}>
+                    <CircularProgress size={26} />
+                    <span>게시글을 불러오는 중입니다...</span>
+                </div>
             </div>
         );
     }
 
     if (isError || !data) {
-        const errorMessage = error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.';
-        if (errorMessage.includes('404')) {
-            return null;
-        }
+        const rawMessage = error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.';
+        const normalized = rawMessage.toLowerCase();
+        const isNotFound = normalized.includes('404') || normalized.includes('not found');
+        const displayMessage = isNotFound ? '잘못된 접근입니다.' : rawMessage;
         return (
             <div className={styles.wrapper}>
-                {renderBackRow()}
-                <div className={styles.errorBox}>{errorMessage}</div>
+                {renderBackButton()}
+                <div className={styles.errorBox}>
+                    <Image src={getCdnUrl('/images/error.jpg')} alt="오류" width={600} height={600} className={styles.statusIcon} />
+                    <span>{displayMessage}</span>
+                </div>
                 <div className={styles.actionRow}>
                     <button className={styles.listButton} onClick={handleBackClick}>목록</button>
                 </div>
@@ -102,11 +113,10 @@ export default function BoardDetailPage() {
         );
     }
 
-    const attachments = data.attachments ?? [];
-
     return (
         <div className={styles.wrapper}>
-            {renderBackRow()}
+            {renderBackButton()}
+            {renderTabSection()}
             <div className={styles.detailCard}>
                 <div className={styles.detailHeader}>
                     <div className={styles.titleRow}>

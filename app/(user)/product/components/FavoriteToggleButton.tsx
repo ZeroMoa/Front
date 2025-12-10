@@ -105,15 +105,23 @@ export default function FavoriteToggleButton({
             onChange?.({ isFavorite: resolvedIsFavorite, likesCount: resolvedLikesCount });
             persistFavoriteState({ productNo, isFavorite: resolvedIsFavorite, likesCount: resolvedLikesCount });
             } catch (error) {
-                const status = (error as Error & { status?: number }).status;
+                const rawStatus = (error as Error & { status?: number }).status;
+                const statusFromMessage =
+                    !rawStatus && error instanceof Error && /\b429\b/.test(error.message) ? 429 : undefined;
+                const status = rawStatus ?? statusFromMessage;
 
                 if (status === 401) {
                     alert('로그인 후 이용해주세요~.~');
                 } else if (status === 429) {
                     alert('너무 빠르게 누르고 있어요. 잠시 후 다시 시도해주세요.');
                 } else {
-                    const message = error instanceof Error ? error.message : '좋아요 처리 중 오류가 발생했습니다.';
-                    alert(message);
+                    const sanitizedMessage =
+                        error instanceof Error && /^API 요청 실패/i.test(error.message)
+                            ? '좋아요 처리 중 오류가 발생했습니다.'
+                            : error instanceof Error
+                              ? error.message
+                              : '좋아요 처리 중 오류가 발생했습니다.';
+                    alert(sanitizedMessage);
                 }
 
             // Rollback on error

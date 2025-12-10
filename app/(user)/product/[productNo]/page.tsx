@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -15,6 +15,7 @@ const PRODUCT_API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     'https://localhost:8443';
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
+const ERROR_IMAGE = getCdnUrl('/images/error.png');
 
 const SWEETENER_KEYWORDS = [
     '알룰로스',
@@ -31,6 +32,124 @@ const SWEETENER_KEYWORDS = [
     '타가토스',
 ];
 const CAFFEINE_KEYWORDS = ['카페인'];
+
+type IngredientHighlightType = 'sweetener' | 'caffeine';
+
+type IngredientSegment = {
+    text: string;
+    highlight?: IngredientHighlightType;
+};
+
+const INGREDIENT_HIGHLIGHT_RULES: Array<{ keywords: readonly string[]; type: IngredientHighlightType }> = [
+    { keywords: SWEETENER_KEYWORDS, type: 'sweetener' },
+    { keywords: CAFFEINE_KEYWORDS, type: 'caffeine' },
+];
+
+const splitIngredients = (value?: string | null): string[] => {
+    if (!value) {
+        return [];
+    }
+    const raw = value.trim();
+    if (!raw) {
+        return [];
+    }
+
+    const result: string[] = [];
+    let buffer = '';
+    let depth = 0;
+    let isBalanced = true;
+
+    for (const char of raw) {
+        if (char === '(') {
+            depth += 1;
+            buffer += char;
+            continue;
+        }
+        if (char === ')') {
+            depth -= 1;
+            if (depth < 0) {
+                isBalanced = false;
+            }
+            buffer += char;
+            continue;
+        }
+        if (char === ',' && depth === 0) {
+            if (buffer.trim()) {
+                result.push(buffer.trim());
+            }
+            buffer = '';
+            continue;
+        }
+        buffer += char;
+    }
+
+    if (buffer.trim()) {
+        result.push(buffer.trim());
+    }
+
+    if (!isBalanced || depth !== 0) {
+        return raw
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+
+    return result;
+};
+
+const segmentIngredientText = (value: string): IngredientSegment[] => {
+    if (!value) {
+        return [];
+    }
+
+    const segments: IngredientSegment[] = [];
+    let cursor = 0;
+
+    while (cursor < value.length) {
+        let bestMatch: { start: number; end: number; highlight: IngredientHighlightType } | null = null;
+
+        for (const rule of INGREDIENT_HIGHLIGHT_RULES) {
+            for (const keyword of rule.keywords) {
+                if (!keyword) {
+                    continue;
+                }
+                const index = value.indexOf(keyword, cursor);
+                if (index === -1) {
+                    continue;
+                }
+                if (
+                    bestMatch === null ||
+                    index < bestMatch.start ||
+                    (index === bestMatch.start && keyword.length > bestMatch.end - bestMatch.start)
+                ) {
+                    bestMatch = {
+                        start: index,
+                        end: index + keyword.length,
+                        highlight: rule.type,
+                    };
+                }
+            }
+        }
+
+        if (!bestMatch) {
+            segments.push({ text: value.slice(cursor) });
+            break;
+        }
+
+        if (bestMatch.start > cursor) {
+            segments.push({ text: value.slice(cursor, bestMatch.start) });
+        }
+
+        segments.push({
+            text: value.slice(bestMatch.start, bestMatch.end),
+            highlight: bestMatch.highlight,
+        });
+
+        cursor = bestMatch.end;
+    }
+
+    return segments;
+};
 
 const hasNumberValue = (value: number) => !Number.isNaN(value);
 const formatQuantity = (value: number, unit: string, emptyText = '없음') =>
@@ -192,6 +311,11 @@ export default function ProductDetail() {
         router.replace('/404');
     }, [shouldRedirectNotFound, router]);
 
+    const ingredientTokens = useMemo(
+        () => splitIngredients(product?.ingredients),
+        [product?.ingredients],
+    );
+
     if (isLoading) {
         return (
             <div className={styles.loading}>
@@ -205,7 +329,19 @@ export default function ProductDetail() {
         if (shouldRedirectNotFound) {
             return null;
         }
-        return <div className={styles.loading}>제품 정보를 불러오지 못했습니다.</div>;
+        return (
+            <div className={styles.error}>
+                <Image
+                    src={ERROR_IMAGE}
+                    alt="오류"
+                    width={320}
+                    height={240}
+                    className={styles.errorImage}
+                    priority
+                />
+                <p>제품 정보를 불러오지 못했습니다.</p>
+            </div>
+        );
     }
 
     if (!product) {
@@ -357,7 +493,7 @@ export default function ProductDetail() {
                                     <span className={styles.productHeaderDivider} aria-hidden="true" />
                                     {product.companyName?.trim() && (
                                         <>
-                                            <p className={styles.companyNameDetail}>{product.companyName.trim()}</p>
+                                            <p className={styles.companyNameDetail}>회사명 : {product.companyName.trim()}</p>
                                             <span className={styles.productHeaderDivider} aria-hidden="true" />
                                         </>
                                     )}
@@ -411,38 +547,54 @@ export default function ProductDetail() {
                             </div>
                         )}
 
-                        {nutritionRows.length > 0 && product.ingredients && product.ingredients.trim() && (
+                        {nutritionRows.length > 0 && ingredientTokens.length > 0 && (
                             <div className={styles.sectionDivider} aria-hidden="true" />
                         )}
                     </div>
 
-                    {product.ingredients && product.ingredients.trim() && (
-                                <div className={styles.ingredients}>
-                                    <h3 className={styles.sectionTitle}>원재료</h3>
-                                    <p>
-                                {product.ingredients.split(',').map((ingredient, index) => {
-                                    const label = ingredient.trim();
-                                    if (!label) {
-                                        return null;
-                                    }
+                    {ingredientTokens.length > 0 && (
+                        <div className={styles.ingredients}>
+                            <h3 className={styles.sectionTitle}>원재료</h3>
+                            <p>
+                                {ingredientTokens.map((ingredient, index) => {
+                                    const segments = segmentIngredientText(ingredient);
+                                    const resolvedSegments = segments.length > 0 ? segments : [{ text: ingredient }];
+
                                     return (
-                                        <span
-                                            key={`${label}-${index}`}
-                                            className={`${styles.ingredient} ${
-                                                SWEETENER_KEYWORDS.some((keyword) => label.includes(keyword))
-                                                    ? styles.ingredientHighlightSweetener
-                                                    : CAFFEINE_KEYWORDS.some((keyword) => label.includes(keyword))
-                                                    ? styles.ingredientHighlightCaffeine
-                                                    : ''
-                                            }`.trim()}
-                                        >
-                                            {label}
-                                            </span>
+                                        <span key={`${ingredient}-${index}`} className={styles.ingredient}>
+                                            {resolvedSegments.map((segment, segmentIndex) => {
+                                                if (!segment.text) {
+                                                    return null;
+                                                }
+                                                if (segment.highlight) {
+                                                    const highlightClass =
+                                                        segment.highlight === 'sweetener'
+                                                            ? styles.ingredientKeywordSweetener
+                                                            : styles.ingredientKeywordCaffeine;
+                                                    return (
+                                                        <span
+                                                            key={`${ingredient}-${index}-segment-${segmentIndex}`}
+                                                            className={`${styles.ingredientKeyword} ${highlightClass}`}
+                                                        >
+                                                            {segment.text}
+                                                        </span>
+                                                    );
+                                                }
+                                                return (
+                                                    <span
+                                                        key={`${ingredient}-${index}-segment-${segmentIndex}`}
+                                                        className={styles.ingredientText}
+                                                    >
+                                                        {segment.text}
+                                                    </span>
+                                                );
+                                            })}
+                                        </span>
                                     );
                                 })}
-                                    </p>
-                                </div>
-                            )}
+                            </p>
+                        </div>
+                    )}
                         </section>
                     </main>
                     

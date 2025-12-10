@@ -20,7 +20,7 @@ const EMAIL_DOMAINS = [
     'outlook.com',
     'kakao.com',
 ];
-const RESET_TOKEN_DURATION_SECONDS = 10; // 5분
+const RESET_TOKEN_DURATION_SECONDS = 300; // 5분
 const NETWORK_ERROR_MESSAGE = '서버와 연결이 끊어졌습니다.';
 const PASSWORD_NOT_FOUND_MESSAGE = '아이디나 이메일을 잘못입력하셨습니다.';
 
@@ -41,8 +41,14 @@ const extractErrorMessage = (rawError: unknown): string => {
 
 const mapPasswordInitiateError = (error: unknown): string => {
     const rawMessage = extractErrorMessage(error);
+    if (!rawMessage) {
+        return '비밀번호 찾기 중 오류가 발생했습니다.';
+    }
     if (rawMessage.includes('Failed to fetch')) {
         return NETWORK_ERROR_MESSAGE;
+    }
+    if (/올바른 형식의 이메일 주소|Email\.|Email\b|\bemail\b|이메일/i.test(rawMessage)) {
+        return '잘못된 이메일 형식입니다.';
     }
     if (rawMessage.includes('인증 자격')) {
         return PASSWORD_NOT_FOUND_MESSAGE;
@@ -236,15 +242,15 @@ const handleTokenExpiration = useCallback(() => {
                                 <label htmlFor="findPwEmail">이메일</label>
                                 <div className={styles.boxEmail}>
                                     <div className={`${styles.boxInput} ${emailFront ? styles.hasValue : ''}`}>
-                                        <input
+                                <input
                                             type="text"
-                                            id="findPwEmail"
+                                    id="findPwEmail"
                                             className={`${styles.inputInfo} ${styles.emailInput}`}
                                             placeholder="이메일 앞자리 입력"
                                             value={emailFront}
                                             onChange={(e) => setEmailFront(e.target.value)}
-                                            required
-                                        />
+                                    required
+                                />
                                     </div>
                                     <div className={styles.textAt}>@</div>
                                     <div ref={emailDropdownRef} className={styles.boxSelect}>

@@ -172,7 +172,6 @@ export const NEW_PRODUCTS_PAGE_CONFIG: NewProductsPageConfig = {
     defaultSort: 'createdDate,desc',
     pageSizeOptions: [30, 60, 90],
     heroItems: [
-        { slug: 'all', label: '전체 신제품' },
         { slug: 'drinks', label: '음료 신제품' },
         { slug: 'snacks', label: '과자 신제품' },
         { slug: 'icecream', label: '아이스크림 신제품' },

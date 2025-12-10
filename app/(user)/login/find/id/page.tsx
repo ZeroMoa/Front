@@ -34,8 +34,14 @@ const getRawErrorMessage = (error: unknown): string => {
 
 const getFindIdFriendlyError = (error: unknown): string => {
     const rawMessage = getRawErrorMessage(error);
+    if (!rawMessage) {
+        return '아이디 찾기 중 오류가 발생했습니다.';
+    }
     if (rawMessage.includes('Failed to fetch')) {
         return '서버와 연결이 끊어졌습니다.';
+    }
+    if (/올바른 형식의 이메일 주소|Email\.|Email\b|\bemail\b|이메일/i.test(rawMessage)) {
+        return '잘못된 이메일 형식입니다.';
     }
     if (rawMessage.includes('인증 자격')) {
         return '이메일 주소를 잘못 입력하셨습니다.';

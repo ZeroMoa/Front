@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import CircularProgress from '@mui/material/CircularProgress'
 import styles from './page.module.css'
 import ProductGrid from '../product/components/ProductGrid'
 import { fetchFavoriteProducts } from '../store/api/userFavoriteApi'
@@ -36,6 +37,8 @@ export default function HomePage() {
     const [isNewLoading, setIsNewLoading] = useState(false);
     const [newError, setNewError] = useState<string | null>(null);
     const [hasHydrated, setHasHydrated] = useState(false);
+    const [hasLoadedFavorites, setHasLoadedFavorites] = useState(false);
+    const [hasLoadedNew, setHasLoadedNew] = useState(false);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -73,10 +76,12 @@ export default function HomePage() {
                 setFavoriteProducts([]);
                 setFavoriteError(null);
                 setIsFavoriteLoading(false);
+                setHasLoadedFavorites(true);
                 return;
             }
 
             setIsFavoriteLoading(true);
+            setHasLoadedFavorites(false);
             setFavoriteError(null);
 
             try {
@@ -86,7 +91,7 @@ export default function HomePage() {
                 }
             } catch (error) {
                 if (!cancelled) {
-                    const fallbackMessage = '좋아요한 제품을 불러오지 못했습니다.';
+                    const fallbackMessage = '좋아하는 상품을 불러오지 못했습니다.';
                     const message =
                         error instanceof Error && error.message && !isNetworkErrorMessage(error.message)
                             ? error.message
@@ -97,6 +102,7 @@ export default function HomePage() {
             } finally {
                 if (!cancelled) {
                     setIsFavoriteLoading(false);
+                    setHasLoadedFavorites(true);
                 }
             }
         };
@@ -121,6 +127,7 @@ export default function HomePage() {
 
         const loadNewProducts = async () => {
             setIsNewLoading(true);
+            setHasLoadedNew(false);
             setNewError(null);
 
             try {
@@ -141,6 +148,7 @@ export default function HomePage() {
             } finally {
                 if (!cancelled) {
                     setIsNewLoading(false);
+                    setHasLoadedNew(true);
                 }
             }
         };
@@ -155,6 +163,10 @@ export default function HomePage() {
     const handleViewAllNew = () => {
         router.push('/product/new');
     };
+
+    const showNewLoading = isNewLoading || !hasLoadedNew;
+    const shouldShowFavoriteLoading =
+        !hasHydrated || authLoading || (isAuthenticated && (!hasLoadedFavorites || isFavoriteLoading));
 
     return (
         <main>
@@ -311,14 +323,23 @@ export default function HomePage() {
             <div className={styles.sectionDivider} aria-hidden="true" />
             <section className={styles.newSection}>
                 <div className={styles.favoriteHeader}>
-                    <h2 className={styles.favoriteTitle}>따끈따끈 신제품</h2>
+                    <h2 className={styles.favoriteTitle}>
+                        따끈따끈 <span className={styles.highlightNew}>신제품</span>
+                    </h2>
                     <button type="button" className={styles.favoriteViewAllButton} onClick={handleViewAllNew}>
                         전체 보기
                     </button>
                 </div>
 
-                {isNewLoading ? null : newError ? (
-                    <p className={styles.favoriteError}>{newError}</p>
+                {showNewLoading ? (
+                    <div className={styles.sectionLoadingBox} role="status">
+                        <CircularProgress size={36} />
+                        <span>목록을 불러오는 중...</span>
+                    </div>
+                ) : newError ? (
+                    <div className={styles.sectionErrorBox} role="alert">
+                        <p>{newError}</p>
+                    </div>
                 ) : newProducts.length === 0 ? (
                     <p className={styles.favoriteMessage}>아직 등록된 신제품이 없어요.</p>
                 ) : (
@@ -328,16 +349,25 @@ export default function HomePage() {
             <div className={styles.sectionDivider} aria-hidden="true" />
             <section className={styles.favoriteSection}>
                 <div className={styles.favoriteHeader}>
-                    <h2 className={styles.favoriteTitle}>내가 좋아하는 상품</h2>
+                    <h2 className={styles.favoriteTitle}>
+                        내가 <span className={styles.highlightFavorite}>좋아하는</span> 상품
+                    </h2>
                     <button type="button" className={styles.favoriteViewAllButton} onClick={handleViewAllFavorites}>
                         전체 보기
                     </button>
                 </div>
 
-                {!hasHydrated ? null : !queryIsLoggedIn && !authLoading ? (
+                {shouldShowFavoriteLoading ? (
+                    <div className={styles.sectionLoadingBox} role="status">
+                        <CircularProgress size={36} />
+                        <span>목록을 불러오는 중...</span>
+                    </div>
+                ) : !isAuthenticated ? (
                     <p className={styles.favoriteMessage}>로그인 후 좋아하는 제품을 확인해보세요!</p>
-                ) : authLoading || isFavoriteLoading ? null : favoriteError ? (
-                    <p className={styles.favoriteError}>{favoriteError}</p>
+                ) : favoriteError ? (
+                    <div className={styles.sectionErrorBox} role="alert">
+                        <p>{favoriteError}</p>
+                    </div>
                 ) : favoriteProducts.length === 0 ? (
                     <p className={styles.favoriteMessage}>아직 좋아요한 제품이 없어요.</p>
                 ) : (

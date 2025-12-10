@@ -8,6 +8,8 @@ import { useAppDispatch } from '../../../store/slices/store';
 import { logout } from '../../../store/slices/authSlice';
 import { useQueryClient } from '@tanstack/react-query';
 import CircularProgress from '@mui/material/CircularProgress';
+import Image from 'next/image';
+import { getCdnUrl } from '@/lib/cdn';
 
 const REASON_ORDER = [
     '정보가 적음',
@@ -30,6 +32,7 @@ export default function WithdrawPage() {
     const [passwordError, setPasswordError] = useState<string | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value, checked } = e.target;
@@ -99,10 +102,17 @@ export default function WithdrawPage() {
                     </div>
                     <div className={styles.noticeContentWrapper}>
                         <div className={styles.noticeContent}>
-                            고객님께서 회원 탈퇴를 원하신다니 저희 서비스가 많이 부족하고 미흡했나 봅니다. 불편하셨던 점이나 불만사항을 알려주시면 적극 반영해서 고객님의 불편함을 해결해 드리도록 노력하겠습니다.
-                            <strong className={styles.strongText}>아울러 회원 탈퇴 시 아래 사항을 숙지하시기 바랍니다.</strong>
+                            <p className={styles.noticeParagraph}>
+                                고객님께서 회원 탈퇴를 원하신다니 저희 서비스가 많이 부족하고 미흡했나 봅니다.
+                            </p>
+                            <p className={styles.noticeParagraph}>
+                                불편하셨던 점이나 불만사항을 알려주시면 적극 반영해 고객님의 불편함을 해결해 드리도록 노력하겠습니다.
+                            </p>
+                            <p className={styles.noticeParagraph}>
+                                아울러 회원 탈퇴 시 아래 사항을 숙지하시기 바랍니다.
+                            </p>
                             <ul>
-                                <li className={styles.listItem}>1. 회원 탈퇴 시 고객님의 정보는 서비스 약관 및 관련 법령에 의거하여 3개월동안 보관 후 파기됩니다.</li>
+                                <li className={styles.listItem}>1. 회원 탈퇴 시 고객님의 정보는 서비스 약관 및 관련 법령에 의거하여 3개월 동안 보관 후 파기됩니다.</li>
                                 <li className={styles.listItem}>2. 탈퇴한 아이디는 재사용 및 복구가 불가능합니다.</li>
                                 <li className={styles.listItem}>3. 회원 탈퇴 후 일정 기간(예: 3개월) 동안 재가입이 불가능합니다.</li>
                             </ul>
@@ -122,11 +132,24 @@ export default function WithdrawPage() {
                                     id="password"
                                     name="password"
                                     placeholder="현재 비밀번호를 입력해주세요"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     className={`${styles.inputField} ${isPasswordError ? styles.inputError : ''}`}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
+                                <button
+                                    type="button"
+                                    className={styles.passwordToggle}
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                                >
+                                    <Image
+                                        src={getCdnUrl(showPassword ? '/images/open_eye.png' : '/images/closed_eye.png')}
+                                        alt={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                                        width={20}
+                                        height={20}
+                                    />
+                                </button>
                             </div>
                         </div>
                         {passwordError && <p className={styles.errorMessage}>{passwordError}</p>}
