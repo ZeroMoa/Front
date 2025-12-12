@@ -64,6 +64,8 @@ export default function BoardPage() {
         const trimmed = searchQuery.trim();
         if (!trimmed) {
             setKeyword('');
+            setSearchType('TITLE_OR_CONTENT');
+            setBoardTypeFilter('ALL');
             setPage(0);
             return;
         }
@@ -131,7 +133,15 @@ export default function BoardPage() {
   }
 
   const handleHeadingClick = () => {
-    router.push('/admin/boards')
+    if (isLoading) {
+      return
+    }
+    setSearchQuery('')
+    setKeyword('')
+    setSearchType('TITLE_OR_CONTENT')
+    setBoardTypeFilter('ALL')
+    setPage(0)
+    router.replace('/admin/boards')
   }
 
   const listContent = () => {
@@ -264,8 +274,11 @@ export default function BoardPage() {
                             className={styles.selectField}
                             value={searchType}
                             onChange={(event) => {
-                setSearchType(event.target.value as BoardSearchType)
-                setPage(0)
+                                const nextType = event.target.value as BoardSearchType
+                                setSearchType(nextType)
+                                if (keyword) {
+                                    setPage(0)
+                                }
                             }}
                         >
                             {BOARD_SEARCH_TYPE_OPTIONS.map((option) => (
@@ -278,8 +291,11 @@ export default function BoardPage() {
                             className={styles.selectField}
                             value={boardTypeFilter}
                             onChange={(event) => {
-                setBoardTypeFilter(event.target.value as 'ALL' | BoardType)
-                setPage(0)
+                                const nextType = event.target.value as 'ALL' | BoardType
+                                setBoardTypeFilter(nextType)
+                                if (keyword) {
+                                    setPage(0)
+                                }
                             }}
                         >
                             <option value="ALL">전체</option>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useRef, useEffect, type ChangeEvent, type FormEvent } from 'react'
+import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import styles from './page.module.css'
@@ -13,6 +13,7 @@ import {
   useUpdateAdminNotificationStatus,
 } from '@/app/admin/hooks/notificationHooks'
 import type { AdminNotificationResponse } from '@/types/notificationTypes'
+import SortableHeader from '@/components/table/SortableHeader'
 import {
   formatDateTime,
   INITIAL_FILTERS,
@@ -25,6 +26,9 @@ import {
   type SortState,
 } from '@/constants/adminNotificationsConstants'
 import { createNotificationQueryParams } from '@/lib/utils/notificationUtils'
+import CircularProgress from '@mui/material/CircularProgress'
+
+const UNSORTED_SORT_STATE: SortState = { field: null, direction: null }
 
 function nextSortState(current: SortState, field: SortKey): SortState {
   if (current.field !== field) {
@@ -35,7 +39,7 @@ function nextSortState(current: SortState, field: SortKey): SortState {
     return { field, direction: 'desc' }
   }
 
-  return INITIAL_SORT_STATE
+  return UNSORTED_SORT_STATE
 }
 
 export default function AdminNotificationsPage() {
@@ -88,20 +92,6 @@ export default function AdminNotificationsPage() {
       return matchTitle && matchBoardNo && matchActive
     })
   }, [data?.content, filters.boardNo, filters.isActive, filters.title])
-
-  const displayNumberMapRef = useRef<Record<string, number>>({})
-  const nextDisplayNoRef = useRef(1)
-
-  useEffect(() => {
-    const notifications = filteredContent
-    notifications.forEach((notification) => {
-      const pairKey = `${notification.adminNotificationNo}-${notification.boardNo ?? 'null'}`
-      if (!displayNumberMapRef.current[pairKey]) {
-        displayNumberMapRef.current[pairKey] = nextDisplayNoRef.current
-        nextDisplayNoRef.current += 1
-      }
-    })
-  }, [filteredContent])
 
   const totalElements = data?.totalElements ?? filteredContent.length
   const totalPages = data?.totalPages ?? 0
@@ -267,34 +257,11 @@ export default function AdminNotificationsPage() {
       </div>
 
       <div className={styles.tableWrapper}>
-        <div className={styles.tableHeaderRow}>
-          {TABLE_COLUMNS.map((column) => {
-            const isActiveSort = sortState.field === column.key
-            const directionSymbol =
-              isActiveSort && sortState.direction
-                ? sortState.direction === 'asc'
-                  ? '▲'
-                  : '▼'
-                : '↕'
-
-            return (
-              <button
-                key={column.key}
-                type="button"
-                className={styles.tableHeaderCell}
-                style={{ width: column.width }}
-                onClick={() => handleSort(column.key)}
-              >
-                <span>{column.label}</span>
-                <span className={styles.sortIndicator}>{directionSymbol}</span>
-              </button>
-            )
-          })}
-          <div className={`${styles.tableHeaderCell} ${styles.actionsHeader}`}>관리</div>
-        </div>
-
         {isLoading ? (
-          <div className={styles.loadingState}>알림을 불러오는 중입니다...</div>
+          <div className={styles.loadingState} role="status">
+          <CircularProgress size={32} />
+          <span>알림을 불러오는 중입니다...</span>
+        </div>
         ) : isError ? (
           <div className={styles.errorState}>
             {error instanceof Error ? error.message : '알림을 불러오지 못했습니다.'}
@@ -302,23 +269,39 @@ export default function AdminNotificationsPage() {
         ) : filteredContent.length === 0 ? (
           <div className={styles.emptyState}>표시할 알림이 없습니다.</div>
         ) : (
-          <ul className={styles.tableBody}>
+          <table className={styles.table}>
+            <thead className={styles.tableHead}>
+              <tr>
+                {TABLE_COLUMNS.map((column) => {
+                  const activeDirection = sortState.field === column.key ? sortState.direction : null
+                  return (
+                    <th key={column.key} className={styles.tableHeadCell} onClick={() => handleSort(column.key)}>
+                      <SortableHeader label={column.label} direction={activeDirection} />
+                    </th>
+                  )
+                })}
+                <th className={`${styles.tableHeadCell} ${styles.actionsHeader}`} aria-label="관리 열">관리</th>
+              </tr>
+            </thead>
+            <tbody className={styles.tableBody}>
             {filteredContent.map((notification, index) => {
               const [sentDate, sentTime] = formatDateTime(notification.sentAt)
               const [createdDate, createdTime] = formatDateTime(notification.createdDate)
               const [updatedDate, updatedTime] = formatDateTime(notification.updatedDate)
-              const rowNumber = baseRowNumber + index + 1
-              const pairKey = `${notification.adminNotificationNo}-${notification.boardNo ?? 'null'}`
-              const displayNo = displayNumberMapRef.current[pairKey] ?? rowNumber
+              const adminDisplayNo =
+                notification.displayIndex ?? notification.adminNotificationNo ?? baseRowNumber + index + 1
+              const boardDisplayNo = notification.boardDisplayIndex ?? notification.boardNo ?? '—'
+              const boardLinkTarget = notification.boardNo
+
               return (
-                <li key={notification.adminNotificationNo} className={styles.tableRow}>
-                  <div className={styles.tableCell} style={{ width: TABLE_COLUMNS[0].width }}>
-                    {displayNo}
-                  </div>
-                  <div className={styles.tableCell}>
+                <tr key={notification.adminNotificationNo} className={styles.tableRow}>
+                  <td className={styles.tableCell}>
+                    {adminDisplayNo}
+                  </td>
+                  <td className={styles.tableCell}>
                     {notification.title ? (
-                      notification.boardNo ? (
-                        <Link href={`/admin/boards/${notification.boardNo}`} className={styles.boardLink}>
+                      typeof boardLinkTarget === 'number' ? (
+                        <Link href={`/admin/boards/${boardLinkTarget}`} className={styles.boardLink}>
                           {notification.title}
                         </Link>
                       ) : (
@@ -327,15 +310,17 @@ export default function AdminNotificationsPage() {
                     ) : (
                       '—'
                     )}
-                  </div>
-                  <div className={styles.tableCell} style={{ width: TABLE_COLUMNS[2].width }}>
-                    {displayNo}
-                  </div>
-                  <div className={styles.tableCell} style={{ width: TABLE_COLUMNS[3].width }}>
-                    <span className={styles.dateLine}>{sentDate}</span>
-                    <span className={styles.timeLine}>{sentTime}</span>
-                  </div>
-                  <div className={styles.tableCell} style={{ width: TABLE_COLUMNS[4].width }}>
+                  </td>
+                  <td className={styles.tableCell}>
+                    {boardDisplayNo}
+                  </td>
+                  <td className={styles.tableCell}>
+                    <div className={styles.dateCell}>
+                      <span className={styles.dateLine}>{sentDate}</span>
+                      <span className={styles.timeLine}>{sentTime}</span>
+                    </div>
+                  </td>
+                  <td className={styles.tableCell}>
                     <label
                       className={`${styles.toggleSwitch} ${notification.isActive ? styles.toggleSwitchActive : ''}`}
                     >
@@ -346,24 +331,29 @@ export default function AdminNotificationsPage() {
                       />
                       <span className={styles.toggleButton} />
                     </label>
-                  </div>
-                  <div className={styles.tableCell} style={{ width: TABLE_COLUMNS[5].width }}>
-                    <span className={styles.dateLine}>{createdDate}</span>
-                    <span className={styles.timeLine}>{createdTime}</span>
-                  </div>
-                  <div className={styles.tableCell} style={{ width: TABLE_COLUMNS[6].width }}>
-                    <span className={styles.dateLine}>{updatedDate}</span>
-                    <span className={styles.timeLine}>{updatedTime}</span>
-                  </div>
-                  <div className={`${styles.tableCell} ${styles.actionsCell}`}>
+                  </td>
+                  <td className={styles.tableCell}>
+                    <div className={styles.dateCell}>
+                      <span className={styles.dateLine}>{createdDate}</span>
+                      <span className={styles.timeLine}>{createdTime}</span>
+                    </div>
+                  </td>
+                  <td className={styles.tableCell}>
+                    <div className={styles.dateCell}>
+                      <span className={styles.dateLine}>{updatedDate}</span>
+                      <span className={styles.timeLine}>{updatedTime}</span>
+                    </div>
+                  </td>
+                  <td className={`${styles.tableCell} ${styles.actionsCell}`}>
                     <button type="button" className={styles.deleteButton} onClick={() => handleDelete(notification)}>
                       삭제
                     </button>
-                  </div>
-                </li>
+                  </td>
+                </tr>
               )
             })}
-          </ul>
+            </tbody>
+          </table>
         )}
       </div>
 

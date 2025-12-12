@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.css'
+import { getCdnUrl } from '@/lib/cdn';
 
 const ADMIN_LOGIN_ENDPOINT = `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? ''}/login`
 
@@ -79,14 +80,14 @@ export default function AdminLoginPage() {
       })
 
       if (!meResponse.ok) {
-        setErrorAndClose('어드민 계정이 아닙니다.')
+        setErrorAndClose('관리자 계정이 아닙니다.')
         return
       }
 
       const meData = await meResponse.json()
       const normalizedRole = typeof meData?.roleType === 'string' ? meData.roleType.toUpperCase() : ''
       if (normalizedRole !== 'ADMIN' && normalizedRole !== 'ROLE_ADMIN') {
-        setErrorAndClose('어드민 계정이 아닙니다.')
+        setErrorAndClose('관리자 계정이 아닙니다.')
         return
       }
 
@@ -113,7 +114,7 @@ export default function AdminLoginPage() {
             <div className={styles.loadingContent}>로그인 중...</div>
           </div>
         )}
-        <Image src="/images/logo2.png" alt="제로모아" width={320} height={112} priority className={styles.logo} />
+        <Image src={getCdnUrl("/images/logo2.png")} alt="제로모아" width={320} height={112} priority className={styles.logo} />
         <h1 className={styles.title}>관리자 로그인</h1>
 
         {error && <div className={styles.errorMessage}>{error}</div>}
@@ -157,7 +158,7 @@ export default function AdminLoginPage() {
                 aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
               >
                 <Image
-                  src={showPassword ? '/images/open_eye.png' : '/images/closed_eye.png'}
+                  src={showPassword ? getCdnUrl('/images/open_eye.png') : getCdnUrl('/images/closed_eye.png')}
                   alt={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                   width={22}
                   height={22}

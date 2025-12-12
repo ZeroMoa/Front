@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import styles from './page.module.css'
 import Pagination from '@/components/pagination/Pagination'
+import SortableHeader from '@/components/table/SortableHeader'
 import { useWithdrawSurveys } from '@/app/admin/hooks/withdrawSurveyHooks'
 import {
   buildWithdrawSurveyParams,
@@ -10,9 +11,11 @@ import {
   normalizeReasonCode,
   sortReasonCodes,
 } from '@/lib/utils/surveyUtils'
-import type { SortKey } from '@/types/withdrawSurveyTypes'
+import type { SortKey, WithdrawSurvey } from '@/types/withdrawSurveyTypes'
 import {
   COLUMN_HEADERS,
+  DEFAULT_SORT_DIRECTION,
+  DEFAULT_SORT_FIELD,
   PAGE_SIZE_OPTIONS,
   PIE_COLORS,
   PRIORITY_REASON_LABELS,
@@ -27,6 +30,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import { fetchWithdrawSurveys } from '@/app/admin/store/api/withdrawSurveyApi'
 import 'dayjs/locale/ko'
+import { useRouter } from 'next/navigation'
 
 dayjs.locale('ko')
 dayjs.extend(isSameOrAfter)
@@ -79,12 +83,27 @@ const toDateInputValue = (value?: string | null) => {
   return parsed.toISOString().slice(0, 10)
 }
 
+const DETAIL_CACHE_KEY = 'withdrawSurveyDetailCache'
+
+const cacheSurveyDetail = (survey: WithdrawSurvey) => {
+  if (typeof window === 'undefined') return
+  try {
+    const raw = window.sessionStorage.getItem(DETAIL_CACHE_KEY)
+    const parsed = raw ? (JSON.parse(raw) as Record<string, WithdrawSurvey>) : {}
+    parsed[String(survey.id)] = survey
+    window.sessionStorage.setItem(DETAIL_CACHE_KEY, JSON.stringify(parsed))
+  } catch (error) {
+    console.warn('설문조사 상세 캐시 저장 실패', error)
+  }
+}
+
 export default function WithdrawSurveyPage() {
+  const router = useRouter()
   const [viewMode, setViewMode] = useState<'table' | 'chart'>('table')
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(PAGE_SIZE_OPTIONS[0])
-  const [sortField, setSortField] = useState<SortKey | null>(null)
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [sortField, setSortField] = useState<SortKey | null>(DEFAULT_SORT_FIELD)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(DEFAULT_SORT_DIRECTION)
   const [selectedReasons, setSelectedReasons] = useState<string[]>([])
   const [usernameFilter, setUsernameFilter] = useState('')
   const [fromDate, setFromDate] = useState('')
@@ -152,15 +171,10 @@ export default function WithdrawSurveyPage() {
 
   const handleSortChange = (field: SortKey) => {
     if (sortField === field) {
-      if (sortDirection === 'asc') {
-        setSortDirection('desc')
-      } else {
-        setSortField(null)
-        setSortDirection('asc')
-      }
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortField(field)
-      setSortDirection(field === 'id' ? 'desc' : 'asc')
+      setSortDirection('desc')
     }
     setPage(0)
   }
@@ -249,7 +263,13 @@ export default function WithdrawSurveyPage() {
       })
       if (!cancelled) {
         setGlobalReasonCounts(buildOrderedReasonList(map))
-        setGlobalEarliestDate(statistics.earliestCreatedDate ?? null)
+        const nextEarliest = statistics.earliestCreatedDate ?? null
+        if (nextEarliest) {
+          setGlobalEarliestDate((prev) => {
+            if (!prev) return nextEarliest
+            return nextEarliest < prev ? nextEarliest : prev
+          })
+        }
       }
       return
     }
@@ -305,12 +325,16 @@ export default function WithdrawSurveyPage() {
 
       if (!cancelled) {
         setGlobalReasonCounts(aggregated.size > 0 ? buildOrderedReasonList(aggregated) : [])
-        setGlobalEarliestDate(earliest)
+        if (earliest) {
+          setGlobalEarliestDate((prev) => {
+            if (!prev) return earliest
+            return earliest < prev ? earliest : prev
+          })
+        }
       }
     }
 
     setGlobalReasonCounts([])
-    setGlobalEarliestDate(null)
     loadAllPages()
 
     return () => {
@@ -409,8 +433,8 @@ export default function WithdrawSurveyPage() {
     setUsernameFilter('')
     setFromDate('')
     setToDate('')
-    setSortField(null)
-    setSortDirection('asc')
+    setSortField(DEFAULT_SORT_FIELD)
+    setSortDirection(DEFAULT_SORT_DIRECTION)
     setPage(0)
   }
 
@@ -423,22 +447,24 @@ export default function WithdrawSurveyPage() {
       <div className={styles.pageWrapper}>
       <div className={styles.headerSection}>
         <div className={styles.titleGroup}>
-          <h1 className={styles.pageTitle}>탈퇴 설문 조사를 확인하세요</h1>
+          <h1 className={styles.pageTitle}>탈퇴 설문 조사</h1>
           <span className={styles.totalCount}>총 {totalElements.toLocaleString()}건</span>
         </div>
       </div>
 
       <div className={styles.controlsRow}>
-        <div className={styles.pageSizeControl}>
-          페이지 크기
-          <select className={styles.pageSizeSelect} value={size} onChange={handlePageSizeChange}>
-            {PAGE_SIZE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}개씩 보기
-              </option>
-            ))}
-          </select>
-        </div>
+        {viewMode === 'table' && (
+          <div className={styles.pageSizeControl}>
+            페이지 크기
+            <select className={styles.pageSizeSelect} value={size} onChange={handlePageSizeChange}>
+              {PAGE_SIZE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}개씩 보기
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <label className={styles.toggleSwitch}>
           <input
             type="checkbox"
@@ -526,7 +552,6 @@ export default function WithdrawSurveyPage() {
                       fontSize: '14px',
                       color: '#2f3f69',
                       textAlign: 'justify',
-                      justifyItems: 'center',
                     },
                   },
                 },
@@ -589,7 +614,7 @@ export default function WithdrawSurveyPage() {
 
       {isLoading && (
         <div className={styles.loadingState}>
-          <CircularProgress size={28} />
+          <CircularProgress size={32} />
           <span>설문 데이터를 불러오는 중입니다…</span>
         </div>
       )}
@@ -609,22 +634,22 @@ export default function WithdrawSurveyPage() {
                 {COLUMN_HEADERS.map((column) => {
                   const { key, label } = column
                   const width = 'width' in column ? column.width : undefined
-                  const sortable = key === 'id' || key === 'createdDate'
+                  const sortable = 'sortable' in column && Boolean(column.sortable)
                   return (
                     <th key={key} style={width ? { width } : undefined}>
                       {sortable ? (
                         <button
                           type="button"
                           className={styles.headerButton}
-                          onClick={() => handleSortChange(key as SortKey)}
+                          onClick={() => handleSortChange(column.key as SortKey)}
                         >
-                          <span>{label}</span>
-                          <span className={styles.sortSymbol}>
-                            {sortField === key ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
-                          </span>
+                          <SortableHeader
+                            label={label}
+                            direction={sortField === (column.key as SortKey) ? sortDirection : null}
+                          />
                         </button>
                       ) : (
-                        label
+                        <span className={styles.headerLabel}>{label}</span>
                       )}
                     </th>
                   )
@@ -633,8 +658,24 @@ export default function WithdrawSurveyPage() {
             </thead>
             <tbody className={styles.tableBody}>
               {filteredSurveys.map((survey) => (
-                <tr key={survey.id} className={styles.tableRow}>
-                  <td className={styles.tableCell}>{survey.id}</td>
+                <tr
+                  key={survey.id}
+                  className={styles.tableRow}
+                  onClick={() => {
+                    cacheSurveyDetail(survey)
+                    router.push(`/admin/survey/withdraw/${survey.id}`)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      cacheSurveyDetail(survey)
+                      router.push(`/admin/survey/withdraw/${survey.id}`)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <td className={styles.tableCell}>{survey.displayIndex ?? '—'}</td>
                   <td className={styles.tableCell}>
                     <div>
                       <strong>{survey.username || '—'}</strong>
@@ -657,8 +698,8 @@ export default function WithdrawSurveyPage() {
                     <div className={styles.dateCell}>
                       {formatDateParts(survey.createdDate) ? (
                         <>
-                          <span>{formatDateParts(survey.createdDate)!.dateLine}</span>
-                          <span>{formatDateParts(survey.createdDate)!.timeLine}</span>
+                          <span className={styles.dateLine}>{formatDateParts(survey.createdDate)!.dateLine}</span>
+                          <span className={styles.timeLine}>{formatDateParts(survey.createdDate)!.timeLine}</span>
                         </>
                       ) : (
                         '—'

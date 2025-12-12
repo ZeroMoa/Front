@@ -255,20 +255,31 @@
   transform: translateY(-1px);
 }
 
-.sortSymbol {
-  font-size: 12px;
-  color: rgba(79, 124, 255, 0.9);
-}
-
 .headerButton {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 100%;
+  padding: 18px 22px;
   border: none;
   background: transparent;
   color: inherit;
   font: inherit;
   cursor: pointer;
+  text-align: left;
+  gap: 8px;
+}
+
+.headerButton:hover {
+  background: rgba(214, 226, 255, 0.32);
+}
+
+.headerLabel {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  padding: 18px 22px;
 }
 
 .tableHead {
@@ -277,11 +288,12 @@
 }
 
 .tableHead th {
-  padding: 18px 22px;
+  padding: 0;
   font-size: 15px;
   font-weight: 700;
   text-align: left;
   border-bottom: 1px solid rgba(210, 220, 245, 0.6);
+  user-select: none;
 }
 
 .tableBody tr {
@@ -295,6 +307,7 @@
 
 .tableRow {
   transition: background-color 0.2s ease;
+  cursor: pointer;
 }
 
 .tableRow:hover {
@@ -339,11 +352,22 @@
 }
 
 .dateCell {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
   gap: 4px;
-  color: #485580;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.dateLine {
+  color: #1f2f5c;
+}
+
+.timeLine {
+  font-size: 13px;
+  color: rgba(31, 47, 92, 0.7);
 }
 
 .emptyState {

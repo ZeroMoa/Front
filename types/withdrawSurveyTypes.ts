@@ -1,6 +1,7 @@
-export type SortKey = 'id' | 'createdDate' | 'updatedDate'
+export type SortKey = 'displayIndex'
 
 export interface WithdrawSurvey {
+  displayIndex: number
   id: number
   userId: number
   username: string

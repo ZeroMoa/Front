@@ -165,6 +165,12 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   )
 
   const childCategories = selectedParentGroup?.children ?? []
+  const canSelectChildCategory = childCategories.length > 0
+  const childCategoryPlaceholder = !categoryParentId
+    ? '상위 카테고리를 먼저 선택하세요'
+    : canSelectChildCategory
+    ? '세부 카테고리를 선택하세요'
+    : '세부 카테고리가 없는 카테고리입니다'
 
   const selectedCategoryLabel = useMemo(() => {
     if (!categoryId) {
@@ -449,19 +455,20 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
               value={categoryId}
               onChange={handleCategoryChange}
               className={styles.selectInput}
-              required
-              disabled={!categoryParentId}
+              required={canSelectChildCategory}
+              disabled={!categoryParentId || !canSelectChildCategory}
             >
-              <option value="">{categoryParentId ? '세부 카테고리를 선택하세요' : '상위 카테고리를 먼저 선택하세요'}</option>
-              {selectedParentGroup && (
-                <option value={selectedParentGroup.parent.id}>{selectedParentGroup.parent.name} 전체</option>
-              )}
+              <option value="">{childCategoryPlaceholder}</option>
+             
               {childCategories.map((child) => (
                 <option key={child.id} value={child.id}>
                   {child.name}
                 </option>
               ))}
             </select>
+            {categoryParentId && !canSelectChildCategory && (
+              <span className={styles.helperText}>선택한 상위 카테고리에 세부 카테고리는 없습니다.</span>
+            )}
           </label>
         </div>
         <p className={styles.categorySummary}>선택된 카테고리: {selectedCategoryLabel}</p>

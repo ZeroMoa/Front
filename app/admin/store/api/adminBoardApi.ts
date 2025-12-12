@@ -17,7 +17,7 @@ export interface AdminBoardListParams extends BoardQueryOptions {
 
 export function fetchAdminBoardList(params: AdminBoardListParams): Promise<BoardListResponse> {
   const searchParams = createBoardSearchParams(params)
-  return commonFetchBoards(searchParams, { search: isBoardSearchMode(params.keyword) })
+  return commonFetchBoards(searchParams, { search: isBoardSearchMode(params.keyword), admin: true })
 }
 
 export function fetchAdminBoardDetail(boardNo: number): Promise<BoardResponse> {

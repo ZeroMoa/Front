@@ -75,15 +75,15 @@ const appendMissingAttachmentsToContent = (baseContent: string, attachments: Edi
     return combined;
 };
 
-const removeAttachmentFromHtml = (html: string, storedPath?: string): string => {
-    if (!storedPath || typeof window === 'undefined') {
+const removeImageBySource = (html: string, targetSrc?: string): string => {
+    if (!targetSrc || typeof window === 'undefined') {
         return html;
     }
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const images = Array.from(doc.querySelectorAll('img'));
     images.forEach((img) => {
-        if (img.getAttribute('src') === storedPath) {
+        if (img.getAttribute('src') === targetSrc) {
             const parent = img.parentElement;
             img.remove();
             if (parent && parent.childNodes.length === 0) {
@@ -326,7 +326,7 @@ export default function WriteBoardPage() {
             );
         }
         if (editor && target?.storedPath) {
-            const updatedHtml = removeAttachmentFromHtml(editor.getHTML(), target.storedPath);
+            const updatedHtml = removeImageBySource(editor.getHTML(), target.storedPath);
             editor.commands.setContent(updatedHtml || '<p></p>');
         }
     };
@@ -426,7 +426,12 @@ export default function WriteBoardPage() {
     };
 
     const handleRemoveImage = (imageId: string) => {
+        const targetImage = uploadedImages.find(item => item.id === imageId);
         setUploadedImages(prev => prev.filter(item => item.id !== imageId));
+        if (editor && targetImage?.src) {
+            const updatedHtml = removeImageBySource(editor.getHTML(), targetImage.src);
+            editor.commands.setContent(updatedHtml || '<p></p>');
+        }
     };
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({

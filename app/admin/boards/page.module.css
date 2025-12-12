@@ -260,7 +260,6 @@
 .itemDate {
     text-align: center;
     color: #6c7b9a;
-    font-weight: 600;
 }
 
 .noticeLink {
@@ -314,7 +313,6 @@
 
 .itemTitleText {
     color: #2a364d;
-    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

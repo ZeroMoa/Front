@@ -114,7 +114,6 @@
     padding: 6px 12px;
     border-radius: 999px;
     font-size: 14px;
-    font-weight: 600;
     color: #1f2d4b;
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(189, 205, 232, 0.6);
@@ -171,7 +170,6 @@
     background: rgba(255, 255, 255, 0.22);
     color: #1f2f5c;
     font-size: 13px;
-    font-weight: 600;
     padding: 8px 16px;
     border-radius: 999px;
     cursor: pointer;
@@ -184,8 +182,8 @@
     background: rgba(255, 255, 255, 0.32);
     transform: translateY(-1px);
 }
-
-.category {
+categ
+.ory {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -193,7 +191,7 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #5c6bc0;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .categoryEditor {
@@ -337,7 +335,7 @@
 .sectionTitle {
     font-size: 18px;
     font-weight: 700;
-    color: #1f2f5c;
+    color: #000000;
     margin-bottom: 16px;
 }
 
@@ -370,7 +368,6 @@
 
 .servingHighlightValue {
     font-size: 14px;
-    font-weight: 700;
     color: #1f2f5c;
 }
 
@@ -435,7 +432,6 @@
 
 .nutritionRow td:nth-child(2) {
     text-align: left;
-    font-weight: 600;
     color: #1f2f5c;
     width: 33%;
 }
@@ -445,6 +441,7 @@
     font-size: 12px;
     color: #7080a7;
     width: 33%;
+    font-weight: 500;
 }
 
 .nutritionRow:last-child th,
@@ -473,7 +470,6 @@
 }
 
 .ingredient {
-    display: inline-flex;
     align-items: center;
     padding: 8px 14px;
     border-radius: 999px;
@@ -491,7 +487,7 @@
 .ingredientKeyword {
     display: inline-flex;
     align-items: center;
-    padding: 4px 2.5px;
+    padding: 5px 7px;
     border-radius: 999px;
     font-weight: 600;
     line-height: 1.2;

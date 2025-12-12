@@ -89,19 +89,15 @@ export async function fetchAdminUserManagement(params: AdminUserManageParams): P
   }
 
   const filters = params.filters
-  const hasUsername = Boolean(filters?.username.trim())
-  const hasEmail = Boolean(filters?.email.trim())
+  const trimmedUsername = filters?.username.trim() ?? ''
+  const trimmedEmail = filters?.email.trim() ?? ''
+  const hasUsername = Boolean(trimmedUsername)
+  const hasEmail = Boolean(trimmedEmail)
   const hasRole = filters?.roleType && filters.roleType !== 'ALL'
   const hasLock = filters?.isLock && filters.isLock !== 'ALL'
+  const searchKeyword = trimmedUsername || trimmedEmail
+  const shouldUseSearchEndpoint = Boolean(searchKeyword)
 
-  if (hasUsername) {
-    const trimmed = filters!.username.trim()
-    query.set('username', trimmed)
-  }
-  if (hasEmail) {
-    const trimmed = filters!.email.trim()
-    query.set('email', trimmed)
-  }
   if (hasRole) {
     const role = filters!.roleType === 'ADMIN' ? 'ROLE_ADMIN' : filters!.roleType === 'USER' ? 'ROLE_USER' : filters!.roleType
     query.set('roleType', role)
@@ -110,20 +106,18 @@ export async function fetchAdminUserManagement(params: AdminUserManageParams): P
     query.set('isLock', filters!.isLock)
   }
 
-  const qParts: string[] = []
-  if (hasUsername) {
-    qParts.push(filters!.username.trim())
-  }
-  if (hasEmail) {
-    qParts.push(filters!.email.trim())
-  }
-
-  const requiresSearch = hasUsername || hasEmail || hasRole || hasLock
-  if (requiresSearch) {
-    query.set('q', (qParts.join(' ').trim() || '*').trim())
+  if (shouldUseSearchEndpoint) {
+    query.set('q', searchKeyword)
+  } else {
+    if (hasUsername) {
+      query.set('username', trimmedUsername)
+    }
+    if (hasEmail) {
+      query.set('email', trimmedEmail)
+    }
   }
 
-  const endpoint = requiresSearch ? '/admin/users/search' : '/admin/users'
+  const endpoint = shouldUseSearchEndpoint ? '/admin/users/search' : '/admin/users'
 
   const response = await fetchWithAuth(buildEndpointWithQuery(endpoint, query))
   const json = await response.json()

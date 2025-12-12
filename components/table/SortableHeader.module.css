@@ -1,0 +1,25 @@
+.sortHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: inherit;
+  line-height: 1.4;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+}
+
+.indicator {
+  font-size: 13px;
+  color: rgba(79, 124, 255, 0.65);
+  transition: color 0.2s ease;
+}
+
+.indicatorActive {
+  color: rgba(79, 124, 255, 0.95);
+}
+

@@ -15,10 +15,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import styles from './page.module.css'
 import { useAdminHeader } from '../layout'
 import Pagination from '@/components/pagination/Pagination'
-import {
-  fetchAdminUserStats,
-  fetchAdminUsersList,
-} from '@/app/admin/store/api/adminUserApi'
+import { fetchAdminUserStats, fetchAdminUsersList } from '@/app/admin/store/api/adminUserApi'
 import { ADMIN_USER_TABLE_COLUMNS, PAGE_SIZE_OPTIONS, SORT_FIELD_MAP } from '@/constants/userConstants'
 import type {
   AdminUser,
@@ -26,6 +23,7 @@ import type {
   AdminUserSortKey,
   SortDirection,
 } from '@/types/userTypes'
+import SortableHeader from '@/components/table/SortableHeader'
 
 type SortState = { field: AdminUserSortKey | null; direction: SortDirection | null }
 
@@ -130,7 +128,7 @@ export default function AdminUsersPage() {
           })
         }
       } catch (statsError) {
-        console.error('어드민 요약 지표를 불러오지 못했습니다.', statsError)
+        console.error('관리자 요약 지표를 불러오지 못했습니다.', statsError)
       }
     }
 
@@ -231,15 +229,6 @@ export default function AdminUsersPage() {
   const totalElements = data?.totalElements ?? 0
   const tableContent = data?.content ?? []
 
-  const sortIndicator = (field: AdminUserSortKey) => {
-    if (sortState.field !== field || !sortState.direction) {
-      return <span className={styles.sortIndicator}>↕</span>
-    }
-    return (
-      <span className={styles.sortIndicator}>{sortState.direction === 'asc' ? '▲' : '▼'}</span>
-    )
-  }
-
 const renderLoadingState = () => (
   <div className={styles.loadingOverlay}>
     <CircularProgress size={40} className={styles.loadingSpinner} />
@@ -266,7 +255,7 @@ const renderLoadingState = () => (
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               className={styles.searchInput}
-              placeholder="회원명을 입력해 검색하세요"
+              placeholder="회원명을 입력하세요"
             />
             <button type="submit" className={styles.searchButton}>
               <Image src={getCdnUrl('/images/search.png')} alt="검색" width={20} height={20} />
@@ -307,8 +296,10 @@ const renderLoadingState = () => (
                       className={styles.sortable}
                       onClick={() => handleSort(key)}
                     >
-                      {label}
-                      {sortIndicator(key)}
+                      <SortableHeader
+                        label={label}
+                        direction={sortState.field === key ? sortState.direction : null}
+                      />
                     </th>
                   ))}
                 </tr>

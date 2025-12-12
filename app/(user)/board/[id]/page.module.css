@@ -133,14 +133,12 @@
     font-size: 1.9rem;
     line-height: 1.35;
     color: #1f2a44;
-    font-weight: 800;
     flex: 1;
 }
 
 .titleDate {
     font-size: 0.96rem;
     color: #6b7894;
-    font-weight: 600;
     white-space: nowrap;
     align-self: center;
 }
@@ -279,7 +277,6 @@
     flex: 1;
     color: #3566ff;
     text-decoration: none;
-    font-weight: 600;
 }
 
 .neighborLink:hover {

@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ReactNode, createContext, useContext, useMemo, useState, useCallback, useEffect, useRef } from 'react'
+import { ReactNode, createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react'
 import styles from './layout.module.css'
 import { getCdnUrl } from '@/lib/cdn'
 import { fetchAdminUserStats } from '@/app/admin/store/api/adminUserApi'
@@ -108,8 +108,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   })
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
-  const profileMenuRef = useRef<HTMLDivElement | null>(null)
   const isLoginPage = pathname === '/admin/login'
 
   useEffect(() => {
@@ -164,19 +162,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     setIsSidebarCollapsed((prev) => !prev)
   }
 
-  useEffect(() => {
-    if (!isProfileMenuOpen) {
-      return
-    }
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
-        setIsProfileMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isProfileMenuOpen])
-
   const handleLogout = useCallback(async () => {
     try {
       const xsrfToken = Cookies.get('XSRF-TOKEN')
@@ -204,14 +189,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       console.error('Failed to logout admin:', logoutError)
       alert(logoutError instanceof Error ? logoutError.message : '로그아웃 중 오류가 발생했습니다.')
     } finally {
-      setIsProfileMenuOpen(false)
       router.replace('/admin/login')
     }
   }, [router])
-
-  const handleProfileToggle = () => {
-    setIsProfileMenuOpen((prev) => !prev)
-  }
 
   if (isLoginPage) {
     return <>{children}</>
@@ -374,22 +354,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   )
                 })}
               </div>
-              <div className={styles.headerActions} ref={profileMenuRef}>
+              <div className={styles.headerActions}>
                 <button
                   type="button"
                   className={styles.profileButton}
-                  onClick={handleProfileToggle}
-                  aria-label="관리자 메뉴 열기"
+                  onClick={handleLogout}
+                  aria-label="관리자 로그아웃"
                 >
-                  <Image src={getCdnUrl('/images/profile.png')} alt="관리자" width={44} height={44} />
+                  <Image
+                    src={getCdnUrl('/images/logout.png')}
+                    alt="로그아웃"
+                    width={32}
+                    height={32}
+                    className={styles.profileIcon}
+                  />
+                  <span className={styles.profileLabel}>로그아웃</span>
                 </button>
-                {isProfileMenuOpen && (
-                  <div className={styles.profileMenu}>
-                    <button type="button" className={styles.profileMenuItem} onClick={handleLogout}>
-                      로그아웃
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </header>

@@ -160,7 +160,13 @@ export default function ProductSidebar({
                         className={styles.searchInput}
                     />
                     <button type="button" className={styles.searchButton} onClick={handleSubmit}>
-                        <Image src={getCdnUrl('/images/search.png')} alt="검색" width={18} height={18} />
+                        <Image
+                            src={getCdnUrl('/images/search.png')}
+                            alt="검색"
+                            width={18}
+                            height={18}
+                            className={styles.searchButtonIcon}
+                        />
                     </button>
                 </div>
             </div>

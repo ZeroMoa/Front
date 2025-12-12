@@ -1,8 +1,6 @@
-import type { SortKey } from '@/types/withdrawSurveyTypes'
-
 export const PAGE_SIZE_OPTIONS = [10, 20, 50]
 
-export const DEFAULT_SORT_FIELD: SortKey = 'id'
+export const DEFAULT_SORT_FIELD = 'displayIndex'
 export const DEFAULT_SORT_DIRECTION: 'asc' | 'desc' = 'desc'
 
 export const PRIORITY_REASON_LABELS = [
@@ -36,7 +34,7 @@ export const PRIORITY_REASON_ORDER = PRIORITY_REASON_LABELS.map((item) => item.c
 export const PIE_COLORS = ['#5A7BFF', '#7F53FF', '#58D3FF', '#FF8F6B', '#FFCD6B', '#8DD38C', '#A081FF', '#FF6FAE']
 
 export const COLUMN_HEADERS = [
-  { key: 'id', label: 'ID', width: '80px' },
+  { key: 'displayIndex', label: '설문조사 번호', width: '160px', sortable: true },
   { key: 'username', label: '회원명 / ID', width: '160px' },
   { key: 'reasons', label: '이유 코드' },
   { key: 'comment', label: '추가 의견', width: '260px' },

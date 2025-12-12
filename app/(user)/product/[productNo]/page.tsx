@@ -396,7 +396,40 @@ export default function ProductDetail() {
         : nutritionBasisValueLabel
         ? `영양정보 (${nutritionBasisValueLabel} 기준)`
         : '영양정보';
-    const allergensLabel = product.allergens?.split(',').map((item) => item.trim()).filter(Boolean).join(', ') || undefined;
+    const allergenTokens =
+        product.allergens
+            ?.split(',')
+            .map((item) => item.trim())
+            .filter(Boolean) ?? [];
+    const isMeaningfulAllergen = (token: string) => {
+        if (!token) {
+            return false;
+        }
+        const cleaned = token.replace(/[\s·.,/\\-]+/g, '').toLowerCase();
+        if (!cleaned) {
+            return false;
+        }
+        const placeholders = [
+            '없음',
+            '없다',
+            '없습니다',
+            '해당없음',
+            '해당없다',
+            '해당사항없음',
+            '무',
+            '무첨가',
+            '정보없음',
+            '기재없음',
+            '미기재',
+            'none',
+            'n/a',
+            'na',
+            'null',
+        ];
+        return !placeholders.includes(cleaned);
+    };
+    const validAllergens = allergenTokens.filter(isMeaningfulAllergen);
+    const allergensLabel = validAllergens.length > 0 ? validAllergens.join(', ') : undefined;
     const servingHighlights = (
         [
             totalContentLabel ? { label: '총 내용량', value: totalContentLabel } : null,

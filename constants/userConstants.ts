@@ -7,15 +7,15 @@ export const ADMIN_USER_TABLE_COLUMNS: Array<{
   label: string
   width?: string
 }> = [
-  { key: 'username', label: '회원명' },
-  { key: 'email', label: '이메일' },
-  { key: 'nickname', label: '닉네임' },
-  { key: 'isLock', label: '정지 여부', width: '140px' },
-  { key: 'isSocial', label: '소셜 여부', width: '140px' },
-  { key: 'createdDate', label: '가입 날짜', width: '160px' },
-  { key: 'updateDate', label: '정보 변경 날짜', width: '170px' },
-  { key: 'isDeleted', label: '탈퇴 여부', width: '140px' },
-  { key: 'deletedAt', label: '탈퇴 날짜', width: '160px' },
+  { key: 'username', label: '회원명' ,width: '210px'},
+  { key: 'email', label: '이메일' ,width: '150px'},
+  { key: 'nickname', label: '닉네임' ,width: '80px'},
+  { key: 'isLock', label: '정지 여부', width: '75px' },
+  { key: 'isSocial', label: '소셜 여부', width: '75px' },
+  { key: 'createdDate', label: '가입 날짜', width: '75px' },
+  { key: 'updateDate', label: '정보 변경 날짜', width: '90px' },
+  { key: 'isDeleted', label: '탈퇴 여부', width: '75px' },
+  { key: 'deletedAt', label: '탈퇴 날짜', width: '95px' },
 ]
 
 export const SORT_FIELD_MAP: Record<AdminUserSortKey, string> = {
@@ -45,18 +45,19 @@ export const MANAGE_USER_FILTER_OPTIONS = {
 
 export const USER_TOGGLE_LABELS = {
   lock: ['활성', '정지'] as const,
-  role: ['유저', '어드민'] as const,
+  role: ['유저', '관리자'] as const,
 }
 
 export const MANAGE_USER_TABLE_COLUMNS: Array<{
   key: ManageUserSortKey
   label: string
+  width?: string
 }> = [
-  { key: 'username', label: '회원명' },
-  { key: 'email', label: '이메일' },
-  { key: 'nickname', label: '닉네임' },
-  { key: 'isLock', label: '정지' },
-  { key: 'roleType', label: '역할' },
+  { key: 'username', label: '회원명', width: '160px' },
+  { key: 'email', label: '이메일', width: '220px' },
+  { key: 'nickname', label: '닉네임', width: '150px' },
+  { key: 'isLock', label: '정지', width: '110px' },
+  { key: 'roleType', label: '역할', width: '110px' },
 ]
 
 

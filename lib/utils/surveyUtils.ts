@@ -42,6 +42,7 @@ export function normalizeSurvey(raw: any): WithdrawSurvey {
     : []
   const ordered = sortReasonCodes(reasonCodes)
   return {
+    displayIndex: Number(raw.displayIndex ?? raw.display_index ?? 0),
     id: Number(raw.id ?? raw.withdrawSurveyId ?? 0),
     userId: Number(raw.userId ?? raw.user_id ?? 0),
     username: raw.username ?? raw.userName ?? `user-${raw.userId ?? '—'}`,

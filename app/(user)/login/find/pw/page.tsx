@@ -242,15 +242,15 @@ const handleTokenExpiration = useCallback(() => {
                                 <label htmlFor="findPwEmail">이메일</label>
                                 <div className={styles.boxEmail}>
                                     <div className={`${styles.boxInput} ${emailFront ? styles.hasValue : ''}`}>
-                                <input
+                                        <input
                                             type="text"
-                                    id="findPwEmail"
+                                            id="findPwEmail"
                                             className={`${styles.inputInfo} ${styles.emailInput}`}
                                             placeholder="이메일 앞자리 입력"
                                             value={emailFront}
                                             onChange={(e) => setEmailFront(e.target.value)}
-                                    required
-                                />
+                                            required
+                                        />
                                     </div>
                                     <div className={styles.textAt}>@</div>
                                     <div ref={emailDropdownRef} className={styles.boxSelect}>

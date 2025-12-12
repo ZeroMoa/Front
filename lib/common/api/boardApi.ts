@@ -13,9 +13,15 @@ function buildListUrl(params: URLSearchParams, basePath: string): string {
 // 게시글 목록 조회 (사용자 및 관리자 공통)
 export async function commonFetchBoards(
   params: URLSearchParams,
-  options?: { search?: boolean }
+  options?: { search?: boolean; admin?: boolean }
 ): Promise<BoardListResponse> {
-  const basePath = options?.search ? BOARD_SEARCH_PATH : BOARD_PUBLIC_PATH
+  const isAdmin = options?.admin ?? false
+  const useSearchPath = options?.search ?? false
+  const basePath = useSearchPath
+    ? BOARD_SEARCH_PATH
+    : isAdmin
+    ? ADMIN_BOARD_BASE_PATH
+    : BOARD_PUBLIC_PATH
   const response = await fetchWithAuth(buildListUrl(params, basePath))
   return response.json()
 }

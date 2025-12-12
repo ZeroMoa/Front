@@ -344,7 +344,7 @@ export default function ProductPageClient({
     const handleCollectionNavigate = (nextCollection: NutritionSlug | 'all') => {
         const nextParams = new URLSearchParams(searchParams.toString());
 
-        const allowToggleToAll = mode === 'search';
+        const allowToggleToAll = mode === 'search' || mode === 'nutrition';
         if (allowToggleToAll && collectionSlug === nextCollection) {
             nextCollection = 'all';
         }
@@ -352,7 +352,7 @@ export default function ProductPageClient({
         if (nextCollection === 'all') {
             nextParams.set('collection', 'all');
         } else {
-        nextParams.set('collection', nextCollection);
+            nextParams.set('collection', nextCollection);
         }
         nextParams.set('page', '1');
 

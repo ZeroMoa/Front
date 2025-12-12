@@ -39,8 +39,6 @@ export default function BoardPage() {
     const [keyword, setKeyword] = useState('');
     const [searchType, setSearchType] = useState<BoardSearchType>('TITLE_OR_CONTENT');
     const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | BoardType>('ALL');
-    const [appliedSearchType, setAppliedSearchType] = useState<BoardSearchType>('TITLE_OR_CONTENT');
-    const [appliedBoardType, setAppliedBoardType] = useState<'ALL' | BoardType>('ALL');
 
     const isSearchMode = keyword.trim().length > 0;
 
@@ -52,14 +50,14 @@ export default function BoardPage() {
 
         if (isSearchMode) {
             searchParams.set('keyword', keyword);
-            searchParams.set('searchType', appliedSearchType);
-            if (appliedBoardType !== 'ALL') {
-                searchParams.set('boardType', appliedBoardType);
+            searchParams.set('searchType', searchType);
+            if (boardTypeFilter !== 'ALL') {
+                searchParams.set('boardType', boardTypeFilter);
             }
         }
 
         return searchParams;
-    }, [page, keyword, appliedSearchType, appliedBoardType, isSearchMode]);
+    }, [page, keyword, searchType, boardTypeFilter, isSearchMode]);
 
     const { data, isLoading, isError, error } = useBoards(params, { search: isSearchMode });
 
@@ -73,15 +71,13 @@ export default function BoardPage() {
 
         if (!trimmed) {
             setKeyword('');
-            setAppliedSearchType('TITLE_OR_CONTENT');
-            setAppliedBoardType('ALL');
+            setSearchType('TITLE_OR_CONTENT');
+            setBoardTypeFilter('ALL');
             setPage(0);
             return;
         }
 
         setKeyword(trimmed);
-        setAppliedSearchType(searchType);
-        setAppliedBoardType(boardTypeFilter);
         setPage(0);
     };
 
@@ -109,9 +105,7 @@ export default function BoardPage() {
         setSearchQuery('');
         setKeyword('');
         setSearchType('TITLE_OR_CONTENT');
-        setAppliedSearchType('TITLE_OR_CONTENT');
         setBoardTypeFilter('ALL');
-        setAppliedBoardType('ALL');
         setPage(0);
         router.replace('/board');
     };
@@ -223,7 +217,11 @@ export default function BoardPage() {
                             className={styles.selectField}
                             value={searchType}
                             onChange={(event) => {
-                                setSearchType(event.target.value as BoardSearchType);
+                                const nextType = event.target.value as BoardSearchType;
+                                setSearchType(nextType);
+                                if (keyword) {
+                                    setPage(0);
+                                }
                             }}
                         >
                             {BOARD_SEARCH_TYPE_OPTIONS.map((option) => (
@@ -236,7 +234,11 @@ export default function BoardPage() {
                             className={styles.selectField}
                             value={boardTypeFilter}
                             onChange={(event) => {
-                                setBoardTypeFilter(event.target.value as 'ALL' | BoardType);
+                                const nextType = event.target.value as 'ALL' | BoardType;
+                                setBoardTypeFilter(nextType);
+                                if (keyword) {
+                                    setPage(0);
+                                }
                             }}
                         >
                             <option value="ALL">전체</option>

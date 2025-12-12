@@ -13,7 +13,9 @@ interface UserNotificationResponse {
 }
 
 interface AdminNotificationResponse {
+    displayIndex: number;
     adminNotificationNo: number;
+    boardDisplayIndex?: number | null;
     boardNo: number; // boardNo 추가
     boardTitle?: string | null;
     title: string;

@@ -59,6 +59,7 @@
   .table {
     width: 100%;
     border-collapse: collapse;
+  table-layout: fixed;
   }
   
   .filtersBar {
@@ -172,19 +173,28 @@
     font-weight: 700;
     text-align: left;
     border-bottom: 1px solid rgba(210, 220, 245, 0.6);
+  user-select: none;
+  cursor: pointer;
   }
   
-  .headerButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-  }
+.headerButton {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tableHead th:last-child {
+  cursor: default;
+}
   
 .tableBody tr {
     background: rgba(255, 255, 255, 0.97);
@@ -224,13 +234,24 @@
 
 
 
-  .tableBody td {
-    padding: 18px 22px;
-    font-size: 14px;
-    color: inherit;
-    border-bottom: 1px solid rgba(210, 220, 245, 0.5);
-    vertical-align: middle;
-  }
+.tableBody td {
+  padding: 18px 22px;
+  font-size: 14px;
+  color: inherit;
+  border-bottom: 1px solid rgba(210, 220, 245, 0.5);
+  vertical-align: middle;
+}
+
+.wordBreakCell {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+.emailCell {
+  word-break: break-all;
+}
   
   .actionCell {
     display: flex;
@@ -325,12 +346,6 @@
     font-weight: 600;
     color: #4b5fa8;
     pointer-events: none;
-  }
-  
-  .sortIndicator {
-    margin-left: 6px;
-    font-size: 12px;
-    color: rgba(79, 124, 255, 0.9);
   }
   
   .deleteButton,
@@ -450,7 +465,7 @@
   
   .paginationWrapper {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   .boxEmail {

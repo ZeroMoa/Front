@@ -15,15 +15,15 @@ export type SortState = {
 }
 
 export type FiltersState = {
-  boardTitle: string
+  title: string
   boardNo: string
   isActive: 'all' | 'true' | 'false'
 }
 
 export const SORT_FIELD_MAP: Record<SortKey, string> = {
-  adminNotificationNo: 'adminNotificationNo',
+  adminNotificationNo: 'displayIndex',
   title: 'board.title',
-  boardNo: 'board.boardNo',
+  boardNo: 'board.displayIndex',
   sentAt: 'sentAt',
   isActive: 'isActive',
   createdDate: 'createdDate',
@@ -33,26 +33,25 @@ export const SORT_FIELD_MAP: Record<SortKey, string> = {
 export const TABLE_COLUMNS: Array<{
   key: SortKey
   label: string
-  width?: string
 }> = [
-  { key: 'adminNotificationNo', label: '관리자 알림 번호', width: '160px' },
+  { key: 'adminNotificationNo', label: '관리자 알림 번호' },
   { key: 'title', label: '게시글 제목' },
-  { key: 'boardNo', label: '게시글 번호', width: '140px' },
-  { key: 'sentAt', label: '전송 시간', width: '170px' },
-  { key: 'isActive', label: '활성화 여부', width: '150px' },
-  { key: 'createdDate', label: '생성일', width: '170px' },
-  { key: 'updatedDate', label: '수정일', width: '170px' },
+  { key: 'boardNo', label: '게시글 번호' },
+  { key: 'sentAt', label: '전송 시간' },
+  { key: 'isActive', label: '활성화 여부' },
+  { key: 'createdDate', label: '생성일' },
+  { key: 'updatedDate', label: '수정일' },
 ]
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 40]
 
 export const INITIAL_SORT_STATE: SortState = {
-  field: null,
-  direction: null,
+  field: 'adminNotificationNo',
+  direction: 'desc',
 }
 
 export const INITIAL_FILTERS: FiltersState = {
-  boardTitle: '',
+  title: '',
   boardNo: '',
   isActive: 'all',
 }

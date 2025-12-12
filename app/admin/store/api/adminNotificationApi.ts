@@ -23,7 +23,9 @@ export type AdminNotificationStatusPayload = {
 
 function normalizeAdminNotification(raw: any): AdminNotificationResponse {
   return {
+    displayIndex: raw.displayIndex ?? raw.display_index ?? 0,
     adminNotificationNo: raw.adminNotificationNo ?? raw.admin_notification_no ?? 0,
+    boardDisplayIndex: raw.boardDisplayIndex ?? raw.board_display_index ?? raw.board?.displayIndex ?? null,
     boardNo: raw.boardNo ?? raw.board_no ?? 0,
     boardTitle: raw.boardTitle ?? raw.board_title ?? null,
     title: raw.title ?? '',

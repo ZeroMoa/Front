@@ -20,12 +20,7 @@ import {
   patchAdminUserLock,
   patchAdminUserRole,
 } from '@/app/admin/store/api/adminUserApi'
-import {
-  MANAGE_USER_FILTER_OPTIONS,
-  MANAGE_USER_TABLE_COLUMNS,
-  PAGE_SIZE_OPTIONS,
-  USER_TOGGLE_LABELS,
-} from '@/constants/userConstants'
+import { MANAGE_USER_FILTER_OPTIONS, MANAGE_USER_TABLE_COLUMNS, PAGE_SIZE_OPTIONS, USER_TOGGLE_LABELS } from '@/constants/userConstants'
 import type {
   EditFormState,
   ManageUser,
@@ -33,6 +28,7 @@ import type {
   PageResponse,
   UserFilters,
 } from '@/types/userTypes'
+import SortableHeader from '@/components/table/SortableHeader'
 
 type SortState = {
   field: ManageUserSortKey | null
@@ -327,9 +323,6 @@ export default function AdminUserManagePage() {
     setPage(0)
   }
 
-  const renderSortSymbol = (field: Exclude<SortState['field'], null>) =>
-    sortState.field === field ? (sortState.direction === 'asc' ? '▲' : '▼') : '↕'
-
   const users = data?.content ?? []
   const totalElements = data?.totalElements ?? 0
   const totalPages = data?.totalPages ?? 0
@@ -378,16 +371,6 @@ export default function AdminUserManagePage() {
             <span>이메일</span>
             <input name="email" value={filters.email} onChange={handleFilterInputChange} placeholder="email@example.com" />
           </label>
-          <label className={`${styles.filterRoleField} ${styles.filterFieldSmall}`}>
-            <span>역할</span>
-            <select name="roleType" value={filters.roleType} onChange={handleFilterSelectChange}>
-              {MANAGE_USER_FILTER_OPTIONS.role.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
           <label className={`${styles.filterLockField} ${styles.filterFieldSmall}`}>
             <span>정지 여부</span>
             <select name="isLock" value={filters.isLock} onChange={handleFilterSelectChange}>
@@ -412,20 +395,17 @@ export default function AdminUserManagePage() {
             <table className={styles.table}>
               <thead className={styles.tableHead}>
                 <tr>
-                  {MANAGE_USER_TABLE_COLUMNS.map(({ key, label }) => (
-                    <th key={key}>
-                      <button type="button" className={styles.headerButton} onClick={() => handleSortChange(key)}>
-                        {label}
-                        {sortState.field && key === sortState.field && (
-                          <span className={styles.sortIndicator}>{renderSortSymbol(key)}</span>
-                        )}
-                        {!(sortState.field && key === sortState.field) && (
-                          <span className={styles.sortIndicator}>↕</span>
-                        )}
-                      </button>
-                    </th>
-                  ))}
-                  <th>관리</th>
+                  {MANAGE_USER_TABLE_COLUMNS.map(({ key, label, width }) => {
+                    const direction = sortState.field === key ? sortState.direction : null
+                    return (
+                      <th key={key} style={width ? { width } : undefined}>
+                        <button type="button" className={styles.headerButton} onClick={() => handleSortChange(key)}>
+                          <SortableHeader label={label} direction={direction} />
+                        </button>
+                      </th>
+                    )
+                  })}
+                  <th style={{ width: '140px' }}>관리</th>
                 </tr>
               </thead>
               <tbody className={styles.tableBody}>
@@ -448,9 +428,9 @@ export default function AdminUserManagePage() {
                   return (
                     <Fragment key={user.username}>
                       <tr className={rowClassName}>
-                        <td>{user.username}</td>
-                        <td>{user.email || '—'}</td>
-                        <td>{user.nickname || '—'}</td>
+                        <td className={styles.wordBreakCell}>{user.username}</td>
+                        <td className={`${styles.wordBreakCell} ${styles.emailCell}`}>{user.email || '—'}</td>
+                        <td className={styles.wordBreakCell}>{user.nickname || '—'}</td>
                         <td>
                           <label className={styles.toggleSwitch} aria-live="polite">
                             <input
