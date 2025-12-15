@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '../../store/slices/store';
 import { openLoginModal } from '../../store/slices/authSlice';
 import styles from './page.module.css';
-import { UserRequestDTO } from '../../../types/auth';
 import { checkExistence, joinUser } from '../../store/api/userAuthApi';
+import { getCdnUrl } from '../../../../lib/cdn';
 
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -105,7 +105,7 @@ export default function JoinPage() {
             return false; // 예상치 못한 경우
         } catch (error: any) {
             console.error('중복 확인 중 오류 발생:', error);
-            const fallback = field === 'username' ? DUPLICATE_USERNAME_MESSAGE : DUPLICATE_EMAIL_MESSAGE;
+            const fallback = field === 'username' ? "사용중인 아이디입니다." : "사용중인 이메일입니다.";
             if (field === 'username') { setUsernameError(error.message || fallback); setUsernameSuccess(null); setIsUsernameValidState(false); }
             if (field === 'email') { setEmailError(error.message || fallback); setEmailSuccess(null); setIsEmailValidState(false); }
             return false; // 네트워크 또는 기타 오류 시 유효하지 않음
@@ -190,11 +190,11 @@ export default function JoinPage() {
         // 3. 최종 유효성 상태 확인
         // 디바운스된 상태가 아닌, 제출 시점에 직접 검사한 결과를 사용합니다.
         if (usernameResponse.isExist) {
-            alert(DUPLICATE_USERNAME_MESSAGE);
+            alert("이미 사용중인 아이디입니다.");
             return;
         }
         if (emailResponse.isExist) {
-            alert(DUPLICATE_EMAIL_MESSAGE);
+            alert("이미 사용중인 이메일입니다.");
             return;
         }
 
@@ -390,7 +390,7 @@ export default function JoinPage() {
                                     aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                 >
                                     <Image 
-                                        src={showPassword ? '/images/open_eye.png' : '/images/closed_eye.png'}
+                                        src={getCdnUrl(showPassword ? '/images/open_eye.png' : '/images/closed_eye.png')}
                                         alt={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                         width={20}
                                         height={20}
@@ -417,7 +417,7 @@ export default function JoinPage() {
                                     aria-label={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                 >
                                     <Image 
-                                        src={showConfirmPassword ? '/images/open_eye.png' : '/images/closed_eye.png'}
+                                        src={getCdnUrl(showConfirmPassword ? '/images/open_eye.png' : '/images/closed_eye.png')}
                                         alt={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                         width={20}
                                         height={20}
@@ -437,10 +437,10 @@ export default function JoinPage() {
                 </div>
             )}
 
-            {step === 2 && (
+            {step === 2 && (    
                 <div className={styles.completionCard}>
                     <Image 
-                        src="/images/check.png" 
+                        src={getCdnUrl('/images/check.png')}
                         alt="회원가입 완료" 
                         width={80} 
                         height={80} 

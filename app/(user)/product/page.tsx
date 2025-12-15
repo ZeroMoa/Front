@@ -113,11 +113,9 @@ export default async function ProductPage({ searchParams }: { searchParams: Prom
     const selectedSubCategory = getSubCategorySlug(categoryConfig, subParam);
 
     const page = parsePageParam(parseSingleValue(params.page), 0);
-    const size = parseNumberParam(
-        parseSingleValue(params.size),
-        categoryConfig.pageSizeOptions[0] ?? 30,
-        1,
-    );
+    const sizeParam = parseNumberParam(parseSingleValue(params.size), categoryConfig.pageSizeOptions[0] ?? 30, 1);
+    const allowedSizes = [30, 60, 90];
+    const size = allowedSizes.includes(sizeParam) ? sizeParam : allowedSizes[0];
     const sort = parseSingleValue(params.sort) ?? categoryConfig.defaultSort;
     const keyword = parseSingleValue(params.keyword) ?? '';
     const filters = parseFilters(params);
@@ -207,7 +205,9 @@ async function renderNutritionPage(nutritionSlug: NutritionSlug, params: Product
      const config = NUTRITION_CONFIG[nutritionSlug];
  
     const page = parsePageParam(parseSingleValue(params.page), 0);
-     const size = parseNumberParam(parseSingleValue(params.size), config.pageSizeOptions[0] ?? 30, 1);
+     const sizeParam = parseNumberParam(parseSingleValue(params.size), config.pageSizeOptions[0] ?? 30, 1);
+     const allowedSizes = [30, 60, 90];
+     const size = allowedSizes.includes(sizeParam) ? sizeParam : allowedSizes[0];
      const sort = parseSingleValue(params.sort) ?? config.defaultSort;
      const keyword = parseSingleValue(params.keyword) ?? '';
     const isNewParam = parseBooleanParam(parseSingleValue(params.isNew));

@@ -81,7 +81,9 @@ export default async function NewProductsPage({ searchParams }: { searchParams: 
     const subParam = parseSingleValue(params.sub);
 
     const page = parsePageParam(parseSingleValue(params.page), 0);
-    const size = parseNumberParam(parseSingleValue(params.size), NEW_PRODUCTS_PAGE_CONFIG.pageSizeOptions[0] ?? 30, 1);
+    const sizeParam = parseNumberParam(parseSingleValue(params.size), NEW_PRODUCTS_PAGE_CONFIG.pageSizeOptions[0] ?? 30, 1);
+    const allowedSizes = [30, 60, 90];
+    const size = allowedSizes.includes(sizeParam) ? sizeParam : allowedSizes[0];
     const sort = parseSingleValue(params.sort) ?? NEW_PRODUCTS_PAGE_CONFIG.defaultSort;
     const keyword = parseSingleValue(params.keyword) ?? '';
 

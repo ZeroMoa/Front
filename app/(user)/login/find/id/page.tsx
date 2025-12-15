@@ -117,7 +117,6 @@ export default function FindIdPage() {
             setFoundCreatedDate(data.createdDate);
             setFindIdStep(2); // 성공 화면으로 전환
         } catch (error: any) {
-            console.error('아이디 찾기 요청 중 오류 발생:', error);
             openErrorModal(getFindIdFriendlyError(error));
         }
     };
@@ -148,7 +147,7 @@ export default function FindIdPage() {
                                             className={`${styles.inputInfo} ${styles.emailInput}`}
                                             placeholder="이메일 앞자리 입력"
                                             value={findIdEmailFront}
-                                            onChange={(e) => setFindIdEmailFront(e.target.value)}
+                                            onChange={(e) => setFindIdEmailFront(e.target.value.replace(/\s+/g, ''))}
                                     required
                                 />
                             </div>
@@ -162,7 +161,7 @@ export default function FindIdPage() {
                                                 }`}
                                                 placeholder="직접 입력"
                                                 value={findIdEmailBack}
-                                                onChange={(e) => setFindIdEmailBack(e.target.value)}
+                                                onChange={(e) => setFindIdEmailBack(e.target.value.replace(/\s+/g, ''))}
                                                 onClick={(e) => e.stopPropagation()}
                                                 required
                                             />

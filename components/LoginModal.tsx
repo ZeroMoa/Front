@@ -75,8 +75,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             // React Query 캐시 무효화
             queryClient.invalidateQueries({ queryKey: ['user'] });
 
+            const redirectTarget =
+                typeof window !== 'undefined' && window.location.pathname ? window.location.pathname : '/';
+
             onClose(); // 모달 닫기
-            router.push('/'); // 메인 페이지로 이동 또는 로그인 후 리다이렉트 처리
+            router.replace(redirectTarget); // 현재 페이지 유지
 
         } catch (error) {
             console.error('로그인 요청 중 오류 발생:', error);
@@ -158,9 +161,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                 onClick={() => setShowPassword(prev => !prev)}
                                 aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                             >
-                                <Image 
-                                    src={showPassword ? '/images/open_eye.png' : '/images/closed_eye.png'}
-                                    alt={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                                <Image
+                                    src={getCdnUrl(showPassword ? '/images/open_eye.png' : '/images/closed_eye.png')}
+                                    alt={showPassword ? '비밀번호 숨김 아이콘' : '비밀번호 보이기 아이콘'}
                                     width={20}
                                     height={20}
                                 />

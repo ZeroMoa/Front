@@ -114,7 +114,7 @@ export default function BoardPage() {
         if (isLoading) {
             return (
                 <div className={styles.loadingBox}>
-                    <CircularProgress size={24} />
+                    <CircularProgress size={32} />
                     <span>게시글을 불러오는 중입니다...</span>
                 </div>
             );

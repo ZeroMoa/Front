@@ -81,14 +81,12 @@ export default function NotificationsPage() {
             onSuccess: () => {
                 refetch();
                 if (boardNo) {
-                    router.push(`/board/${boardNo}`)
-                } else {
-                    router.push('/notifications')
+                    router.push(`/board/${boardNo}?back=notifications`)
                 }
             },
             onError: () => {
                 if (boardNo) {
-                    router.push(`/board/${boardNo}`)
+                    router.push(`/board/${boardNo}?back=notifications`)
                 }
             },
         })
@@ -119,7 +117,7 @@ export default function NotificationsPage() {
     if (!isHydrated || isLoading) {
         return (
             <div className={styles.loadingState}>
-                <CircularProgress size={28} />
+                <CircularProgress size={32} />
                 <span className={styles.loadingText}>알림을 불러오는 중입니다...</span>
             </div>
         );
@@ -129,7 +127,7 @@ export default function NotificationsPage() {
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <h1>최근 알림</h1>
+                <h1>전체 알림</h1>
                 {/* <button className={styles.settingsButton}>⚙️</button> */}
             </div>
             <div className={styles.tabNav}>

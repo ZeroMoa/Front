@@ -12,6 +12,7 @@ import {
 } from '@/types/authTypes';
 import { getUserData, checkCurrentPassword as apiCheckCurrentPassword, updateUserProfile, checkExistence } from '../../store/api/userAuthApi';
 import CircularProgress from '@mui/material/CircularProgress';
+import { getCdnUrl } from '../../../../lib/cdn';
 
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -53,6 +54,7 @@ export default function ProfilePage() {
     const [showEmailDomainSelect, setShowEmailDomainSelect] = useState(false); // 이메일 도메인 선택 박스 표시 여부
     const [isDirectInput, setIsDirectInput] = useState(false); // 이메일 도메인 직접 입력 여부
     const emailDropdownRef = useRef<HTMLDivElement | null>(null);
+    const currentPasswordInputRef = useRef<HTMLInputElement | null>(null);
 
     // 비밀번호 가시성 상태 추가
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -93,6 +95,23 @@ export default function ProfilePage() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [showEmailDomainSelect]);
+
+    useEffect(() => {
+        if (isSocialUser) {
+            return;
+        }
+        const syncFromInput = () => {
+            const value = currentPasswordInputRef.current?.value ?? '';
+            if (value && value !== currentPassword) {
+                setCurrentPassword(value);
+                setCurrentPasswordError(null);
+                setCurrentPasswordMismatchError(null);
+                setIsCurrentPasswordValid(null);
+            }
+        };
+        const timer = setTimeout(syncFromInput, 300);
+        return () => clearTimeout(timer);
+    }, [isSocialUser, currentPassword]);
 
     useEffect(() => {
         // 로그인 상태이고, userData가 아직 로드되지 않았으며, 이전에 API 호출을 시도하지 않았을 경우에만 fetchData 호출
@@ -412,7 +431,7 @@ export default function ProfilePage() {
                                             name="currentPassword"
                                             placeholder="현재 비밀번호를 입력해 주세요"
                                             type={showCurrentPassword ? 'text' : 'password'}
-                                            autoComplete="off"
+                                            autoComplete="current-password"
                                             className={`${styles.input} ${currentPasswordError || currentPasswordMismatchError ? styles.errorBorder : ''}`}
                                             value={currentPassword}
                                             onChange={(e) => {
@@ -431,6 +450,7 @@ export default function ProfilePage() {
                                                     setCurrentPasswordError('현재 비밀번호를 입력해주세요.');
                                                 }
                                             }}
+                                            ref={currentPasswordInputRef}
                                         />
                                         <button
                                             type="button"
@@ -439,7 +459,7 @@ export default function ProfilePage() {
                                             aria-label={showCurrentPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                         >
                                             <Image 
-                                                src={showCurrentPassword ? '/images/open_eye.png' : '/images/closed_eye.png'}
+                                                src={getCdnUrl(showCurrentPassword ? '/images/open_eye.png' : '/images/closed_eye.png')}
                                                 alt={showCurrentPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                                 width={20}
                                                 height={20}
@@ -479,7 +499,7 @@ export default function ProfilePage() {
                                             aria-label={showNewPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                         >
                                             <Image 
-                                                src={showNewPassword ? '/images/open_eye.png' : '/images/closed_eye.png'}
+                                                src={getCdnUrl(showNewPassword ? '/images/open_eye.png' : '/images/closed_eye.png')}
                                                 alt={showNewPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                                 width={20}
                                                 height={20}
@@ -517,14 +537,14 @@ export default function ProfilePage() {
                                             aria-label={showNewPasswordConfirm ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                         >
                                             <Image 
-                                                src={showNewPasswordConfirm ? '/images/open_eye.png' : '/images/closed_eye.png'}
+                                                src={getCdnUrl(showNewPasswordConfirm ? '/images/open_eye.png' : '/images/closed_eye.png')}
                                                 alt={showNewPasswordConfirm ? '비밀번호 숨기기' : '비밀번호 보이기'}
                                                 width={20}
                                                 height={20}
                                             />
                                         </button>
                                     </div>
-                                    {passwordMismatchError && <p className={styles.errorMessage}>새 비밀번호와 비밀번호 확인이 일치하지 않습니다.</p>}
+                                    {passwordMismatchError && <p className={styles.errorMessage}>입력한 비밀번호가 서로 일치하지 않습니다.</p>}
                                 </div>
                             </>
                         )}

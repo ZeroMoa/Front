@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import styles from '../page.module.css';
+import styles from './FavoriteToggleButton.module.css';
 import { FAVORITE_TOGGLE_COOLDOWN_MS, toggleFavoriteProduct } from '@/app/(user)/store/api/userFavoriteApi';
 import { useIsLoggedIn } from '@/app/(user)/hooks/useAuth';
 import { getCdnUrl } from '@/lib/cdn';

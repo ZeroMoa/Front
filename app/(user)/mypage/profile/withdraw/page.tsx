@@ -21,6 +21,7 @@ const REASON_ORDER = [
 const sortReasons = (reasons: string[]) =>
     REASON_ORDER.filter((reason) => reasons.includes(reason as string));
 
+const MAX_COMMENT_LENGTH = 1000;
 
 export default function WithdrawPage() {
     const router = useRouter();
@@ -31,6 +32,7 @@ export default function WithdrawPage() {
     const [reasonComment, setReasonComment] = useState('');
     const [passwordError, setPasswordError] = useState<string | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
+    const [commentError, setCommentError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -185,11 +187,23 @@ export default function WithdrawPage() {
                                     name="reasonComment"
                                     className={styles.commentTextarea}
                                     value={reasonComment}
-                                    onChange={(e) => setReasonComment(e.target.value)}
+                                    onChange={(e) => {
+                                        const nextValue = e.target.value;
+                                        if (nextValue.length > MAX_COMMENT_LENGTH) {
+                                            setReasonComment(nextValue.slice(0, MAX_COMMENT_LENGTH));
+                                            setCommentError('설문은 1000자까지만 작성하실 수 있습니다.');
+                                            return;
+                                        }
+                                        setCommentError(null);
+                                        setReasonComment(nextValue);
+                                    }}
                                 ></textarea>
                                 <div className={styles.placeholder}></div>
-                                <span className={styles.contentLengthCounter}>{reasonComment.length}</span>
+                                <span className={styles.contentLengthCounter}>
+                                    {reasonComment.length}/{MAX_COMMENT_LENGTH}
+                                </span>
                             </div>
+                            {commentError && <p className={styles.errorMessage}>{commentError}</p>}
                         </div>
                     </div>
 
@@ -204,7 +218,7 @@ export default function WithdrawPage() {
                         <button type="submit" className={`${styles.bottomButton} ${styles.withdrawButton}`} disabled={isSubmitting}>
                             {isSubmitting ? (
                                 <span className={styles.buttonLoading}>
-                                    <CircularProgress size={18} />
+                                    <CircularProgress size={32} />
                                     <span className={styles.buttonLoadingText}>탈퇴 진행 중...</span>
                                 </span>
                             ) : (

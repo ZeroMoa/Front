@@ -6,7 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import styles from './page.module.css';
 import { Product, normalizeProduct } from '../../../../types/productTypes';
 import { getCdnUrl } from '@/lib/cdn';
-import FavoriteToggleButton from '../components/FavoriteToggleButton';
+import FavoriteToggleButton from '../../favorites/components/FavoriteToggleButton';
 import ProductGrid from '../components/ProductGrid';
 import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth';
 
@@ -319,8 +319,8 @@ export default function ProductDetail() {
     if (isLoading) {
         return (
             <div className={styles.loading}>
-                <CircularProgress size={40} />
-                <p>제품 정보를 불러오는 중입니다...</p>
+                <CircularProgress size={32} />
+                <span>제품 정보를 불러오는 중입니다...</span>
             </div>
         );
     }

@@ -59,9 +59,11 @@
 }
 
 .tabWrap {
-    display: flex;
+    display: inline-flex;
     justify-content: flex-start;
     margin-bottom: 0;
+    width: fit-content;
+    max-width: 100%;
 }
 
 .tabList {

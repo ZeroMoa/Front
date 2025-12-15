@@ -149,12 +149,18 @@ export default function ProductPageClient({
     const [, startTransition] = useTransition();
     const [clientContent, setClientContent] = useState<Product[]>(data.content);
 
-    const pageSizeOptions = config.pageSizeOptions ?? [30, 60, 90];
+    const SUPPORTED_PAGE_SIZES = [30, 60, 90] as const;
+    const pageSizeOptions = (config.pageSizeOptions ?? SUPPORTED_PAGE_SIZES).filter((value) =>
+        SUPPORTED_PAGE_SIZES.includes(value as (typeof SUPPORTED_PAGE_SIZES)[number]),
+    );
+    const normalizedSize = SUPPORTED_PAGE_SIZES.includes(size as (typeof SUPPORTED_PAGE_SIZES)[number])
+        ? size
+        : SUPPORTED_PAGE_SIZES[0];
     const totalPages = data.totalPages ?? 0;
     const totalElements = data.totalElements ?? data.content.length;
     const totalCountLabel = totalElements.toLocaleString();
 
-    const selectedPageSize = pageSizeOptions.includes(size) ? size : pageSizeOptions[0];
+    const selectedPageSize = pageSizeOptions.includes(normalizedSize) ? normalizedSize : pageSizeOptions[0];
 
     const currentFilters = useMemo(() => filters, [filters]);
     const isNewActive = Boolean(isNew);
@@ -293,6 +299,10 @@ export default function ProductPageClient({
 
     const handlePageSizeChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
         const nextSize = Number(event.target.value);
+        if (!SUPPORTED_PAGE_SIZES.includes(nextSize as (typeof SUPPORTED_PAGE_SIZES)[number])) {
+            commitUpdates({ size: SUPPORTED_PAGE_SIZES[0], page: 0 });
+            return;
+        }
         commitUpdates({ size: nextSize, page: 0 });
     };
 
@@ -370,6 +380,15 @@ export default function ProductPageClient({
     };
 
     const handleHeroFilterToggle = (slug: NutritionSlug) => {
+        if (mode === 'nutrition') {
+            const targetCollection = slug;
+            if (collectionSlug === targetCollection) {
+                return;
+            }
+            commitUpdates({ collection: targetCollection, page: 0 });
+            return;
+        }
+
         const filterKey = HERO_FILTER_MAP[slug];
         if (!filterKey) {
             return;
@@ -503,8 +522,79 @@ export default function ProductPageClient({
         }
     };
 
+    const ignoredNewResetKeys = new Set(['page', 'size', 'sort']);
+    const hasNewPageModifiers = useMemo(() => {
+        if (mode !== 'new') {
+            return false;
+        }
+        if (!searchParams) {
+            return false;
+        }
+        const entries = Array.from(searchParams.entries());
+        if (entries.length === 0) {
+            return false;
+        }
+        return entries.some(([key, value]) => {
+            if (!ignoredNewResetKeys.has(key)) {
+                return true;
+            }
+            if (key === 'page') {
+                return value !== '1';
+            }
+            if (key === 'size') {
+                return !SUPPORTED_PAGE_SIZES.includes(Number(value) as (typeof SUPPORTED_PAGE_SIZES)[number]);
+            }
+            if (key === 'sort') {
+                return value !== config.defaultSort;
+            }
+            return false;
+        });
+    }, [mode, searchParams, config.defaultSort]);
+
+    const handleNewPageReset = () => {
+        if (mode !== 'new') {
+            return;
+        }
+        const basePath = pathname && pathname.startsWith('/product/new') ? '/product/new' : pathname ?? '/product/new';
+        startTransition(() => {
+            router.replace(basePath, { scroll: true });
+        });
+    };
+
     const renderHeroInline = () => {
-        if (mode === 'nutrition' || mode === 'search') {
+        if (mode === 'nutrition') {
+            return (
+                <div className={styles.heroInline}>
+                    <button
+                        type="button"
+                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${isNewActive ? styles.heroCardActive : ''}`}
+                        onClick={handleNewToggle}
+                        aria-pressed={isNewActive}
+                        disabled
+                    >
+                        신제품
+                    </button>
+                    <span className={styles.heroDivider} aria-hidden="true" />
+                    {HERO_BANNER_ITEMS.map((item) => {
+                        const isActive = activeHeroSlug === item.slug;
+                        const accentClass = styles[item.accentClass];
+                        return (
+                            <button
+                                key={item.slug}
+                                type="button"
+                                className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
+                                onClick={() => handleHeroButtonClick(item.slug)}
+                                aria-pressed={isActive}
+                            >
+                                <span className={styles.heroCardLabel}>{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        if (mode === 'search') {
             return (
                 <div className={styles.heroInline}>
                     <button
@@ -745,6 +835,11 @@ export default function ProductPageClient({
                     </div>
                 )}
                 <div className={styles.listActions}>
+                    {mode === 'new' && hasNewPageModifiers && (
+                        <button type="button" className={styles.newPageResetButton} onClick={handleNewPageReset}>
+                            신제품 초기화
+                        </button>
+                    )}
                     <div className={styles.listActionsControls}>
                         {mode === 'category' && activeCategorySlug === 'icecream' && (
                             <>

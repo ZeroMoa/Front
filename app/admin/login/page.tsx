@@ -158,7 +158,7 @@ export default function AdminLoginPage() {
                 aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
               >
                 <Image
-                  src={showPassword ? getCdnUrl('/images/open_eye.png') : getCdnUrl('/images/closed_eye.png')}
+                  src={getCdnUrl(showPassword ? '/images/open_eye.png' : '/images/closed_eye.png')}
                   alt={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                   width={22}
                   height={22}

@@ -7,8 +7,9 @@ import LoginModal from '../../components/LoginModal';
 import SearchHeader from '../../components/SearchHeader';
 import { useAppSelector, useAppDispatch } from './store/slices/store';
 import { closeLoginModal, setLoggedIn, setUser } from './store/slices/authSlice';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useIsLoggedIn } from './hooks/useAuth';
+import { useUserLogout } from './hooks/useUserLogout';
 
 export default function UserLayout({
   children,
@@ -16,19 +17,20 @@ export default function UserLayout({
   children: React.ReactNode
 }) {
   const dispatch = useAppDispatch();    
-  const authState = useAppSelector((state) => state.auth);
-  const isLoginModalOpen = authState.isLoginModalOpen;
-  const storedIsLoggedIn = authState.isLoggedIn;
-  const storedUser = authState.user;
+  const { isLoginModalOpen } = useAppSelector((state) => state.auth);
   const pathname = usePathname();
   const router = useRouter();
   const { isLoggedIn: queryIsLoggedIn, userData, isLoading: authLoading } = useIsLoggedIn();
+  const logoutUser = useUserLogout();
 
   const handleCloseLoginModal = () => {
     dispatch(closeLoginModal());
   };
 
   const shouldRenderSearchHeader = pathname !== '/';
+
+  const lastSyncedUserRef = useRef<{ id: string; username: string } | null>(null);
+  const lastSyncedLoggedInRef = useRef(false);
 
   useEffect(() => {
     if (authLoading) {
@@ -37,18 +39,25 @@ export default function UserLayout({
 
     if (queryIsLoggedIn && userData) {
       const nextUser = { id: userData.username, username: userData.username };
-      const shouldUpdateUser = !storedUser || storedUser.username !== userData.username;
-      if (!storedIsLoggedIn) {
+      const shouldUpdateUser =
+        !lastSyncedUserRef.current || lastSyncedUserRef.current.username !== nextUser.username;
+
+      if (!lastSyncedLoggedInRef.current) {
         dispatch(setLoggedIn(true));
+        lastSyncedLoggedInRef.current = true;
       }
+
       if (shouldUpdateUser) {
         dispatch(setUser(nextUser));
+        lastSyncedUserRef.current = nextUser;
       }
-    } else if (storedIsLoggedIn || storedUser) {
+    } else if (lastSyncedLoggedInRef.current || lastSyncedUserRef.current) {
       dispatch(setUser(null));
       dispatch(setLoggedIn(false));
+      lastSyncedLoggedInRef.current = false;
+      lastSyncedUserRef.current = null;
     }
-  }, [authLoading, queryIsLoggedIn, userData, dispatch, storedIsLoggedIn, storedUser]);
+  }, [authLoading, queryIsLoggedIn, userData, dispatch]);
 
   useEffect(() => {
     if (!pathname || typeof window === 'undefined') return;
@@ -64,6 +73,18 @@ export default function UserLayout({
       router.replace('/');
     }
   }, [authLoading, pathname, queryIsLoggedIn, router]);
+
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+    if (!pathname) {
+      return;
+    }
+    if (queryIsLoggedIn && pathname.startsWith('/login')) {
+      void logoutUser({ forceRedirectTo: '/' });
+    }
+  }, [authLoading, pathname, queryIsLoggedIn, logoutUser]);
 
   return (
     <>

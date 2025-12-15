@@ -231,7 +231,7 @@ export default function AdminUsersPage() {
 
 const renderLoadingState = () => (
   <div className={styles.loadingOverlay}>
-    <CircularProgress size={40} className={styles.loadingSpinner} />
+    <CircularProgress size={32} className={styles.loadingSpinner} />
     <p>회원 목록 불러오는 중...</p>
   </div>
   )

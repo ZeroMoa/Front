@@ -1009,6 +1009,22 @@
     width: 100%;
 }
 
+.newPageResetButton {
+    border-radius: 12px;
+    border: 1px solid rgba(185, 201, 228, 0.6);
+    background: rgba(248, 250, 255, 0.9);
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    color: #2f3f71;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.newPageResetButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(53, 58, 104, 0.15);
+}
+
 .listActionsControls {
     display: flex;
     align-items: center;

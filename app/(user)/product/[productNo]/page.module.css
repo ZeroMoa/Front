@@ -332,7 +332,7 @@
 .ingredientKeyword {
     display: inline-flex;
     align-items: center;
-    padding: 4px 2.5px;
+    padding: 5px 7px;
     border-radius: 999px;
     line-height: 1.2;
 }

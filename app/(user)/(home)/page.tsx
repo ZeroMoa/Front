@@ -333,7 +333,7 @@ export default function HomePage() {
 
                 {showNewLoading ? (
                     <div className={styles.sectionLoadingBox} role="status">
-                        <CircularProgress size={36} />
+                        <CircularProgress size={32} />
                         <span>목록을 불러오는 중...</span>
                     </div>
                 ) : newError ? (
@@ -359,7 +359,7 @@ export default function HomePage() {
 
                 {shouldShowFavoriteLoading ? (
                     <div className={styles.sectionLoadingBox} role="status">
-                        <CircularProgress size={36} />
+                        <CircularProgress size={32} />
                         <span>목록을 불러오는 중...</span>
                     </div>
                 ) : !isAuthenticated ? (

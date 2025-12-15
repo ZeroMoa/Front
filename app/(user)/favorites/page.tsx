@@ -15,10 +15,10 @@ const DEFAULT_SORT = 'createdDate,desc';
 const PAGE_MIN = 1;
 
 const SORT_OPTIONS: Array<{ value: string; label: string }> = [
+    { value: 'createdDate,desc', label: '좋아요 최신순' },
     { value: 'product.productName,asc', label: '제품명 오름차순' },
     { value: 'product.productName,desc', label: '제품명 내림차순' },
     { value: 'product.updatedDate,desc', label: '최신 업데이트순' },
-    { value: 'createdDate,desc', label: '좋아요 최신순' },
     { value: 'product.likesCount,desc', label: '인기순' },
 ] as const;
 

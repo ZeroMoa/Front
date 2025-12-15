@@ -9,6 +9,8 @@ import {
     InitiatePasswordResetResponse,
 } from '@/types/authTypes';
 import { initiatePasswordReset, resetUserPassword } from '../../../store/api/userAuthApi';
+import Image from 'next/image';
+import { getCdnUrl } from '@/lib/cdn';
 
 const EMAIL_DOMAINS = [
     'naver.com',
@@ -82,6 +84,8 @@ export default function FindPasswordPage() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
     const [passwordMismatchError, setPasswordMismatchError] = useState(false); // 비밀번호 불일치 에러 상태
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [initiateSuccessMessage, setInitiateSuccessMessage] = useState<string | null>(null);
     const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
@@ -337,41 +341,71 @@ const handleTokenExpiration = useCallback(() => {
 
                             <div className={styles.inputGroup}>
                                 <label htmlFor="newPassword">새 비밀번호 등록</label>
-                                <input
-                                    type="password"
-                                    id="newPassword"
-                                    className={`${styles.inputField} ${passwordMismatchError ? styles.errorBorder : ''}`}
-                                    placeholder="새 비밀번호를 입력해 주세요"
-                                    value={newPassword}
-                                    onChange={(e) => {
-                                        setNewPassword(e.target.value);
-                                        if (confirmNewPassword && e.target.value !== confirmNewPassword) {
-                                            setPasswordMismatchError(true);
-                                        } else {
-                                            setPasswordMismatchError(false);
-                                        }
-                                    }}
-                                    required
-                                />
+                                <div className={styles.passwordInputWrapper}>
+                                    <input
+                                        type={showNewPassword ? 'text' : 'password'}
+                                        id="newPassword"
+                                        className={`${styles.inputField} ${passwordMismatchError ? styles.errorBorder : ''}`}
+                                        placeholder="새 비밀번호를 입력해 주세요"
+                                        value={newPassword}
+                                        onChange={(e) => {
+                                            setNewPassword(e.target.value);
+                                            if (confirmNewPassword && e.target.value !== confirmNewPassword) {
+                                                setPasswordMismatchError(true);
+                                            } else {
+                                                setPasswordMismatchError(false);
+                                            }
+                                        }}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className={styles.passwordToggle}
+                                        onClick={() => setShowNewPassword((prev) => !prev)}
+                                        aria-label={showNewPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                                    >
+                                        <Image
+                                            src={getCdnUrl(showNewPassword ? '/images/open_eye.png' : '/images/closed_eye.png')}
+                                            alt={showNewPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                                            width={20}
+                                            height={20}
+                                        />
+                                    </button>
+                                </div>
                             </div>
                             <div className={styles.inputGroup}>
                                 <label htmlFor="confirmNewPassword">새 비밀번호 확인</label>
-                                <input
-                                    type="password"
-                                    id="confirmNewPassword"
-                                    className={`${styles.inputField} ${passwordMismatchError ? styles.errorBorder : ''}`}
-                                    placeholder="새 비밀번호를 한 번 더 입력해 주세요"
-                                    value={confirmNewPassword}
-                                    onChange={(e) => {
-                                        setConfirmNewPassword(e.target.value);
-                                        if (newPassword && e.target.value !== newPassword) {
-                                            setPasswordMismatchError(true);
-                                        } else {
-                                            setPasswordMismatchError(false);
-                                        }
-                                    }}
-                                    required
-                                />
+                                <div className={styles.passwordInputWrapper}>
+                                    <input
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        id="confirmNewPassword"
+                                        className={`${styles.inputField} ${passwordMismatchError ? styles.errorBorder : ''}`}
+                                        placeholder="새 비밀번호를 한 번 더 입력해 주세요"
+                                        value={confirmNewPassword}
+                                        onChange={(e) => {
+                                            setConfirmNewPassword(e.target.value);
+                                            if (newPassword && e.target.value !== newPassword) {
+                                                setPasswordMismatchError(true);
+                                            } else {
+                                                setPasswordMismatchError(false);
+                                            }
+                                        }}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className={styles.passwordToggle}
+                                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                        aria-label={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                                    >
+                                        <Image
+                                            src={getCdnUrl(showConfirmPassword ? '/images/open_eye.png' : '/images/closed_eye.png')}
+                                            alt={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                                            width={20}
+                                            height={20}
+                                        />
+                                    </button>
+                                </div>
                                 {passwordMismatchError && (
                                     <p className={styles.errorMessage}>비밀번호가 일치하지 않습니다.</p>
                                 )}

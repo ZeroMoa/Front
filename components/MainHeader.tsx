@@ -5,18 +5,19 @@ import Link from 'next/link'
 import styles from './MainHeader.module.css'
 import { useAppDispatch, useAppSelector } from '../app/(user)/store/slices/store';
 import { resetState } from '../app/(user)/store/slices/productSlice';
-import { openLoginModal, logout, selectIsLoggedIn } from '../app/(user)/store/slices/authSlice';
-import { getUserData } from '../app/(user)/store/api/userAuthApi';
+import { openLoginModal, selectIsLoggedIn } from '../app/(user)/store/slices/authSlice';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect, useId } from 'react'; // useState, useRef, useEffect 임포트
-import Cookies from 'js-cookie'; // Cookies 임포트
 import { useIsLoggedIn } from '../app/(user)/hooks/useAuth'; // React Query hook import
-import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotification, useMarkAllNotificationsAsRead } from '../app/(user)/hooks/useNotification'; // 알림 훅 import
+import {
+    useUserNotifications,
+    useMarkNotificationAsRead,
+    useDeleteUserNotification,
+} from '../app/(user)/hooks/useNotification'; // 알림 훅 import
+import { useUserLogout } from '../app/(user)/hooks/useUserLogout';
 import type { CategorySlug } from '../app/(user)/product/config';
 import { getCdnUrl } from '../lib/cdn';
-import { suppressSessionExpiryAlert } from '../lib/common/api/fetchWithAuth';
 import type { UserNotificationResponse } from '@/types/notificationTypes'
-import { useQueryClient } from '@tanstack/react-query';
 
 const CATEGORY_NAV_ITEMS: Array<{
     slug: CategorySlug;
@@ -32,13 +33,12 @@ export default function Header() {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const pathname = usePathname();
-    const queryClient = useQueryClient();
+    const logoutUser = useUserLogout();
     
     const { isLoading: authLoading } = useIsLoggedIn();
     const { data: notifications, isLoading: notificationsLoading, refetch: refetchNotifications } = useUserNotifications();
     const markAsReadMutation = useMarkNotificationAsRead();
     const deleteNotificationMutation = useDeleteUserNotification();
-    const markAllAsReadMutation = useMarkAllNotificationsAsRead(); // 모든 알림 읽음 처리 훅
 
     const [isHydrated, setIsHydrated] = useState(false);
     const isLoggedIn = useAppSelector(selectIsLoggedIn); // Redux의 isLoggedIn 상태 사용
@@ -114,14 +114,10 @@ export default function Header() {
             return;
         }
 
-        const hasUnread = notifications?.some((notification) => !notification.isRead);
         setIsNotificationTooltipOpen((prev) => {
             const next = !prev;
             if (next) {
                 void refetchNotifications();
-                if (hasUnread) {
-                    markAllAsReadMutation.mutate();
-                }
             }
             return next;
         });
@@ -183,62 +179,14 @@ export default function Header() {
 
     const handleLogoutClick = async () => {
         const protectedPrefixes = ['/mypage/profile', '/notifications', '/favorites'];
-        try {
-            const xsrfToken = Cookies.get('XSRF-TOKEN');
-            const refreshToken = Cookies.get('refreshToken') || '';
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/logout`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(xsrfToken && { 'X-XSRF-TOKEN': xsrfToken, 'X-CSRF-TOKEN': xsrfToken }),
-                },
-                body: JSON.stringify({ refreshToken }),
-                credentials: 'include',
-            });
-
-            if (response.ok) {
-                console.log('로그아웃 성공');
-                alert('로그아웃 되었습니다.'); // 로그아웃 성공 메시지
-                suppressSessionExpiryAlert(4000);
-            } else {
-                let errorData: { message?: string } = {};
-                try {
-                    errorData = await response.json();
-                } catch (e) {
-                    errorData.message = '로그아웃 실패: 서버 응답 오류';
-                }
-                const errorMessage = errorData.message || `로그아웃 실패: ${response.status}`;
-
-                if (response.status === 401 && (errorMessage.includes('액세스 토큰이 없습니다. 로그인해주세요.') || errorMessage.includes('액세스 토큰이 만료되었습니다. 다시 로그인해주세요.'))) {
-                    alert('인증 정보가 유효하지 않습니다. 다시 로그인해주세요.');
-                } else {
-                    console.error('로그아웃 실패:', errorMessage);
-                    alert(`로그아웃 실패: ${errorMessage}`);
-                }
-            }
-        } catch (error) {
-            console.error('로그아웃 중 오류 발생:', error);
-            alert(`로그아웃 처리 중 오류 발생: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
-        } finally {
-            dispatch(logout()); // Redux 상태에서 로그아웃 처리
-            await queryClient.cancelQueries({ queryKey: ['userNotifications'] });
-            await queryClient.cancelQueries({ queryKey: ['userNotification'] });
-            queryClient.removeQueries({ queryKey: ['user'], exact: true });
-            queryClient.removeQueries({ queryKey: ['userNotifications'] });
-            queryClient.removeQueries({ queryKey: ['userNotification'] });
-            try {
-                await getUserData();
-            } catch {
-                // logout 후 인증 API에 access/refresh 쿠키가 없는지 확인하기 위한 호출, 실패해도 무시
-            }
-            setIsProfileTooltipOpen(false); // 툴팁 닫기
-            const requiresAuth = protectedPrefixes.some(
-                (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-            );
-            if (requiresAuth) {
-                router.replace('/');
-            }
-        }
+        const requiresAuth = protectedPrefixes.some(
+            (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+        );
+        await logoutUser({
+            protectedPrefixes,
+            forceRedirectTo: requiresAuth ? '/' : undefined,
+        });
+        setIsProfileTooltipOpen(false);
     };
 
     return (
@@ -274,13 +222,14 @@ export default function Header() {
                                         <button
                                             type="button"
                                             onClick={handleProfileIconClick}
-                                            className={styles.iconButton}
+                                            className={`${styles.iconButton} ${styles.iconButtonWithLabel}`}
                                             aria-haspopup="menu"
                                             aria-expanded={isProfileTooltipOpen}
                                             aria-controls={isProfileTooltipOpen ? profileTooltipId : undefined}
                                             ref={profileButtonRef}
                                         >
                                             <Image src={getCdnUrl('/images/profile.png')} alt="프로필" width={50} height={50} className={styles.headerIcon} />
+                                            <span className={styles.iconLabel}>프로필</span>
                                         </button>
                                         {isProfileTooltipOpen && (
                                             <div ref={profileTooltipRef} className={styles.profileTooltip} id={profileTooltipId}>
@@ -289,13 +238,12 @@ export default function Header() {
                                             </div>
                                         )}
                                     </div>
-                                    <span className={styles.iconLabel}>프로필</span>
                                 </div>
 
                                 <div className={`${styles.notificationIconContainer} ${styles.iconWithLabel}`}>
                                     <button
                                         type="button"
-                                        className={styles.iconButton}
+                                        className={`${styles.iconButton} ${styles.iconButtonWithLabel}`}
                                         ref={notificationButtonRef}
                                         onClick={handleNotificationIconClick}
                                         aria-haspopup="dialog"
@@ -306,10 +254,11 @@ export default function Header() {
                                             src={getCdnUrl(notifications?.some(n => !n.isRead) ? '/images/bell4.png' : '/images/bell.png')}
                                             alt="알림" width={30} height={30} className={styles.headerIcon}
                                         />
+                                        <span className={styles.iconLabel}>알림</span>
                                         {/* {!unreadCountLoading && unreadCount && unreadCount > 0 && (
                                             <span className={styles.unreadBadge}>{unreadCount}</span>
                                         )} */}
-                                </button>
+                                    </button>
                                     {isNotificationTooltipOpen && (
                                         <div ref={notificationTooltipRef} className={styles.notificationTooltip} id={notificationTooltipId}>
                                             <div className={styles.notificationHeader}>
@@ -366,14 +315,18 @@ export default function Header() {
                                             </div>
                                         </div>
                                     )}
-                                    <span className={styles.iconLabel}>알림</span>
                                 </div>
 
                                 <div className={styles.iconWithLabel}>
-                                    <button type="button" onClick={handleFavoritesClick} className={styles.iconButton} aria-label="좋아요한 상품">
+                                    <button
+                                        type="button"
+                                        onClick={handleFavoritesClick}
+                                        className={`${styles.iconButton} ${styles.iconButtonWithLabel}`}
+                                        aria-label="좋아요한 상품"
+                                    >
                                         <Image src={getCdnUrl('/images/favorite2.png')} alt="좋아요" width={30} height={30} className={styles.headerIcon} />
+                                        <span className={styles.iconLabel}>좋아요</span>
                                     </button>
-                                    <span className={styles.iconLabel}>좋아요</span>
                                 </div>
                             </div>
                         ) : (

@@ -5,6 +5,7 @@ import Cookies from 'js-cookie'
 let sessionRedirectScheduled = false
 let lastSessionAlertAt = 0
 let sessionAlertMutedUntil = 0
+let sessionRedirectSuppressedUntil = 0
 const SESSION_ALERT_DEBOUNCE_MS = 1500
 
 function displaySessionAlert(message: string) {
@@ -24,12 +25,21 @@ export function suppressSessionExpiryAlert(durationMs = 3000) {
   sessionAlertMutedUntil = Math.max(sessionAlertMutedUntil, now + Math.max(0, durationMs))
 }
 
+export function suppressSessionExpiryRedirect(durationMs = 3000) {
+  const now = Date.now()
+  sessionRedirectSuppressedUntil = Math.max(sessionRedirectSuppressedUntil, now + Math.max(0, durationMs))
+}
+
 function handleSessionExpiry(originPathname: string, loginTarget: string, showAlert = false) {
   if (typeof window === 'undefined') {
     return
   }
 
   const isAdminScope = originPathname.startsWith('/admin')
+  const now = Date.now()
+  if (now < sessionRedirectSuppressedUntil) {
+    return
+  }
   const alertMessage = '로그인이 풀렸습니다! 다시 로그인 부탁드립니다~'
   const maybeAlert = () => {
     if (showAlert) {
@@ -65,6 +75,7 @@ function handleSessionExpiry(originPathname: string, loginTarget: string, showAl
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? ''
+let pendingLoginRedirect: string | null = null
 
 function headersToRecord(headers: Headers): Record<string, string> {
   const record: Record<string, string> = {}

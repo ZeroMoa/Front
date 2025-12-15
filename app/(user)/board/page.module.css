@@ -112,10 +112,6 @@
     transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
-.searchButton:hover {
-    background-color: rgba(230, 235, 245, 0.9);
-    transform: translateY(-1px);
-}
 
 .filterSelects {
     display: flex;
