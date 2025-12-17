@@ -58,6 +58,17 @@
     width: 100%;
 }
 
+.autocompleteTrap {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+}
+
 .inputGroup {
     width: 100%;
     margin-bottom: 0;

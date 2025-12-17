@@ -9,6 +9,19 @@ import { UserNotificationResponse } from '@/types/notificationTypes';
 import { getCdnUrl } from '@/lib/cdn';
 import CircularProgress from '@mui/material/CircularProgress';
 
+function formatDateOnly(value: string | Date | null | undefined) {
+    if (!value) {
+        return '';
+    }
+
+    const date = typeof value === 'string' ? new Date(value) : value;
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return date.toLocaleDateString('ko-KR');
+}
+
 const decodeHtmlEntities = (value: string): string => {
     if (!value) {
         return '';
@@ -172,7 +185,7 @@ export default function NotificationsPage() {
                                     dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(notification.content) }}
                                 />
                                 <div className={styles.notificationFooterContent}> {/* 이 div로 타임스탬프와 액션 버튼을 감쌉니다. */}
-                                    <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
+                                    <span className={styles.notificationTimestamp}>{formatDateOnly(notification.createdDate)}</span>
                                     <div className={styles.notificationActions}> {/* notificationActions를 이 위치로 이동 */}
                                         {!notification.isRead && (
                                             <button onClick={(e) => { e.stopPropagation(); handleMarkAsReadOnly(notification); }} className={styles.markAsReadButton}>

@@ -105,9 +105,24 @@ export default function JoinPage() {
             return false; // 예상치 못한 경우
         } catch (error: any) {
             console.error('중복 확인 중 오류 발생:', error);
-            const fallback = field === 'username' ? "사용중인 아이디입니다." : "사용중인 이메일입니다.";
-            if (field === 'username') { setUsernameError(error.message || fallback); setUsernameSuccess(null); setIsUsernameValidState(false); }
-            if (field === 'email') { setEmailError(error.message || fallback); setEmailSuccess(null); setIsEmailValidState(false); }
+            const fallback = field === 'username' ? '사용중인 아이디입니다.' : '사용중인 이메일입니다.';
+            const networkMessage = '네트워크 오류 또는 서버와 통신하지 못했습니다.';
+            const message =
+                typeof error?.message === 'string' &&
+                error.message.toLowerCase().includes('failed to fetch')
+                    ? networkMessage
+                    : error?.message || fallback;
+
+            if (field === 'username') {
+                setUsernameError(message);
+                setUsernameSuccess(null);
+                setIsUsernameValidState(false);
+            }
+            if (field === 'email') {
+                setEmailError(message);
+                setEmailSuccess(null);
+                setIsEmailValidState(false);
+            }
             return false; // 네트워크 또는 기타 오류 시 유효하지 않음
         }
     }, []);

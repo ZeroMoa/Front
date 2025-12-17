@@ -354,7 +354,7 @@ export default function ProductPageClient({
     const handleCollectionNavigate = (nextCollection: NutritionSlug | 'all') => {
         const nextParams = new URLSearchParams(searchParams.toString());
 
-        const allowToggleToAll = mode === 'search' || mode === 'nutrition';
+        const allowToggleToAll = mode === 'search';
         if (allowToggleToAll && collectionSlug === nextCollection) {
             nextCollection = 'all';
         }

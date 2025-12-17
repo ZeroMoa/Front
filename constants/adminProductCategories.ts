@@ -10,7 +10,7 @@ export const ADMIN_PRODUCT_CATEGORY_TREE: AdminProductCategoryGroup[] = [
       { id: 8, name: '차' },
       { id: 9, name: '커피' },
       { id: 10, name: '에너지 드링크' },
-      { id: 11, name: '주류' },
+      // { id: 11, name: '주류' },
       { id: 12, name: '탄산 - 기타' },
     ],
   },

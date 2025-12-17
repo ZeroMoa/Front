@@ -82,7 +82,7 @@ export const CATEGORY_CONFIG: Record<CategorySlug, CategoryPageConfig> = {
             { slug: 'tea', label: '차', categoryNo: 8 },
             { slug: 'coffee', label: '커피', categoryNo: 9 },
             { slug: 'energy', label: '에너지 드링크', categoryNo: 10 },
-            { slug: 'alcohol', label: '주류', categoryNo: 11 },
+            // { slug: 'alcohol', label: '주류', categoryNo: 11 },
             { slug: 'etc', label: '기타', categoryNo: 12 },
         ],
     },

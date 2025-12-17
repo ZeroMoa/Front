@@ -36,7 +36,6 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     const handleLogin = async (e: React.FormEvent) => { // async로 변경
         e.preventDefault();
         setLoginError(null); // 로그인 시도 시 에러 메시지 초기화
-        console.log('로그인 시도:', { username, password, autoLogin });
 
         try {
             const response = await fetch(`${API_BASE_URL}/login`, { // URL 수정: /user/login -> /login
@@ -61,12 +60,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     }
                 }
                 setLoginError(errorData.message || '로그인 실패: 알 수 없는 오류'); // errorData.message가 비어있을 경우를 대비
-                console.error('로그인 실패:', errorData);
                 return;
             }
 
             const userData = await response.json();
-            console.log('로그인 성공:', userData);
 
             // Redux 상태 업데이트
             dispatch(setLoggedIn(true));
@@ -75,14 +72,17 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             // React Query 캐시 무효화
             queryClient.invalidateQueries({ queryKey: ['user'] });
 
-            const redirectTarget =
-                typeof window !== 'undefined' && window.location.pathname ? window.location.pathname : '/';
+            let redirectTarget = '/';
+            if (typeof window !== 'undefined') {
+                const { pathname, search, hash } = window.location;
+                const next = `${pathname || ''}${search || ''}${hash || ''}`;
+                redirectTarget = next && next !== '' ? next : '/';
+            }
 
             onClose(); // 모달 닫기
             router.replace(redirectTarget); // 현재 페이지 유지
 
         } catch (error) {
-            console.error('로그인 요청 중 오류 발생:', error);
             setLoginError('네트워크 오류 또는 서버 응답 없음');
         }
     };

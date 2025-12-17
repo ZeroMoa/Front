@@ -101,14 +101,12 @@
     padding: 15px;
     border: 1px solid #eee;
     border-radius: 8px;
-    background-color: rgba(247, 249, 255, 0.92);
+    background-color: rgb(233 239 255 / 92%);
     transition: background-color 0.2s ease;
     cursor: pointer;
 }
 
-.notificationItem:hover {
-    background-color: #f0f0f0;
-}
+
 
 .notificationItem.read {
     background-color: #f0f0f0;

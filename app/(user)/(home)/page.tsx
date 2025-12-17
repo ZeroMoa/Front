@@ -185,35 +185,45 @@ export default function HomePage() {
                     </button>
                 </form>
                 <div className={styles.searchTags}>
-                    <button 
+                    <button
                         className={styles.tag}
                         onClick={() => handleTagClick("제로")}
+                        aria-label="제로 검색"
                     >
-                        제로
+                        <span className={styles.tagEmoji}>0️⃣</span>
+                        <span className={styles.tagLabel}>제로</span>
                     </button>
-                    <button 
+                    <button
                         className={styles.tag}
                         onClick={() => handleTagClick("저당")}
+                        aria-label="저당 검색"
                     >
-                        저당
+                        <span className={styles.tagEmoji}>🥗</span>
+                        <span className={styles.tagLabel}>저당</span>
                     </button>
-                    <button 
+                    <button
                         className={styles.tag}
                         onClick={() => handleTagClick("단백질")}
+                        aria-label="단백질 검색"
                     >
-                        단백질 
+                        <span className={styles.tagEmoji}>💪</span>
+                        <span className={styles.tagLabel}>단백질</span>
                     </button>
-                    <button 
+                    <button
                         className={styles.tag}
                         onClick={() => handleTagClick("콜라")}
+                        aria-label="콜라 검색"
                     >
-                        콜라 
+                        <span className={styles.tagEmoji}>🥤</span>
+                        <span className={styles.tagLabel}>콜라</span>
                     </button>
-                    <button 
+                    <button
                         className={styles.tag}
                         onClick={() => handleTagClick("초콜릿")}
+                        aria-label="초콜릿 검색"
                     >
-                        초콜릿
+                        <span className={styles.tagEmoji}>🍫</span>
+                        <span className={styles.tagLabel}>초콜릿</span>
                     </button>
                 </div>
             </section>
@@ -227,7 +237,7 @@ export default function HomePage() {
                 >
                     <div className={styles.featureItem}>
                         <Image 
-                            src={getCdnUrl('/images/zero_calorie.png')} 
+                            src={getCdnUrl('/images/zero_calorie2.png')} 
                             alt="제로 칼로리" 
                             width={80} 
                             height={80}
@@ -247,7 +257,7 @@ export default function HomePage() {
                 >
                     <div className={styles.featureItem}>
                         <Image 
-                            src={getCdnUrl('/images/zero_sugar.png')} 
+                            src={getCdnUrl('/images/zero_sugar2.png')} 
                             alt="제로 슈가" 
                             width={80} 
                             height={80}
@@ -267,7 +277,7 @@ export default function HomePage() {
                 >
                     <div className={styles.featureItem}>
                         <Image 
-                            src={getCdnUrl('/images/low_calorie.png')} 
+                            src={getCdnUrl('/images/low_calorie2.png')} 
                             alt="저칼로리" 
                             width={80} 
                             height={80}
@@ -288,7 +298,7 @@ export default function HomePage() {
                 >
                     <div className={styles.featureItem}>
                         <Image 
-                            src={getCdnUrl('/images/low_sugar.png')} 
+                            src={getCdnUrl('/images/low_sugar4.png')} 
                             alt="저당 식품" 
                             width={80} 
                             height={80}

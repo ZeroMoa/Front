@@ -75,16 +75,28 @@ export default function UserLayout({
   }, [authLoading, pathname, queryIsLoggedIn, router]);
 
   useEffect(() => {
-    if (authLoading) {
+    if (authLoading || !pathname) {
       return;
     }
-    if (!pathname) {
+    if (!queryIsLoggedIn) {
       return;
     }
-    if (queryIsLoggedIn && pathname.startsWith('/login')) {
+
+    const isJoinPage = pathname.startsWith('/login/join');
+    const isRecoveryPage = pathname.startsWith('/login/find');
+
+    if (isJoinPage || isRecoveryPage) {
+      if (isLoginModalOpen) {
+        dispatch(closeLoginModal());
+      }
+      router.replace('/');
+      return;
+    }
+
+    if (pathname.startsWith('/login')) {
       void logoutUser({ forceRedirectTo: '/' });
     }
-  }, [authLoading, pathname, queryIsLoggedIn, logoutUser]);
+  }, [authLoading, pathname, queryIsLoggedIn, logoutUser, router, dispatch, isLoginModalOpen]);
 
   return (
     <>

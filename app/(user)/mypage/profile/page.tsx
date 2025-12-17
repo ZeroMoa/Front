@@ -398,7 +398,11 @@ export default function ProfilePage() {
                     <h2 className={styles.pageTitle}>개인 정보 수정</h2>
                 </div>
                 <div className={styles.formSection}>
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} autoComplete="off">
+                        <div className={styles.autocompleteTrap} aria-hidden="true">
+                            <input type="text" name="fake-username" autoComplete="username" tabIndex={-1} />
+                            <input type="password" name="fake-current-password" autoComplete="current-password" tabIndex={-1} />
+                        </div>
                         <div className={styles.inputGroup}>
                             <label htmlFor="username" className={styles.label}>아이디</label>
                             <div className={styles.inputFieldContainer}>
@@ -428,7 +432,7 @@ export default function ProfilePage() {
                                         <input
                                             data-testid="input-box"
                                             id="currentPassword"
-                                            name="currentPassword"
+                                        name="currentPassword"
                                             placeholder="현재 비밀번호를 입력해 주세요"
                                             type={showCurrentPassword ? 'text' : 'password'}
                                             autoComplete="current-password"

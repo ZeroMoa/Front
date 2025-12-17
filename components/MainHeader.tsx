@@ -19,6 +19,18 @@ import type { CategorySlug } from '../app/(user)/product/config';
 import { getCdnUrl } from '../lib/cdn';
 import type { UserNotificationResponse } from '@/types/notificationTypes'
 
+function formatDateOnly(value: string | Date | null | undefined) {
+    if (!value) {
+        return '';
+    }
+
+    const date = typeof value === 'string' ? new Date(value) : value;
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+        return '';
+    }
+    return date.toLocaleDateString('ko-KR');
+}
+
 const CATEGORY_NAV_ITEMS: Array<{
     slug: CategorySlug;
     label: string;
@@ -283,7 +295,7 @@ export default function Header() {
                                                             <div className={styles.notificationText}>
                                                                 <p className={styles.notificationMessage}>{notification.title}</p>
                                                                 <div className={styles.notificationFooterContent}>
-                                                                    <span className={styles.notificationTimestamp}>{new Date(notification.createdDate).toLocaleString()}</span>
+                                                                    <span className={styles.notificationTimestamp}>{formatDateOnly(notification.createdDate)}</span>
                                                                     <div className={styles.notificationActions}>
                                                                         {!notification.isRead && (
                                                                             <button
