@@ -27,7 +27,9 @@ type EditableAttachment = BoardAttachment & { isVirtual?: boolean };
 type RawAttachment = Partial<BoardAttachment> & Record<string, unknown>;
 
 const ATTACHMENT_KEYS = ['attachments', 'attachmentResponses', 'attachmentList', 'attachmentsResponse', 'attachmentFiles'];
-const MAX_TOTAL_SIZE = 50 * 1024 * 1024;
+const MAX_ATTACHMENT_COUNT = 3;
+const MAX_SINGLE_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+const MAX_TOTAL_SIZE = 30 * 1024 * 1024;
 
 const decodeHtmlContent = (value: string): string => {
     if (!value) {
@@ -75,15 +77,67 @@ const appendMissingAttachmentsToContent = (baseContent: string, attachments: Edi
     return combined;
 };
 
-const removeImageBySource = (html: string, targetSrc?: string): string => {
-    if (!targetSrc || typeof window === 'undefined') {
+const annotateContentWithAttachmentMeta = (content: string, attachments: EditableAttachment[]): string => {
+    if (!content || !attachments?.length) {
+        return content || '<p></p>';
+    }
+    if (typeof window === 'undefined') {
+        return content;
+    }
+
+    const attachmentMap = new Map<string, number>();
+    attachments.forEach((attachment) => {
+        if (attachment.storedPath) {
+            attachmentMap.set(attachment.storedPath, attachment.attachmentNo);
+        }
+    });
+
+    if (!attachmentMap.size) {
+        return content;
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const images = Array.from(doc.querySelectorAll('img'));
+
+    images.forEach((img) => {
+        const src = img.getAttribute('src');
+        if (!src) {
+            return;
+        }
+        const matchedAttachmentNo = attachmentMap.get(src);
+        if (matchedAttachmentNo === undefined) {
+            return;
+        }
+        img.setAttribute('data-attachment-no', String(matchedAttachmentNo));
+        const parent = img.parentElement;
+        if (parent && parent.nodeName === 'P') {
+            parent.setAttribute('data-attachment-no', String(matchedAttachmentNo));
+        }
+    });
+
+    return doc.body.innerHTML || '<p></p>';
+};
+
+const removeImageBySource = (
+    html: string,
+    options?: { targetSrc?: string; attachmentNo?: number },
+): string => {
+    if (typeof window === 'undefined') {
         return html;
     }
+
+    const { targetSrc, attachmentNo } = options ?? {};
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const images = Array.from(doc.querySelectorAll('img'));
+
     images.forEach((img) => {
-        if (img.getAttribute('src') === targetSrc) {
+        const srcMatches = targetSrc && img.getAttribute('src') === targetSrc;
+        const dataAttr = img.getAttribute('data-attachment-no');
+        const attachmentMatches = attachmentNo !== undefined && Number(dataAttr) === attachmentNo;
+
+        if (srcMatches || attachmentMatches) {
             const parent = img.parentElement;
             img.remove();
             if (parent && parent.childNodes.length === 0) {
@@ -91,6 +145,7 @@ const removeImageBySource = (html: string, targetSrc?: string): string => {
             }
         }
     });
+
     const nextHtml = doc.body.innerHTML || '<p></p>';
     return nextHtml;
 };
@@ -299,7 +354,11 @@ export default function WriteBoardPage() {
         setBoardType(boardDetail.boardType);
         setTitle(boardDetail.title ?? '');
         const decodedContent = decodeHtmlContent(boardDetail.content ?? '');
-        const contentWithAttachments = appendMissingAttachmentsToContent(decodedContent, normalizedAttachments);
+        const annotatedContent = annotateContentWithAttachmentMeta(decodedContent, normalizedAttachments);
+        const shouldAppendMissing = !isEditMode || !boardDetail?.content;
+        const contentWithAttachments = shouldAppendMissing
+            ? appendMissingAttachmentsToContent(annotatedContent, normalizedAttachments)
+            : annotatedContent;
         editor.commands.setContent(contentWithAttachments || '<p></p>');
         setSendNotification(false);
         isPrefilledRef.current = true;
@@ -325,8 +384,11 @@ export default function WriteBoardPage() {
                 prev.includes(attachmentNo) ? prev : [...prev, attachmentNo]
             );
         }
-        if (editor && target?.storedPath) {
-            const updatedHtml = removeImageBySource(editor.getHTML(), target.storedPath);
+        if (editor) {
+            const updatedHtml = removeImageBySource(editor.getHTML(), {
+                targetSrc: target?.storedPath,
+                attachmentNo,
+            });
             editor.commands.setContent(updatedHtml || '<p></p>');
         }
     };
@@ -356,9 +418,11 @@ export default function WriteBoardPage() {
         formData.append('content', content);
         formData.append('sendNotification', String(sendNotification));
 
+        const attachmentFieldName = isEditMode ? 'newAttachments' : 'attachments';
+
         uploadedImages.forEach((image) => {
             if (image.file) {
-                formData.append('attachments', image.file, image.name);
+                formData.append(attachmentFieldName, image.file, image.name);
             }
         });
 
@@ -396,25 +460,74 @@ export default function WriteBoardPage() {
         }
     };
 
-    const onDrop = useCallback((acceptedFiles: File[]) => {
-        acceptedFiles.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setUploadedImages(prev => [
-                    ...prev,
-                    {
-                        id: crypto.randomUUID(),
-                        name: file.name,
-                        size: file.size,
-                        src: reader.result as string,
-                        file,
-                        inserted: false,
-                    }
-                ]);
-            };
-            reader.readAsDataURL(file);
-        });
-    }, []);
+    const onDrop = useCallback(
+        (acceptedFiles: File[]) => {
+            if (!acceptedFiles.length) {
+                return;
+            }
+
+            const currentAttachmentCount = existingAttachments.length + uploadedImages.length;
+            if (currentAttachmentCount >= MAX_ATTACHMENT_COUNT) {
+                alert(
+                    `첨부파일은 최대 ${MAX_ATTACHMENT_COUNT}개까지만 등록할 수 있습니다. 기존 첨부를 삭제한 뒤 다시 시도해주세요.`,
+                );
+                return;
+            }
+
+            const availableSlots = MAX_ATTACHMENT_COUNT - currentAttachmentCount;
+            if (acceptedFiles.length > availableSlots) {
+                alert(`첨부파일은 최대 ${MAX_ATTACHMENT_COUNT}개까지만 등록할 수 있습니다. 나머지는 무시됩니다.`);
+            }
+
+            let runningTotalSize =
+                existingAttachments.reduce((sum, attachment) => sum + (attachment.fileSize ?? 0), 0) +
+                uploadedImages.reduce((sum, image) => sum + image.size, 0);
+
+            const filesToAdd: File[] = [];
+
+            for (const file of acceptedFiles) {
+                if (filesToAdd.length >= availableSlots) {
+                    break;
+                }
+
+                if (file.size > MAX_SINGLE_ATTACHMENT_SIZE) {
+                    alert('첨부파일 하나당 최대 10MB까지 업로드할 수 있습니다.');
+                    continue;
+                }
+
+                if (runningTotalSize + file.size > MAX_TOTAL_SIZE) {
+                    alert('첨부파일 총 용량은 30MB를 넘길 수 없습니다.');
+                    break;
+                }
+
+                filesToAdd.push(file);
+                runningTotalSize += file.size;
+            }
+
+            if (!filesToAdd.length) {
+                return;
+            }
+
+            filesToAdd.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    setUploadedImages(prev => [
+                        ...prev,
+                        {
+                            id: crypto.randomUUID(),
+                            name: file.name,
+                            size: file.size,
+                            src: reader.result as string,
+                            file,
+                            inserted: false,
+                        },
+                    ]);
+                };
+                reader.readAsDataURL(file);
+            });
+        },
+        [existingAttachments, uploadedImages],
+    );
 
     const handleInsertImage = (imageId: string) => {
         const image = uploadedImages.find(item => item.id === imageId);
@@ -429,7 +542,7 @@ export default function WriteBoardPage() {
         const targetImage = uploadedImages.find(item => item.id === imageId);
         setUploadedImages(prev => prev.filter(item => item.id !== imageId));
         if (editor && targetImage?.src) {
-            const updatedHtml = removeImageBySource(editor.getHTML(), targetImage.src);
+            const updatedHtml = removeImageBySource(editor.getHTML(), { targetSrc: targetImage.src });
             editor.commands.setContent(updatedHtml || '<p></p>');
         }
     };
@@ -437,6 +550,7 @@ export default function WriteBoardPage() {
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: { 'image/*': [] },
+        maxSize: MAX_SINGLE_ATTACHMENT_SIZE,
     });
 
     const totalSize =

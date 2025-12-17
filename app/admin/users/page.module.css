@@ -54,6 +54,20 @@
   height: 46px;
 }
 
+.searchFieldSelect {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2f5c;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
+.searchFieldSelect:focus {
+  outline: none;
+}
+
 .searchInput {
   flex: 1;
   border: none;

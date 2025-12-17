@@ -12,7 +12,8 @@ import {
 type AdminUserListParams = {
   page: number
   size: number
-  keyword?: string
+  usernameKeyword?: string | null
+  emailKeyword?: string | null
   sortField?: string | null
   sortDirection?: SortDirection | null
 }
@@ -62,9 +63,13 @@ export async function fetchAdminUsersList(params: AdminUserListParams): Promise<
   query.set('page', Math.max(params.page, 0).toString())
   query.set('size', params.size.toString())
 
-  const trimmedKeyword = params.keyword?.trim()
-  if (trimmedKeyword) {
-    query.set('q', trimmedKeyword)
+  const trimmedUsername = params.usernameKeyword?.trim() ?? ''
+  const trimmedEmail = params.emailKeyword?.trim() ?? ''
+  const hasUsername = Boolean(trimmedUsername)
+  const hasEmail = Boolean(trimmedEmail)
+
+  if (hasUsername && hasEmail) {
+    throw new Error('아이디와 이메일 검색은 동시에 사용할 수 없습니다.')
   }
 
   const sortParam = buildSortParam(params.sortField, params.sortDirection)
@@ -72,7 +77,17 @@ export async function fetchAdminUsersList(params: AdminUserListParams): Promise<
     query.set('sort', sortParam)
   }
 
-  const endpoint = trimmedKeyword ? '/admin/users/search' : '/admin/users'
+  let endpoint = '/admin/users'
+
+  if (hasUsername || hasEmail) {
+    endpoint = '/admin/users/search'
+    if (hasUsername) {
+      query.set('username', trimmedUsername)
+    } else if (hasEmail) {
+      query.set('email', trimmedEmail)
+    }
+  }
+
   const response = await fetchWithAuth(buildEndpointWithQuery(endpoint, query))
   const json = await response.json()
   return normalizePageResponse(json, normalizeAdminUser)
@@ -95,8 +110,11 @@ export async function fetchAdminUserManagement(params: AdminUserManageParams): P
   const hasEmail = Boolean(trimmedEmail)
   const hasRole = filters?.roleType && filters.roleType !== 'ALL'
   const hasLock = filters?.isLock && filters.isLock !== 'ALL'
-  const searchKeyword = trimmedUsername || trimmedEmail
-  const shouldUseSearchEndpoint = Boolean(searchKeyword)
+  const shouldUseSearchEndpoint = hasUsername || hasEmail
+
+  if (hasUsername && hasEmail) {
+    throw new Error('아이디와 이메일 검색은 동시에 사용할 수 없습니다.')
+  }
 
   if (hasRole) {
     const role = filters!.roleType === 'ADMIN' ? 'ROLE_ADMIN' : filters!.roleType === 'USER' ? 'ROLE_USER' : filters!.roleType
@@ -107,12 +125,9 @@ export async function fetchAdminUserManagement(params: AdminUserManageParams): P
   }
 
   if (shouldUseSearchEndpoint) {
-    query.set('q', searchKeyword)
-  } else {
     if (hasUsername) {
       query.set('username', trimmedUsername)
-    }
-    if (hasEmail) {
+    } else if (hasEmail) {
       query.set('email', trimmedEmail)
     }
   }

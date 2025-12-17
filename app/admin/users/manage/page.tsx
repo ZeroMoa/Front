@@ -89,6 +89,15 @@ export default function AdminUserManagePage() {
   const emailDropdownRef = useRef<HTMLDivElement | null>(null)
 
   const fetchUsers = useCallback(async () => {
+    const hasUsername = filters.username.trim().length > 0
+    const hasEmail = filters.email.trim().length > 0
+
+    if (hasUsername && hasEmail) {
+      setError('아이디와 이메일 검색은 동시에 사용할 수 없습니다. 하나만 입력해주세요.')
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -329,7 +338,7 @@ export default function AdminUserManagePage() {
 
   const renderLoadingOverlay = () => (
     <div className={styles.loadingOverlay}>
-      <CircularProgress size={32}lassName={styles.loadingSpinner} />
+      <CircularProgress size={32} className={styles.loadingSpinner} />
       <p>회원 목록 불러오는 중...</p>
     </div>
   )
@@ -351,6 +360,11 @@ export default function AdminUserManagePage() {
             ))}
           </select>
         </div>
+      </div>
+
+      <div className={styles.legendNote} role="status" aria-live="polite">
+        <span className={styles.deletedLegendChip} aria-hidden="true" />
+        <span>빨간색 배경은 탈퇴한 회원을 의미합니다.</span>
       </div>
 
       {error && <div className={`${styles.statusMessage} ${styles.errorMessage}`}>{error}</div>}

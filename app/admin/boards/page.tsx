@@ -108,7 +108,7 @@ export default function BoardPage() {
   const handleEditBoard = (event: MouseEvent<HTMLButtonElement>, boardNo: number) => {
     event.preventDefault()
     event.stopPropagation()
-    router.push(`/admin/boards/write?boardNo=${boardNo}`)
+    router.push(`/admin/boards/edit?boardNo=${boardNo}`)
   }
 
   const handleDeleteBoard = async (event: MouseEvent<HTMLButtonElement>, notice: BoardResponse) => {

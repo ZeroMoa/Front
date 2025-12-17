@@ -8,6 +8,7 @@ import styles from './layout.module.css'
 import { getCdnUrl } from '@/lib/cdn'
 import { fetchAdminUserStats } from '@/app/admin/store/api/adminUserApi'
 import Cookies from 'js-cookie'
+import { ensureAuthSession } from '@/lib/common/api/fetchWithAuth'
 
 type NavChildItem = {
   href: string
@@ -157,6 +158,48 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       isMounted = false
     }
   }, [isLoginPage])
+
+  useEffect(() => {
+    if (isLoginPage) {
+      return
+    }
+
+    let handledExpiration = false
+
+    const forceLogout = () => {
+      if (handledExpiration) {
+        return
+      }
+      handledExpiration = true
+      window.alert('로그인이 풀렸습니다! 다시 로그인 부탁드립니다~')
+      router.replace('/admin/login')
+    }
+
+    const runCheckSession = async () => {
+      try {
+        await ensureAuthSession()
+      } catch (error) {
+        console.error('관리자 세션 확인 실패:', error)
+        forceLogout()
+      }
+    }
+
+    void runCheckSession()
+
+    const handleFocus = () => {
+      if (document.visibilityState !== 'visible') {
+        return
+      }
+      void runCheckSession()
+    }
+
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      handledExpiration = true
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [isLoginPage, router])
 
   const handleToggleSidebar = () => {
     setIsSidebarCollapsed((prev) => !prev)

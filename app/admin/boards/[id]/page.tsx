@@ -43,7 +43,7 @@ export default function BoardDetailPage() {
     const handleEditClick = async () => {
         try {
             await ensureAuthSession({ showAlertOnFail: true });
-            router.push(`/admin/boards/write?boardNo=${boardNo}`);
+            router.push(`/admin/boards/edit?boardNo=${boardNo}`);
         } catch (sessionError) {
             if (sessionError instanceof Error) {
                 console.error('세션 갱신 중 오류:', sessionError);

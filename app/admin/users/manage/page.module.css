@@ -31,6 +31,26 @@
     color: #4a5884;
   }
   
+.legendNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  align-self: flex-end;
+}
+
+.deletedLegendChip {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: rgba(255, 118, 140, 0.9);
+  border: 1px solid rgba(196, 73, 92, 0.8);
+  flex-shrink: 0;
+}
+
   .pageSizeControl {
     display: inline-flex;
     align-items: center;

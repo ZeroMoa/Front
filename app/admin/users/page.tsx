@@ -93,10 +93,16 @@ export default function AdminUsersPage() {
   const searchParams = useSearchParams()
   const { setValues: setHeaderValues } = useAdminHeader()
 
+  const usernameParam = searchParams.get('username')
+  const emailParam = searchParams.get('email')
+  const initialSearchField: 'username' | 'email' = emailParam ? 'email' : 'username'
+  const initialSearchValue = (initialSearchField === 'email' ? emailParam : usernameParam) ?? ''
+
   const [data, setData] = useState<PageResponse<AdminUser> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('q') ?? '')
+  const [searchField, setSearchField] = useState<'username' | 'email'>(initialSearchField)
+  const [searchTerm, setSearchTerm] = useState(initialSearchValue)
 
   const pageParamRaw = searchParams.get('page')
   const pageParam = pageParamRaw ? Number(pageParamRaw) : 0
@@ -107,13 +113,15 @@ export default function AdminUsersPage() {
   const size = PAGE_SIZE_OPTIONS.includes(sizeParam) ? sizeParam : PAGE_SIZE_OPTIONS[0]
   const sortParam = searchParams.get('sort')
   const sortState = useMemo(() => parseSortState(sortParam), [sortParam])
-  const keyword = searchParams.get('q') ?? ''
-
   const isDefaultSortActive = sortParam === null
 
   useEffect(() => {
-    setSearchTerm(keyword)
-  }, [keyword])
+    const nextField: 'username' | 'email' = emailParam ? 'email' : 'username'
+    const nextValue = (nextField === 'email' ? emailParam : usernameParam) ?? ''
+
+    setSearchField((prev) => (prev === nextField ? prev : nextField))
+    setSearchTerm(nextValue)
+  }, [usernameParam, emailParam])
 
   useEffect(() => {
     let isMounted = true
@@ -158,26 +166,27 @@ export default function AdminUsersPage() {
   )
 
   const fetchUsers = useCallback(async () => {
-      setLoading(true)
-      setError(null)
+    setLoading(true)
+    setError(null)
     try {
       const nextData = await fetchAdminUsersList({
         page,
         size,
-        keyword: keyword.trim(),
+        usernameKeyword: usernameParam,
+        emailKeyword: emailParam,
         sortField: sortState.field ? SORT_FIELD_MAP[sortState.field] : undefined,
         sortDirection: sortState.direction,
       })
       setData(nextData)
-      } catch (fetchError: unknown) {
-        if ((fetchError as Error).name === 'AbortError') {
-          return
-        }
-        setError((fetchError as Error).message ?? '알 수 없는 오류가 발생했습니다.')
-      } finally {
-        setLoading(false)
+    } catch (fetchError: unknown) {
+      if ((fetchError as Error).name === 'AbortError') {
+        return
       }
-  }, [keyword, page, size, sortState.field, sortState.direction])
+      setError((fetchError as Error).message ?? '알 수 없는 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }, [emailParam, page, size, sortState.direction, sortState.field, usernameParam])
 
   useEffect(() => {
     fetchUsers()
@@ -186,17 +195,21 @@ export default function AdminUsersPage() {
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const trimmed = searchTerm.trim()
-    updateQueryParams({
-      q: trimmed || null,
+    const nextParams: Record<string, string | null> = {
+      username: searchField === 'username' ? (trimmed || null) : null,
+      email: searchField === 'email' ? (trimmed || null) : null,
       page: '0',
       sort: null,
-    })
+    }
+    updateQueryParams(nextParams)
   }
 
   const handleResetFilters = () => {
     setSearchTerm('')
+    setSearchField('username')
     updateQueryParams({
-      q: null,
+      username: null,
+      email: null,
       page: '0',
       sort: null,
     })
@@ -250,12 +263,21 @@ const renderLoadingState = () => (
       <div className={styles.toolbar}>
         <div className={styles.searchArea}>
           <form className={styles.searchForm} onSubmit={handleSearchSubmit}>
+            <select
+              value={searchField}
+              onChange={(event) => setSearchField(event.target.value as 'username' | 'email')}
+              className={styles.searchFieldSelect}
+              aria-label="검색 기준 선택"
+            >
+              <option value="username">아이디</option>
+              <option value="email">이메일</option>
+            </select>
             <input
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               className={styles.searchInput}
-              placeholder="회원명을 입력하세요"
+              placeholder={searchField === 'username' ? '아이디를 입력하세요' : '이메일을 입력하세요'}
             />
             <button type="submit" className={styles.searchButton}>
               <Image src={getCdnUrl('/images/search.png')} alt="검색" width={20} height={20} />
@@ -271,7 +293,7 @@ const renderLoadingState = () => (
               </option>
             ))}
           </select>
-          {(keyword || sortState.field) && (
+          {((usernameParam && usernameParam.trim()) || (emailParam && emailParam.trim()) || sortState.field) && (
             <button type="button" className={styles.resetButton} onClick={handleResetFilters}>
               필터 초기화
             </button>
