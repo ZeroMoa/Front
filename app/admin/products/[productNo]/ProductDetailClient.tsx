@@ -21,7 +21,7 @@ const SWEETENER_KEYWORDS = [
   '솔비톨',
   '자일리톨',
   '아스파탐',
-  '아세설팜',
+  '아세설팜칼륨',
   '수크랄로스',
   '사카린',
   '스테비올',
@@ -30,6 +30,17 @@ const SWEETENER_KEYWORDS = [
 ]
 
 const CAFFEINE_KEYWORDS = ['카페인']
+const DECAF_PREFIXES = ['디', '디 ']
+
+const isDecafContext = (value: string, index: number) => {
+  return DECAF_PREFIXES.some((prefix) => {
+    if (index < prefix.length) {
+      return false
+    }
+
+    return value.slice(index - prefix.length, index) === prefix
+  })
+}
 
 type IngredientHighlightType = 'sweetener' | 'caffeine'
 
@@ -61,6 +72,9 @@ const segmentIngredientText = (value: string): IngredientSegment[] => {
         }
         const index = value.indexOf(keyword, cursor)
         if (index === -1) {
+          continue
+        }
+        if (rule.type === 'caffeine' && isDecafContext(value, index)) {
           continue
         }
         if (
@@ -693,6 +707,14 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const infoCardRef = useRef<HTMLDivElement | null>(null)
   const likesCount = product.likesCount ?? 0
 
+  const handleBackClick = useCallback(() => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    router.push('/admin/products')
+  }, [router])
+
   useEffect(() => {
     if (!editingHighlight && !editingNutritionKey) {
       return undefined
@@ -714,6 +736,17 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   return (
     <div className={styles.wrapper}>
+      <div className={styles.backButtonRow}>
+        <button
+          type="button"
+          className={styles.backButton}
+          aria-label="목록 페이지로 이동"
+          onClick={handleBackClick}
+        >
+          <span className={styles.backIcon} aria-hidden="true" />
+          <span className={styles.backText}>목록으로</span>
+        </button>
+      </div>
       <main className={styles.productContainer}>
         <div className={styles.imageSection}>
           <div className={styles.imageFavoriteOverlay}>

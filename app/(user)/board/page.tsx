@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import Image from 'next/image';
@@ -10,7 +10,7 @@ import { BOARD_TYPE_LABELS, BOARD_TYPE_OPTIONS, BOARD_SEARCH_TYPE_OPTIONS } from
 import { BoardResponse, BoardSearchType, BoardType } from '@/types/boardTypes';
 import { getCdnUrl } from '@/lib/cdn';
 import Pagination from '@/components/pagination/Pagination';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const PAGE_SIZE = 10;
 const MAX_VISIBLE_PAGES = 7;
@@ -19,6 +19,25 @@ const badgeClassMap: Record<BoardType, string> = {
     NOTICE: styles.badgeNOTICE,
     FAQ: styles.badgeFAQ,
     EVENT: styles.badgeEVENT,
+};
+
+const isValidBoardType = (value: string | null): value is BoardType => {
+    return value === 'NOTICE' || value === 'FAQ' || value === 'EVENT';
+};
+
+const isValidBoardSearchType = (value: string | null): value is BoardSearchType => {
+    return value === 'TITLE' || value === 'CONTENT' || value === 'TITLE_OR_CONTENT';
+};
+
+const parsePageParam = (value: string | null) => {
+    if (!value) {
+        return 0;
+    }
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed < 1) {
+        return 0;
+    }
+    return Math.max(parsed - 1, 0);
 };
 
 const resolveErrorMessage = (error: unknown) => {
@@ -34,11 +53,73 @@ const resolveErrorMessage = (error: unknown) => {
 
 export default function BoardPage() {
     const router = useRouter();
-    const [page, setPage] = useState(0);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [keyword, setKeyword] = useState('');
-    const [searchType, setSearchType] = useState<BoardSearchType>('TITLE_OR_CONTENT');
-    const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | BoardType>('ALL');
+    const searchParams = useSearchParams();
+    const searchParamsString = searchParams.toString();
+
+    const initialKeyword = searchParams.get('keyword') ?? '';
+    const initialSearchType = isValidBoardSearchType(searchParams.get('searchType'))
+        ? (searchParams.get('searchType') as BoardSearchType)
+        : 'TITLE_OR_CONTENT';
+    const initialBoardTypeParam = searchParams.get('boardType');
+    const initialBoardType: 'ALL' | BoardType = isValidBoardType(initialBoardTypeParam)
+        ? (initialBoardTypeParam as BoardType)
+        : 'ALL';
+    const initialPage = parsePageParam(searchParams.get('page'));
+
+    const [page, setPage] = useState(initialPage);
+    const [searchQuery, setSearchQuery] = useState(initialKeyword);
+    const [keyword, setKeyword] = useState(initialKeyword);
+    const [searchType, setSearchType] = useState<BoardSearchType>(initialSearchType);
+    const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | BoardType>(
+        initialKeyword ? initialBoardType : 'ALL'
+    );
+
+    const syncUrlState = useCallback((overrides?: Partial<{
+        page: number;
+        keyword: string;
+        searchType: BoardSearchType;
+        boardTypeFilter: 'ALL' | BoardType;
+    }>) => {
+        const targetPage = overrides?.page ?? page;
+        const targetKeyword = overrides?.keyword ?? keyword;
+        const targetSearchType = overrides?.searchType ?? searchType;
+        const targetBoardType = overrides?.boardTypeFilter ?? boardTypeFilter;
+
+        const params = new URLSearchParams();
+        if (targetPage > 0) {
+            params.set('page', String(targetPage + 1));
+        }
+        if (targetKeyword.trim()) {
+            params.set('keyword', targetKeyword.trim());
+            params.set('searchType', targetSearchType);
+            if (targetBoardType !== 'ALL') {
+                params.set('boardType', targetBoardType);
+            }
+        }
+        const queryString = params.toString();
+        const nextUrl = queryString ? `/board?${queryString}` : '/board';
+        router.replace(nextUrl, { scroll: false });
+    }, [router, page, keyword, searchType, boardTypeFilter]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(searchParamsString);
+        const nextPage = parsePageParam(params.get('page'));
+        const nextKeyword = params.get('keyword') ?? '';
+        const nextSearchTypeParam = params.get('searchType');
+        const resolvedSearchType: BoardSearchType = nextKeyword && isValidBoardSearchType(nextSearchTypeParam)
+            ? (nextSearchTypeParam as BoardSearchType)
+            : 'TITLE_OR_CONTENT';
+        const nextBoardTypeParam = params.get('boardType');
+        const resolvedBoardType: 'ALL' | BoardType = nextKeyword && isValidBoardType(nextBoardTypeParam)
+            ? (nextBoardTypeParam as BoardType)
+            : 'ALL';
+
+        setPage(nextPage);
+        setKeyword(nextKeyword);
+        setSearchQuery(nextKeyword);
+        setSearchType(resolvedSearchType);
+        setBoardTypeFilter(resolvedBoardType);
+    }, [searchParamsString]);
 
     const isSearchMode = keyword.trim().length > 0;
 
@@ -70,15 +151,18 @@ export default function BoardPage() {
         const trimmed = searchQuery.trim();
 
         if (!trimmed) {
+            setSearchQuery('');
             setKeyword('');
             setSearchType('TITLE_OR_CONTENT');
             setBoardTypeFilter('ALL');
             setPage(0);
+            router.replace('/board', { scroll: false });
             return;
         }
 
         setKeyword(trimmed);
         setPage(0);
+        syncUrlState({ keyword: trimmed, page: 0 });
     };
 
     const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
@@ -93,7 +177,9 @@ export default function BoardPage() {
     };
 
     const handlePageChange = (pageIndex: number) => {
-        setPage(Math.max(pageIndex - 1, 0));
+        const nextPage = Math.max(pageIndex - 1, 0);
+        setPage(nextPage);
+        syncUrlState({ page: nextPage });
     };
 
     const emptyMessage = isSearchMode ? '조건에 맞는 게시글이 없습니다.' : '등록된 게시글이 없습니다.';
@@ -107,7 +193,7 @@ export default function BoardPage() {
         setSearchType('TITLE_OR_CONTENT');
         setBoardTypeFilter('ALL');
         setPage(0);
-        router.replace('/board');
+        router.replace('/board', { scroll: false });
     };
 
     const listContent = () => {
@@ -221,6 +307,7 @@ export default function BoardPage() {
                                 setSearchType(nextType);
                                 if (keyword) {
                                     setPage(0);
+                                    syncUrlState({ searchType: nextType, page: 0 });
                                 }
                             }}
                         >
@@ -238,6 +325,7 @@ export default function BoardPage() {
                                 setBoardTypeFilter(nextType);
                                 if (keyword) {
                                     setPage(0);
+                                    syncUrlState({ boardTypeFilter: nextType, page: 0 });
                                 }
                             }}
                         >

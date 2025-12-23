@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import styles from './page.module.css'
 import type { WithdrawSurvey } from '@/types/withdrawSurveyTypes'
@@ -49,17 +48,30 @@ export default function WithdrawSurveyDetailPage() {
   }, [surveyId])
 
   const formattedCreated = survey?.createdDate ? formatDateParts(survey.createdDate) : null
+  const createdDateText = formattedCreated?.dateLine ?? '—'
+
+  const handleBackClick = () => {
+    router.push('/admin/survey/withdraw')
+  }
 
   return (
     <div className={styles.pageWrapper}>
+      <div className={styles.backButtonRow}>
+        <button
+          type="button"
+          className={styles.backButton}
+          onClick={handleBackClick}
+          aria-label="설문조사 목록으로 이동"
+        >
+          <span className={styles.backIcon} aria-hidden="true" />
+          <span className={styles.backText}>목록으로</span>
+        </button>
+      </div>
       <div className={styles.header}>
         <div className={styles.titleRow}>
           <h1 className={styles.pageTitle}>설문조사 상세</h1>
           {survey && <span className={styles.meta}>#{survey.displayIndex}</span>}
         </div>
-        <button type="button" className={styles.backButton} onClick={() => router.push('/admin/survey/withdraw')}>
-          목록으로
-        </button>
       </div>
 
       {isLoading ? (
@@ -68,28 +80,24 @@ export default function WithdrawSurveyDetailPage() {
         <div className={styles.errorState}>{error}</div>
       ) : survey ? (
         <div className={styles.card}>
-          <div className={styles.infoGrid}>
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>회원명</span>
-              <span className={styles.infoValue}>{survey.username || '—'}</span>
-              <span className={styles.meta}>ID: {survey.userId || '—'}</span>
-            </div>
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>작성일</span>
-              {formattedCreated ? (
-                <div className={styles.dateCell}>
-                  <span className={styles.dateLine}>{formattedCreated.dateLine}</span>
-                  <span className={styles.timeLine}>{formattedCreated.timeLine}</span>
-                </div>
-              ) : (
-                <span className={styles.infoValue}>—</span>
-              )}
-            </div>
+          <div className={styles.infoCard}>
+            <p className={styles.infoLine}>
+              <span className={styles.infoLabelText}>회원명 :</span>
+              <span className={styles.infoValueText}>{survey.username || '—'}</span>
+            </p>
+            <span className={styles.infoMeta}>ID : {survey.userId || '—'}</span>
+
+            <p className={styles.infoLine}>
+              <span className={styles.infoLabelText}>작성일 :</span>
+              <span className={styles.infoValueText}>{createdDateText}</span>
+            </p>
           </div>
+
+          <div className={styles.sectionDivider} aria-hidden="true" />
 
           <div>
             <div className={styles.reasonTitle}>이유 코드</div>
-            {survey.reasonCodes.length > 0 ? (
+            {survey.reasonCodes && survey.reasonCodes.length > 0 ? (
               <div className={styles.reasonTags}>
                 {survey.reasonCodes.map((code) => {
                   const label = REASON_LABEL_MAP[code] ?? code
@@ -104,6 +112,8 @@ export default function WithdrawSurveyDetailPage() {
               <span className={styles.meta}>선택된 이유 코드가 없습니다.</span>
             )}
           </div>
+
+          <div className={styles.sectionDivider} aria-hidden="true" />
 
           <div>
             <div className={styles.reasonTitle}>추가 의견</div>

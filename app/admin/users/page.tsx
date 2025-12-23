@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  ChangeEvent,
-  FormEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
 import Image from 'next/image'
 import { getCdnUrl } from '@/lib/cdn'
@@ -95,14 +88,12 @@ export default function AdminUsersPage() {
 
   const usernameParam = searchParams.get('username')
   const emailParam = searchParams.get('email')
-  const initialSearchField: 'username' | 'email' = emailParam ? 'email' : 'username'
-  const initialSearchValue = (initialSearchField === 'email' ? emailParam : usernameParam) ?? ''
 
   const [data, setData] = useState<PageResponse<AdminUser> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchField, setSearchField] = useState<'username' | 'email'>(initialSearchField)
-  const [searchTerm, setSearchTerm] = useState(initialSearchValue)
+  const [usernameSearch, setUsernameSearch] = useState(usernameParam ?? '')
+  const [emailSearch, setEmailSearch] = useState(emailParam ?? '')
 
   const pageParamRaw = searchParams.get('page')
   const pageParam = pageParamRaw ? Number(pageParamRaw) : 0
@@ -116,12 +107,17 @@ export default function AdminUsersPage() {
   const isDefaultSortActive = sortParam === null
 
   useEffect(() => {
-    const nextField: 'username' | 'email' = emailParam ? 'email' : 'username'
-    const nextValue = (nextField === 'email' ? emailParam : usernameParam) ?? ''
-
-    setSearchField((prev) => (prev === nextField ? prev : nextField))
-    setSearchTerm(nextValue)
+    setUsernameSearch(usernameParam ?? '')
+    setEmailSearch(emailParam ?? '')
   }, [usernameParam, emailParam])
+
+  const handleUsernameSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUsernameSearch(event.target.value)
+  }
+
+  const handleEmailSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setEmailSearch(event.target.value)
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -192,21 +188,9 @@ export default function AdminUsersPage() {
     fetchUsers()
   }, [fetchUsers])
 
-  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const trimmed = searchTerm.trim()
-    const nextParams: Record<string, string | null> = {
-      username: searchField === 'username' ? (trimmed || null) : null,
-      email: searchField === 'email' ? (trimmed || null) : null,
-      page: '0',
-      sort: null,
-    }
-    updateQueryParams(nextParams)
-  }
-
   const handleResetFilters = () => {
-    setSearchTerm('')
-    setSearchField('username')
+    setUsernameSearch('')
+    setEmailSearch('')
     updateQueryParams({
       username: null,
       email: null,
@@ -215,6 +199,29 @@ export default function AdminUsersPage() {
     })
   }
 
+  const handleSearchChangeEffect = useCallback(() => {
+    const trimmedUsername = usernameSearch.trim()
+    const trimmedEmail = emailSearch.trim()
+    const usernameMatches = trimmedUsername === (usernameParam ?? '')
+    const emailMatches = trimmedEmail === (emailParam ?? '')
+    if (usernameMatches && emailMatches) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      updateQueryParams({
+        username: trimmedUsername || null,
+        email: trimmedEmail || null,
+        page: '0',
+      })
+    }, 350)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [emailParam, updateQueryParams, usernameParam, usernameSearch, emailSearch])
+
+  useEffect(() => {
+    return handleSearchChangeEffect()
+  }, [handleSearchChangeEffect])
   const handleSort = (field: AdminUserSortKey) => {
     const baselineState = isDefaultSortActive && field === DEFAULT_SORT_KEY ? INITIAL_SORT_STATE : sortState
     const next = nextSortState(baselineState, field)
@@ -261,43 +268,44 @@ const renderLoadingState = () => (
       </div>
 
       <div className={styles.toolbar}>
-        <div className={styles.searchArea}>
-          <form className={styles.searchForm} onSubmit={handleSearchSubmit}>
-            <select
-              value={searchField}
-              onChange={(event) => setSearchField(event.target.value as 'username' | 'email')}
-              className={styles.searchFieldSelect}
-              aria-label="검색 기준 선택"
-            >
-              <option value="username">아이디</option>
-              <option value="email">이메일</option>
-            </select>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              className={styles.searchInput}
-              placeholder={searchField === 'username' ? '아이디를 입력하세요' : '이메일을 입력하세요'}
-            />
-            <button type="submit" className={styles.searchButton}>
-              <Image src={getCdnUrl('/images/search.png')} alt="검색" width={20} height={20} />
-            </button>
-          </form>
-        </div>
-
-        <div className={styles.controlsGroup}>
-          <select value={size} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-            {PAGE_SIZE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                페이지당 {option}명
-              </option>
-            ))}
-          </select>
-          {((usernameParam && usernameParam.trim()) || (emailParam && emailParam.trim()) || sortState.field) && (
-            <button type="button" className={styles.resetButton} onClick={handleResetFilters}>
-              필터 초기화
-            </button>
-          )}
+        <div className={styles.filtersBar}>
+          <div className={styles.filtersRow}>
+            <label className={styles.filterUsernameField}>
+              <span>회원명</span>
+              <input
+                name="username"
+                value={usernameSearch}
+                onChange={handleUsernameSearchChange}
+                placeholder="아이디 또는 이름을 입력하세요"
+              />
+            </label>
+            <label className={styles.filterEmailField}>
+              <span>이메일</span>
+              <input
+                name="email"
+                value={emailSearch}
+                onChange={handleEmailSearchChange}
+                placeholder="email@example.com"
+              />
+            </label>
+            <div className={styles.filtersActions}>
+              <div className={styles.pageSizeControl}>
+                페이지 크기
+                <select value={size} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
+                  {PAGE_SIZE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}명씩 보기
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {((usernameParam && usernameParam.trim()) || (emailParam && emailParam.trim()) || sortState.field) && (
+                <button type="button" className={styles.resetButton} onClick={handleResetFilters}>
+                  필터 초기화
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -337,9 +345,9 @@ const renderLoadingState = () => (
                   </tr>
                 ) : (
                   tableContent.map((user) => (
-                    <tr key={user.username} className={styles.tableRow}>
-                      <td>{user.username || '—'}</td>
-                      <td>{user.email || '—'}</td>
+                  <tr key={user.username} className={styles.tableRow}>
+                      <td className={styles.wordBreakCell}>{user.username || '—'}</td>
+                      <td className={`${styles.wordBreakCell} ${styles.emailCell}`}>{user.email || '—'}</td>
                       <td>{user.nickname || '—'}</td>
                       <td>
                         <span

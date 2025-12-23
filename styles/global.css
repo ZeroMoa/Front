@@ -12,6 +12,7 @@
 
 :root {
   --font: 'NanumSquareRound', sans-serif;
+  --typing-font: 'FlightSans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
 
 * {
@@ -19,6 +20,12 @@
     padding: 0;
     margin: 0;
     font-family: var(--font);
+}
+
+input,
+textarea,
+[contenteditable='true'] {
+  font-family: var(--typing-font);
 }
   
 html,

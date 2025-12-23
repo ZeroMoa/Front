@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, MouseEvent } from 'react'
+import { useMemo, useState, useEffect, useCallback, MouseEvent } from 'react'
 import Link from 'next/link'
 import styles from './page.module.css'
 import Image from 'next/image'
@@ -17,7 +17,7 @@ import { BoardResponse, BoardSearchType, BoardType } from '@/types/boardTypes'
 import { getCdnUrl } from '@/lib/cdn'
 import Pagination from '@/components/pagination/Pagination'
 import CircularProgress from '@mui/material/CircularProgress'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ensureAuthSession } from '@/lib/common/api/fetchWithAuth'
 
 const badgeClassMap: Record<BoardType, string> = {
@@ -26,13 +26,47 @@ const badgeClassMap: Record<BoardType, string> = {
     EVENT: styles.badgeEVENT,
 };
 
+const isValidBoardType = (value: string | null): value is BoardType => {
+    return value === 'NOTICE' || value === 'FAQ' || value === 'EVENT'
+}
+
+const isValidBoardSearchType = (value: string | null): value is BoardSearchType => {
+    return value === 'TITLE' || value === 'CONTENT' || value === 'TITLE_OR_CONTENT'
+}
+
+const parsePageParam = (value: string | null) => {
+    if (!value) {
+        return 0
+    }
+    const parsed = Number(value)
+    if (Number.isNaN(parsed) || parsed < 1) {
+        return 0
+    }
+    return Math.max(parsed - 1, 0)
+}
+
 export default function BoardPage() {
   const router = useRouter()
-  const [page, setPage] = useState(0)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [keyword, setKeyword] = useState('')
-  const [searchType, setSearchType] = useState<BoardSearchType>('TITLE_OR_CONTENT')
-  const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | BoardType>('ALL')
+  const searchParams = useSearchParams()
+  const searchParamsString = searchParams.toString()
+
+  const initialKeyword = searchParams.get('keyword') ?? ''
+  const initialSearchType = isValidBoardSearchType(searchParams.get('searchType'))
+    ? (searchParams.get('searchType') as BoardSearchType)
+    : 'TITLE_OR_CONTENT'
+  const initialBoardTypeParam = searchParams.get('boardType')
+  const initialBoardType: 'ALL' | BoardType = isValidBoardType(initialBoardTypeParam)
+    ? (initialBoardTypeParam as BoardType)
+    : 'ALL'
+  const initialPage = parsePageParam(searchParams.get('page'))
+
+  const [page, setPage] = useState(initialPage)
+  const [searchQuery, setSearchQuery] = useState(initialKeyword)
+  const [keyword, setKeyword] = useState(initialKeyword)
+  const [searchType, setSearchType] = useState<BoardSearchType>(initialSearchType)
+  const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | BoardType>(
+    initialKeyword ? initialBoardType : 'ALL'
+  )
   const [isPreparingWrite, setIsPreparingWrite] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
@@ -58,35 +92,92 @@ export default function BoardPage() {
   const totalPages = data?.totalPages ?? 1
   const currentPageIndex = data?.number ?? 0
 
-    const emptyMessage = isSearchMode ? '검색 결과가 없습니다.' : '등록된 공지사항이 없습니다.';
+  const emptyMessage = isSearchMode ? '검색 결과가 없습니다.' : '등록된 공지사항이 없습니다.'
 
-    const handleSearch = () => {
-        const trimmed = searchQuery.trim();
-        if (!trimmed) {
-            setKeyword('');
-            setSearchType('TITLE_OR_CONTENT');
-            setBoardTypeFilter('ALL');
-            setPage(0);
-            return;
-        }
-        setKeyword(trimmed);
-        setPage(0);
-    };
+  const syncUrlState = useCallback(
+    (overrides?: Partial<{
+      page: number
+      keyword: string
+      searchType: BoardSearchType
+      boardTypeFilter: 'ALL' | BoardType
+    }>) => {
+      const targetPage = overrides?.page ?? page
+      const targetKeyword = overrides?.keyword ?? keyword
+      const targetSearchType = overrides?.searchType ?? searchType
+      const targetBoardType = overrides?.boardTypeFilter ?? boardTypeFilter
 
-    const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            handleSearch();
+      const params = new URLSearchParams()
+      if (targetPage > 0) {
+        params.set('page', String(targetPage + 1))
+      }
+      if (targetKeyword.trim()) {
+        params.set('keyword', targetKeyword.trim())
+        params.set('searchType', targetSearchType)
+        if (targetBoardType !== 'ALL') {
+          params.set('boardType', targetBoardType)
         }
-    };
+      }
+      const queryString = params.toString()
+      const nextUrl = queryString ? `/admin/boards?${queryString}` : '/admin/boards'
+      router.replace(nextUrl, { scroll: false })
+    },
+    [router, page, keyword, searchType, boardTypeFilter]
+  )
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParamsString)
+    const nextPage = parsePageParam(params.get('page'))
+    const nextKeyword = params.get('keyword') ?? ''
+    const nextSearchTypeParam = params.get('searchType')
+    const resolvedSearchType: BoardSearchType =
+      nextKeyword && isValidBoardSearchType(nextSearchTypeParam)
+        ? (nextSearchTypeParam as BoardSearchType)
+        : 'TITLE_OR_CONTENT'
+    const nextBoardTypeParam = params.get('boardType')
+    const resolvedBoardType: 'ALL' | BoardType =
+      nextKeyword && isValidBoardType(nextBoardTypeParam)
+        ? (nextBoardTypeParam as BoardType)
+        : 'ALL'
+
+    setPage(nextPage)
+    setKeyword(nextKeyword)
+    setSearchQuery(nextKeyword)
+    setSearchType(resolvedSearchType)
+    setBoardTypeFilter(resolvedBoardType)
+  }, [searchParamsString])
+
+  const handleSearch = () => {
+    const trimmed = searchQuery.trim()
+    if (!trimmed) {
+      setKeyword('')
+      setSearchType('TITLE_OR_CONTENT')
+      setBoardTypeFilter('ALL')
+      setPage(0)
+      router.replace('/admin/boards', { scroll: false })
+      return
+    }
+
+    setKeyword(trimmed)
+    setPage(0)
+    syncUrlState({ keyword: trimmed, page: 0 })
+  }
+
+  const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      handleSearch()
+    }
+  }
 
     const getDisplayNumber = (index: number) => {
         return totalElements - (currentPageIndex * BOARD_PAGE_SIZE + index);
     };
 
-    const handlePageChange = (pageIndex: number) => {
-        setPage(Math.max(pageIndex - 1, 0));
-    };
+  const handlePageChange = (pageIndex: number) => {
+    const nextPage = Math.max(pageIndex - 1, 0)
+    setPage(nextPage)
+    syncUrlState({ page: nextPage })
+  }
 
   const handleWriteClick = async () => {
     if (isPreparingWrite) {
@@ -278,6 +369,7 @@ export default function BoardPage() {
                                 setSearchType(nextType)
                                 if (keyword) {
                                     setPage(0)
+                                    syncUrlState({ searchType: nextType, page: 0 })
                                 }
                             }}
                         >
@@ -295,6 +387,7 @@ export default function BoardPage() {
                                 setBoardTypeFilter(nextType)
                                 if (keyword) {
                                     setPage(0)
+                                    syncUrlState({ boardTypeFilter: nextType, page: 0 })
                                 }
                             }}
                         >
@@ -307,7 +400,6 @@ export default function BoardPage() {
                         </select>
                     </div>
                 </div>
-                
             </div>
 
             {listContent()}

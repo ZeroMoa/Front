@@ -24,6 +24,9 @@ interface ProductSidebarProps {
     onKeywordSubmit: (keyword: string) => void;
     onFilterToggle: (filterKey: ProductFilterKey) => void;
     onResetFilters: () => void;
+    showInlineResetButton?: boolean;
+    inlineResetLabel?: string;
+    onInlineReset?: () => void;
     lockedFilters?: ProductFilterKey[];
     selectedCategorySlug?: CategorySlug;
     onCategorySelect?: (category: CategorySlug | 'all', subSlug?: string) => void;
@@ -40,6 +43,9 @@ export default function ProductSidebar({
     onKeywordSubmit,
     onFilterToggle,
     onResetFilters,
+    showInlineResetButton = false,
+    inlineResetLabel = '필터 초기화',
+    onInlineReset,
     lockedFilters,
     selectedCategorySlug,
     onCategorySelect,
@@ -130,6 +136,9 @@ export default function ProductSidebar({
         [filters, lockedFilters],
     );
 
+    const resolvedInlineResetLabel =
+        inlineResetLabel ?? (activeFilterCount > 0 ? `필터 초기화 (${activeFilterCount})` : '필터 초기화');
+
     const handleSubmit = () => {
         const trimmed = inputValue.trim();
         if (!trimmed) {
@@ -170,6 +179,17 @@ export default function ProductSidebar({
                     </button>
                 </div>
             </div>
+            {showInlineResetButton && (
+                <div className={styles.inlineResetRow}>
+                    <button
+                        type="button"
+                        className={styles.inlineResetButton}
+                        onClick={onInlineReset ?? onResetFilters}
+                    >
+                        {resolvedInlineResetLabel}
+                    </button>
+                </div>
+            )}
 
             {(mode === 'nutrition' || mode === 'new' || mode === 'search') && onCategorySelect && (
                 <div className={styles.sidebarSection}>

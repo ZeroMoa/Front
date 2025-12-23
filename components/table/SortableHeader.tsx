@@ -7,18 +7,26 @@ type SortableHeaderProps = {
   label: ReactNode
   direction?: TableSortDirection
   className?: string
+  hideIndicator?: boolean
 }
 
-export default function SortableHeader({ label, direction = null, className }: SortableHeaderProps) {
+export default function SortableHeader({
+  label,
+  direction = null,
+  className,
+  hideIndicator = false,
+}: SortableHeaderProps) {
   const symbol = getTableSortSymbol(direction)
   const isActive = direction === 'asc' || direction === 'desc'
 
   return (
     <span className={clsx(styles.sortHeader, className)}>
       <span className={styles.label}>{label}</span>
-      <span className={clsx(styles.indicator, isActive && styles.indicatorActive)} aria-hidden="true">
-        {symbol}
-      </span>
+      {!hideIndicator && (
+        <span className={clsx(styles.indicator, isActive && styles.indicatorActive)} aria-hidden="true">
+          {symbol}
+        </span>
+      )}
     </span>
   )
 }

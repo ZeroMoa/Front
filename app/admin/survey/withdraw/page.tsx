@@ -453,18 +453,7 @@ export default function WithdrawSurveyPage() {
       </div>
 
       <div className={styles.controlsRow}>
-        {viewMode === 'table' && (
-          <div className={styles.pageSizeControl}>
-            페이지 크기
-            <select className={styles.pageSizeSelect} value={size} onChange={handlePageSizeChange}>
-              {PAGE_SIZE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}개씩 보기
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        
         <label className={styles.toggleSwitch}>
           <input
             type="checkbox"
@@ -485,9 +474,10 @@ export default function WithdrawSurveyPage() {
 
       {viewMode === 'table' && (
         <div className={styles.filterPanel}>
-          <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>이유 코드</span>
-            <div className={styles.reasonChips}>
+          <div className={styles.filterPanelHeader}>
+            <div className={styles.filterGroup}>
+              <span className={styles.filterLabel}>이유 코드</span>
+              <div className={styles.reasonChips}>
               {PRIORITY_REASON_LABELS.map(({ code, label }) => {
                 const active = selectedReasons.includes(code)
                 return (
@@ -502,6 +492,8 @@ export default function WithdrawSurveyPage() {
                 )
               })}
             </div>
+          </div>
+            
           </div>
           <div className={styles.filterRow}>
           <label className={styles.filterField}>
@@ -600,14 +592,27 @@ export default function WithdrawSurveyPage() {
               }}
             />
           </label>
-          <button
-            type="button"
-            className={styles.resetButton}
-            onClick={handleResetFilters}
-            disabled={!isFiltered}
-          >
-            필터 초기화
-          </button>
+
+          <div className={styles.controlsGroup}>
+            <div className={styles.pageSizeControl}>
+              페이지 크기
+              <select className={styles.pageSizeSelect} value={size} onChange={handlePageSizeChange}>
+                {PAGE_SIZE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}개씩 보기
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="button"
+              className={styles.resetButton}
+              onClick={handleResetFilters}
+              disabled={!isFiltered}
+            >
+              필터 초기화
+            </button>
+          </div>
         </div>
         </div>
       )}

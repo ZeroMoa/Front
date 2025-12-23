@@ -208,6 +208,14 @@
   background: rgba(214, 226, 255, 0.32);
 }
 
+.tableHeadCell.unsortableHeader {
+  cursor: default;
+}
+
+.tableHeadCell.unsortableHeader:hover {
+  background: transparent;
+}
+
 .tableHeadCell:first-child {
   border-top-left-radius: 18px;
 }

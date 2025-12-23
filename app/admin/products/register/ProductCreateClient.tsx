@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import styles from './page.module.css'
@@ -125,6 +125,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   const [autoHealthFlags, setAutoHealthFlags] = useState<Record<HealthFlagKey, boolean>>({ ...DEFAULT_HEALTH_FLAGS })
   const [manualOverrides, setManualOverrides] = useState<Record<HealthFlagKey, boolean>>({ ...DEFAULT_MANUAL_OVERRIDES })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const submittingRef = useRef(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const clearPreview = useCallback(() => {
@@ -300,24 +301,32 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault()
-    if (isSubmitting) {
+    if (submittingRef.current) {
       return
     }
 
+    submittingRef.current = true
+    setIsSubmitting(true)
     setSuccessMessage(null)
 
     if (!formValues.productName.trim()) {
       alert('제품명을 입력해주세요.')
+      submittingRef.current = false
+      setIsSubmitting(false)
       return
     }
 
     if (!categoryId) {
       alert('카테고리를 선택해주세요.')
+      submittingRef.current = false
+      setIsSubmitting(false)
       return
     }
 
     if (!imageFile) {
       alert('대표 이미지를 등록해주세요.')
+      submittingRef.current = false
+      setIsSubmitting(false)
       return
     }
 
@@ -351,14 +360,16 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
     payload.append('attachments', imageFile)
 
     try {
-      setIsSubmitting(true)
       const product = await createAdminProduct(payload)
       setSuccessMessage('제품이 등록되었습니다.')
       router.push(`/admin/products/${product.productNo}`)
+      // 성공 이후에는 재전송 방지를 위해 submittingRef와 isSubmitting을 해제하지 않음
+      // (페이지 이동으로 자연스럽게 폼이 떠나게 됨)
+      return
     } catch (error) {
       const message = error instanceof Error ? error.message : '제품 등록에 실패했습니다.'
       alert(message)
-    } finally {
+      submittingRef.current = false
       setIsSubmitting(false)
     }
   }

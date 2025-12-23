@@ -1,7 +1,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 20px;
 }
 
 .pageTitle {
@@ -30,79 +30,84 @@
 
 .toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.searchArea {
+.filtersBar {
   display: flex;
-  align-items: center;
-  gap: 18px;
-  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 20px;
+  background: rgba(247, 249, 255, 0.96);
+  border: 1px solid rgba(180, 197, 236, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-.searchForm {
+.filtersRow {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(243, 246, 252, 0.9);
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filterUsernameField,
+.filterEmailField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: #435181;
+}
+
+.filterUsernameField {
+  width: 220px;
+}
+
+.filterEmailField {
+  min-width: 280px;
+  flex: 0 1 280px;
+}
+
+.filterFieldSmall {
+  max-width: 160px;
+}
+
+.filterUsernameField input,
+.filterEmailField input {
   border-radius: 12px;
-  padding: 0 12px;
-  border: 1px solid rgba(185, 201, 228, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  height: 46px;
-}
-
-.searchFieldSelect {
-  border: none;
-  background: transparent;
+  border: 1px solid rgba(155, 174, 220, 0.6);
+  padding: 10px 12px;
   font-size: 14px;
-  font-weight: 600;
-  color: #1f2f5c;
-  padding: 8px 4px;
-  cursor: pointer;
+  color: #2f3f69;
+  background: rgba(248, 250, 255, 0.95);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-.searchFieldSelect:focus {
-  outline: none;
+.filtersActions {
+  margin-left: auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.searchInput {
-  flex: 1;
-  border: none;
-  background: transparent;
-  padding: 12px 8px;
-  font-size: 15px;
-  color: #23304a;
-  min-width: 0;
-}
-
-.searchInput:focus {
-  outline: none;
-}
-
-.searchButton {
+.pageSizeControl {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  gap: 12px;
+  font-size: 14px;
+  color: #435181;
 }
 
 .pageSizeSelect {
   border-radius: 12px;
-  border: 1px solid rgba(202, 212, 238, 0.7);
-  background: rgba(249, 251, 255, 0.92);
-  color: #1f2f5c;
-  font-size: 15px;
-  padding: 10px 14px;
-  cursor: pointer;
+  border: 1px solid rgba(155, 174, 220, 0.6);
+  padding: 8px 14px;
+  font-size: 14px;
+  color: #2f3f69;
+  background: rgba(248, 250, 255, 0.96);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
@@ -125,6 +130,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.wordBreakCell {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+.emailCell {
+  word-break: break-all;
 }
 
 .tableHead tr {
@@ -245,12 +261,6 @@
   color: rgba(31, 47, 92, 0.7);
 }
 
-.controlsGroup {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
 .resetButton {
   background: linear-gradient(135deg, #4f7cff, #6c5cff);
   border: none;
@@ -267,20 +277,12 @@
   transform: translateY(-1px);
 }
 
-@media (max-width: 1280px) {
-  .toolbar {
+@media (max-width: 860px) {
+  .filtersRow {
     flex-direction: column;
-    align-items: flex-start;
   }
 
-  .searchArea {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .controlsGroup {
+  .filtersActions {
     width: 100%;
     justify-content: flex-start;
   }
@@ -290,10 +292,6 @@
   .tableWrapper,
   .content {
     overflow-x: auto;
-  }
-
-  .searchInput {
-    width: 160px;
   }
 
   .pageTitle {

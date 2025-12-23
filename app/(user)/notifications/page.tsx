@@ -8,6 +8,7 @@ import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotificat
 import { UserNotificationResponse } from '@/types/notificationTypes';
 import { getCdnUrl } from '@/lib/cdn';
 import CircularProgress from '@mui/material/CircularProgress';
+import { extractFirstImageSrcFromContent } from '@/lib/utils/notificationUtils';
 
 function formatDateOnly(value: string | Date | null | undefined) {
     if (!value) {
@@ -21,18 +22,6 @@ function formatDateOnly(value: string | Date | null | undefined) {
 
     return date.toLocaleDateString('ko-KR');
 }
-
-const decodeHtmlEntities = (value: string): string => {
-    if (!value) {
-        return '';
-    }
-    if (typeof window === 'undefined') {
-        return value;
-    }
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = value;
-    return textarea.value;
-};
 
 export default function NotificationsPage() {
     const router = useRouter();
@@ -169,37 +158,48 @@ export default function NotificationsPage() {
                 {displayedNotifications.length === 0 ? (
                     <p className={styles.noNotifications}>표시할 알림이 없습니다.</p>
                 ) : (
-                    displayedNotifications.map((notification) => (
-                        <div 
-                            key={notification.userNotificationNo}
-                            id={`notification-${notification.userNotificationNo}`}
-                            className={`${styles.notificationItem} ${notification.isRead ? styles.read : ''}`}
-                            onClick={() => handleNotificationClick(notification)}
-                        >
-                            {/* 알림 타입에 따른 아이콘 (필요시 추가) */}
-                            <Image src={getCdnUrl('/images/bell.png')} alt="알림 아이콘" width={40} height={40} className={styles.notificationIcon} />
-                            <div className={styles.notificationText}>
-                                <h2 className={styles.notificationTitle}>{notification.title}</h2>
-                                <div
-                                    className={styles.notificationContent}
-                                    dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(notification.content) }}
-                                />
-                                <div className={styles.notificationFooterContent}> {/* 이 div로 타임스탬프와 액션 버튼을 감쌉니다. */}
-                                    <span className={styles.notificationTimestamp}>{formatDateOnly(notification.createdDate)}</span>
-                                    <div className={styles.notificationActions}> {/* notificationActions를 이 위치로 이동 */}
-                                        {!notification.isRead && (
-                                            <button onClick={(e) => { e.stopPropagation(); handleMarkAsReadOnly(notification); }} className={styles.markAsReadButton}>
-                                                읽음
+                    displayedNotifications.map((notification) => {
+                        const previewSrc = extractFirstImageSrcFromContent(notification.content);
+                        return (
+                            <div 
+                                key={notification.userNotificationNo}
+                                id={`notification-${notification.userNotificationNo}`}
+                                className={`${styles.notificationItem} ${notification.isRead ? styles.read : ''}`}
+                                onClick={() => handleNotificationClick(notification)}
+                            >
+                                {/* 알림 타입에 따른 아이콘 (필요시 추가) */}
+                                <Image src={getCdnUrl('/images/bell.png')} alt="알림 아이콘" width={40} height={40} className={styles.notificationIcon} />
+                                <div className={styles.notificationText}>
+                                    <h2 className={styles.notificationTitle}>{notification.title}</h2>
+                                    {previewSrc && (
+                                        <div className={styles.notificationImageWrapper}>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={previewSrc}
+                                                alt="알림 대표 이미지"
+                                                className={styles.notificationImage}
+                                                loading="lazy"
+                                                decoding="async"
+                                            />
+                                        </div>
+                                    )}
+                                    <div className={styles.notificationFooterContent}> {/* 이 div로 타임스탬프와 액션 버튼을 감쌉니다. */}
+                                        <span className={styles.notificationTimestamp}>{formatDateOnly(notification.createdDate)}</span>
+                                        <div className={styles.notificationActions}> {/* notificationActions를 이 위치로 이동 */}
+                                            {!notification.isRead && (
+                                                <button onClick={(e) => { e.stopPropagation(); handleMarkAsReadOnly(notification); }} className={styles.markAsReadButton}>
+                                                    읽음
+                                                </button>
+                                            )}
+                                            <button onClick={(e) => { e.stopPropagation(); handleDeleteNotification(notification.userNotificationNo); }} className={styles.deleteButton}>
+                                                <Image src={getCdnUrl('/images/delete.png')} alt="삭제" width={20} height={20} />
                                             </button>
-                                        )}
-                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteNotification(notification.userNotificationNo); }} className={styles.deleteButton}>
-                                            <Image src={getCdnUrl('/images/delete.png')} alt="삭제" width={20} height={20} />
-                                        </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
         </div>

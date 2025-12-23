@@ -33,13 +33,14 @@ export const SORT_FIELD_MAP: Record<SortKey, string> = {
 export const TABLE_COLUMNS: Array<{
   key: SortKey
   label: string
+  sortable?: boolean
 }> = [
   { key: 'adminNotificationNo', label: '관리자 알림 번호' },
   { key: 'title', label: '게시글 제목' },
   { key: 'boardNo', label: '게시글 번호' },
   { key: 'sentAt', label: '전송 시간' },
   { key: 'isActive', label: '활성화 여부' },
-  { key: 'createdDate', label: '생성일' },
+  { key: 'createdDate', label: '생성일', sortable: false },
   { key: 'updatedDate', label: '수정일' },
 ]
 

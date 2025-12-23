@@ -15,7 +15,7 @@ const PRODUCT_API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     'https://localhost:8443';
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
-const ERROR_IMAGE = getCdnUrl('/images/error.png');
+const ERROR_IMAGE = getCdnUrl('/images/error.jpg');
 
 const SWEETENER_KEYWORDS = [
     '알룰로스',
@@ -24,7 +24,7 @@ const SWEETENER_KEYWORDS = [
     '솔비톨',
     '자일리톨',
     '아스파탐',
-    '아세설팜',
+    '아세설팜칼륨',
     '수크랄로스',
     '사카린',
     '스테비올',
@@ -32,6 +32,17 @@ const SWEETENER_KEYWORDS = [
     '타가토스',
 ];
 const CAFFEINE_KEYWORDS = ['카페인'];
+const DECAF_PREFIXES = ['디', '디 '];
+
+const isDecafContext = (value: string, index: number) => {
+    return DECAF_PREFIXES.some((prefix) => {
+        if (index < prefix.length) {
+            return false;
+        }
+
+        return value.slice(index - prefix.length, index) === prefix;
+    });
+};
 
 type IngredientHighlightType = 'sweetener' | 'caffeine';
 
@@ -117,6 +128,9 @@ const segmentIngredientText = (value: string): IngredientSegment[] => {
                 if (index === -1) {
                     continue;
                 }
+                        if (rule.type === 'caffeine' && isDecafContext(value, index)) {
+                            continue;
+                        }
                 if (
                     bestMatch === null ||
                     index < bestMatch.start ||
@@ -267,7 +281,6 @@ export default function ProductDetail() {
                     setIsLoading(false);
                 }
             } catch (err: unknown) {
-                console.error('Error fetching product:', err);
                 if (mounted) {
                     const message = err instanceof Error ? err.message : '제품 정보를 불러오지 못했습니다';
                     setError(message);
@@ -334,8 +347,8 @@ export default function ProductDetail() {
                 <Image
                     src={ERROR_IMAGE}
                     alt="오류"
-                    width={320}
-                    height={240}
+                    width={550}
+                    height={550}
                     className={styles.errorImage}
                     priority
                 />
@@ -478,8 +491,27 @@ export default function ProductDetail() {
         pushNutritionRow('에리스리톨', product.erythritolG, 'g');
     }
 
+    const handleBackClick = () => {
+        if (typeof window !== 'undefined' && window.history.length > 1) {
+            router.back();
+            return;
+        }
+        router.push('/product');
+    };
+
     return (
             <div className={styles.wrapper}>
+                <div className={styles.backButtonRow}>
+                    <button
+                        type="button"
+                        className={styles.backButton}
+                        aria-label="목록 페이지로 이동"
+                        onClick={handleBackClick}
+                    >
+                        <span className={styles.backIcon} aria-hidden="true" />
+                        <span className={styles.backText}>목록으로</span>
+                    </button>
+                </div>
                 <main className={styles.productContainer}>
                     <div className={styles.imageSection}>
                     <div className={styles.imageFavoriteOverlay}>

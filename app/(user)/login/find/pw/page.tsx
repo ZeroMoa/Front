@@ -79,6 +79,7 @@ export default function FindPasswordPage() {
     const [resetToken, setResetToken] = useState<string | null>(null); // 비밀번호 재설정 토큰
     const [findPwStep, setFindPwStep] = useState<1 | 2 | 3>(1); // 1: 정보 입력, 2: 새 비밀번호 입력, 3: 완료
     const [secondsRemaining, setSecondsRemaining] = useState(RESET_TOKEN_DURATION_SECONDS);
+    const [expirationTimestamp, setExpirationTimestamp] = useState<number | null>(null);
 
     // 비밀번호 재설정 관련 상태
     const [newPassword, setNewPassword] = useState('');
@@ -125,6 +126,7 @@ export default function FindPasswordPage() {
 
 const handleTokenExpiration = useCallback(() => {
         setResetToken(null);
+        setExpirationTimestamp(null);
         setFindPwStep(1);
         setErrorMessage('비밀번호 재설정 시간이 지났습니다.\n처음부터 다시 진행해 주세요.');
         setIsErrorModalOpen(true);
@@ -132,27 +134,37 @@ const handleTokenExpiration = useCallback(() => {
 
     useEffect(() => {
         let intervalId: NodeJS.Timeout | null = null;
-        if (findPwStep === 2) {
-            setSecondsRemaining(RESET_TOKEN_DURATION_SECONDS);
-            intervalId = setInterval(() => {
-                setSecondsRemaining((prev) => {
-                    if (prev <= 1) {
+        if (findPwStep === 2 && expirationTimestamp !== null) {
+            const updateRemaining = () => {
+                setSecondsRemaining(() => {
+                    const remainingMs = expirationTimestamp - Date.now();
+                    if (remainingMs <= 0) {
                         if (intervalId) {
                             clearInterval(intervalId);
                         }
                         handleTokenExpiration();
                         return 0;
                     }
-                    return prev - 1;
+                    return Math.max(0, Math.ceil(remainingMs / 1000));
                 });
-            }, 1000);
+            };
+
+            updateRemaining();
+            intervalId = setInterval(updateRemaining, 1000);
         }
+
         return () => {
             if (intervalId) {
                 clearInterval(intervalId);
             }
         };
-    }, [findPwStep, handleTokenExpiration]);
+    }, [findPwStep, expirationTimestamp, handleTokenExpiration]);
+
+    useEffect(() => {
+        if (findPwStep === 2 && expirationTimestamp !== null && expirationTimestamp <= Date.now()) {
+            handleTokenExpiration();
+        }
+    }, [findPwStep, expirationTimestamp, handleTokenExpiration]);
 
     // 비밀번호 초기화 시작 API 호출
     const handleInitiatePasswordReset = async (e: React.FormEvent) => {
@@ -172,9 +184,11 @@ const handleTokenExpiration = useCallback(() => {
             });
             setResetToken(data.resetToken); // 토큰 저장
             setResetSuccessMessage(null);
+            const expiresAt = Date.now() + RESET_TOKEN_DURATION_SECONDS * 1000;
+            setExpirationTimestamp(expiresAt);
+            setSecondsRemaining(RESET_TOKEN_DURATION_SECONDS);
             setFindPwStep(2); // 비밀번호 재설정 폼으로 전환
         } catch (error: any) {
-            console.error('비밀번호 찾기 요청 중 오류 발생:', error);
             openErrorModal(mapPasswordInitiateError(error));
         }
     };
@@ -205,6 +219,7 @@ const handleTokenExpiration = useCallback(() => {
             setNewPassword('');
             setConfirmNewPassword('');
             setResetToken(null);
+            setExpirationTimestamp(null);
             setFindPwStep(3);
         } catch (error: any) {
             console.error('비밀번호 재설정 요청 중 오류 발생:', error);
@@ -216,8 +231,13 @@ const handleTokenExpiration = useCallback(() => {
         dispatch(openLoginModal());
     };
 
-    const formattedTimer = `${String(Math.floor(secondsRemaining / 60)).padStart(2, '0')}:${String(
-        secondsRemaining % 60
+    const currentRemainingSeconds =
+        expirationTimestamp !== null
+            ? Math.max(0, Math.ceil((expirationTimestamp - Date.now()) / 1000))
+            : secondsRemaining;
+
+    const formattedTimer = `${String(Math.floor(currentRemainingSeconds / 60)).padStart(2, '0')}:${String(
+        currentRemainingSeconds % 60
     ).padStart(2, '0')}`;
 
     return (

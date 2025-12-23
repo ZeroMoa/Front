@@ -350,16 +350,7 @@ export default function AdminUserManagePage() {
           <h1 className={styles.pageTitle}>회원 관리</h1>
           <span className={styles.totalInfo}>총 {totalElements.toLocaleString()}명</span>
         </div>
-        <div className={styles.pageSizeControl}>
-          페이지 크기
-          <select value={size} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-            {PAGE_SIZE_OPTIONS_LIST.map((option) => (
-              <option key={option} value={option}>
-                {option}명씩 보기
-              </option>
-            ))}
-          </select>
-        </div>
+        
       </div>
 
       <div className={styles.legendNote} role="status" aria-live="polite">
@@ -378,7 +369,7 @@ export default function AdminUserManagePage() {
               name="username"
               value={filters.username}
               onChange={handleFilterInputChange}
-              placeholder="아이디 또는 이름"
+              placeholder="검색할 아이디를 입력하세요"
             />
           </label>
           <label className={styles.filterEmailField}>
@@ -395,9 +386,21 @@ export default function AdminUserManagePage() {
               ))}
             </select>
           </label>
-          <button type="button" className={styles.resetButton} onClick={handleResetFilters} disabled={!hasActiveControls}>
-            필터 초기화
-          </button>
+          <div className={styles.filtersActions}>
+            <div className={styles.pageSizeControl}>
+              페이지 크기
+              <select value={size} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
+                {PAGE_SIZE_OPTIONS_LIST.map((option) => (
+                  <option key={option} value={option}>
+                    {option}명씩 보기
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button type="button" className={styles.resetButton} onClick={handleResetFilters} disabled={!hasActiveControls}>
+              필터 초기화
+            </button>
+          </div>
         </div>
       </div>
 
@@ -408,7 +411,7 @@ export default function AdminUserManagePage() {
           <>
             <table className={styles.table}>
               <thead className={styles.tableHead}>
-                <tr>
+                <tr>                            
                   {MANAGE_USER_TABLE_COLUMNS.map(({ key, label, width }) => {
                     const direction = sortState.field === key ? sortState.direction : null
                     return (

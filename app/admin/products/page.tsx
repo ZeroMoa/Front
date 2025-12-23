@@ -76,27 +76,23 @@ export default async function AdminProductsPage({
   const activeFilters = getActiveFilters(filters)
 
   const hasKeyword = Boolean(keyword)
+  const shouldUseSearch = hasKeyword || Boolean(isNewParam)
 
   const searchCategoryNo =
     selectedSubCategory.categoryNo && selectedSubCategory.categoryNo > 0
       ? selectedSubCategory.categoryNo
       : undefined
 
-  const productResponse = hasKeyword
-      ? await fetchProductSearch(
-          {
-            query: keyword,
-            categoryNo: searchCategoryNo,
-            page,
-            size,
-            sort,
-            isNew: isNewParam,
-            filters,
-          },
-          { cache: 'no-store' },
-          { includeProductsWithoutImage: true, requireAuth: true }
-        )
-    : categoryConfig
+  const searchRequestBase: Parameters<typeof fetchProductSearch>[0] = {
+    page,
+    size,
+    sort,
+    isNew: isNewParam,
+    filters,
+    categoryNo: searchCategoryNo,
+  }
+
+  const productResponse = categoryConfig
     ? await fetchCategoryProducts(
         {
           categoryNo: selectedSubCategory.categoryNo,
@@ -109,31 +105,27 @@ export default async function AdminProductsPage({
         { cache: 'no-store' },
         { includeProductsWithoutImage: true }
       )
-    : activeCollection === 'all'
+    : activeCollection === 'all' || shouldUseSearch
       ? await fetchProductSearch(
+          {
+            ...searchRequestBase,
+            query: keyword || undefined,
+          },
+          { cache: 'no-store' },
+          { includeProductsWithoutImage: true, requireAuth: true }
+        )
+      : await fetchNutritionProducts(
+          baseConfig.slug,
           {
             page,
             size,
             sort,
             keyword: keyword || undefined,
             isNew: isNewParam,
-            filters,
           },
           { cache: 'no-store' },
-          { includeProductsWithoutImage: true, requireAuth: true }
+          { includeProductsWithoutImage: true }
         )
-    : await fetchNutritionProducts(
-        baseConfig.slug,
-        {
-          page,
-          size,
-          sort,
-          keyword: keyword || undefined,
-          isNew: isNewParam,
-        },
-        { cache: 'no-store' },
-        { includeProductsWithoutImage: true }
-      )
 
   const pageMode = hasKeyword ? 'search' : 'nutrition'
 

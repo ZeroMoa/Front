@@ -1,7 +1,7 @@
 .pageWrapper {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
   }
   
   .headerSection {
@@ -100,6 +100,14 @@
     flex-wrap: wrap;
   }
 
+  .filtersActions {
+    margin-left: auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
   .filterUsernameField,
   .filterEmailField,
   .filterRoleField,
@@ -158,6 +166,10 @@
       width: 100%;
       justify-self: stretch;
     }
+    .filtersActions {
+      width: 100%;
+      justify-content: flex-start;
+    }
   }
 
   .resetButton {
@@ -188,13 +200,13 @@
   }
   
   .tableHead th {
-    padding: 18px 22px;
+    padding: 0;
     font-size: 15px;
     font-weight: 700;
     text-align: left;
     border-bottom: 1px solid rgba(210, 220, 245, 0.6);
-  user-select: none;
-  cursor: pointer;
+    user-select: none;
+    cursor: pointer;
   }
   
 .headerButton {
@@ -202,8 +214,8 @@
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  min-height: 100%;
-  padding: 0;
+  height: 100%;
+  padding: 18px 22px;
   border: none;
   background: transparent;
   color: inherit;
@@ -415,6 +427,9 @@
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 18px;
+    width: 100%;
+    padding: 18px 22px;
+    box-sizing: border-box;
   }
   
   .formField {
@@ -458,10 +473,15 @@
   
   .formActions {
     display: flex;
+    justify-content: flex-end;
     align-items: flex-end;
     gap: 10px;
     margin-left: auto;
     min-width: 170px;
+  }
+
+  .expandedRow td {
+    padding: 0;
   }
   
   .statusMessage {

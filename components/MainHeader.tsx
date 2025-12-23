@@ -13,11 +13,13 @@ import {
     useUserNotifications,
     useMarkNotificationAsRead,
     useDeleteUserNotification,
+    useMarkAllNotificationsAsRead,
 } from '../app/(user)/hooks/useNotification'; // 알림 훅 import
 import { useUserLogout } from '../app/(user)/hooks/useUserLogout';
 import type { CategorySlug } from '../app/(user)/product/config';
 import { getCdnUrl } from '../lib/cdn';
 import type { UserNotificationResponse } from '@/types/notificationTypes'
+import { extractFirstImageSrcFromContent } from '../lib/utils/notificationUtils';
 
 function formatDateOnly(value: string | Date | null | undefined) {
     if (!value) {
@@ -51,6 +53,7 @@ export default function Header() {
     const { data: notifications, isLoading: notificationsLoading, refetch: refetchNotifications } = useUserNotifications();
     const markAsReadMutation = useMarkNotificationAsRead();
     const deleteNotificationMutation = useDeleteUserNotification();
+    const markAllNotificationsMutation = useMarkAllNotificationsAsRead();
 
     const [isHydrated, setIsHydrated] = useState(false);
     const isLoggedIn = useAppSelector(selectIsLoggedIn); // Redux의 isLoggedIn 상태 사용
@@ -175,6 +178,18 @@ export default function Header() {
         })
     }
 
+    const handleTooltipMarkAllRead = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation()
+        markAllNotificationsMutation.mutate(undefined, {
+            onSuccess: () => {
+                refetchNotifications()
+            },
+            onError: (mutationError) => {
+                console.error('알림 전체 읽음 처리 실패', mutationError)
+            },
+        })
+    }
+
     const handleNotificationClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation(); // 이벤트 버블링 방지
         setIsNotificationTooltipOpen(false); // 전체 알림 보기 클릭 시 툴팁 닫기
@@ -275,8 +290,17 @@ export default function Header() {
                                         <div ref={notificationTooltipRef} className={styles.notificationTooltip} id={notificationTooltipId}>
                                             <div className={styles.notificationHeader}>
                                                 <h3>알림</h3>
-                                                {/* <button onClick={handleMarkAllAsRead} className={styles.markAllReadButton}>모두 읽기</button> */}
                                                 <button onClick={(e) => { e.stopPropagation(); setIsNotificationTooltipOpen(false); }} className={styles.closeButton}>×</button>    
+                                            </div>
+                                            <div className={styles.notificationTooltipActions}>
+                                                <button
+                                                    type="button"
+                                                    className={styles.tooltipMarkAllButton}
+                                                    onClick={handleTooltipMarkAllRead}
+                                                    disabled={markAllNotificationsMutation.isPending}
+                                                >
+                                                    알림 모두 읽기
+                                                </button>
                                             </div>
                                             <div className={styles.notificationList}>
                                                 {notificationsLoading ? (
@@ -284,40 +308,54 @@ export default function Header() {
                                                 ) : notifications?.length === 0 ? (
                                                     <p className={styles.noNotifications}>새로운 알림이 없습니다.</p>
                                                 ) : (
-                                                    notifications?.map((notification) => (
-                                                        <div 
-                                                            key={notification.userNotificationNo} 
-                                                            className={`${styles.notificationItem} ${notification.isRead ? styles.read : ''}`}
-                                                            onClick={() => handleNotificationItemClick(notification)}
-                                                        >
-                                                            {/* 알림 타입에 따른 아이콘 (필요시 추가, 현재는 기본 종 모양) */}
-                                                            <Image src={getCdnUrl('/images/bell.png')} alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
-                                                            <div className={styles.notificationText}>
-                                                                <p className={styles.notificationMessage}>{notification.title}</p>
-                                                                <div className={styles.notificationFooterContent}>
-                                                                    <span className={styles.notificationTimestamp}>{formatDateOnly(notification.createdDate)}</span>
-                                                                    <div className={styles.notificationActions}>
-                                                                        {!notification.isRead && (
+                                                    notifications?.map((notification) => {
+                                                        const previewSrc = extractFirstImageSrcFromContent(notification.content)
+                                                        return (
+                                                            <div 
+                                                                key={notification.userNotificationNo} 
+                                                                className={`${styles.notificationItem} ${notification.isRead ? styles.read : ''}`}
+                                                                onClick={() => handleNotificationItemClick(notification)}
+                                                            >
+                                                                {/* 알림 타입에 따른 아이콘 (필요시 추가, 현재는 기본 종 모양) */}
+                                                                <Image src={getCdnUrl('/images/bell.png')} alt="알림 아이콘" width={30} height={30} className={styles.notificationIcon} />
+                                                                <div className={styles.notificationText}>
+                                                                    <p className={styles.notificationMessage}>{notification.title}</p>
+                                                                    {previewSrc && (
+                                                                        <div className={styles.tooltipNotificationImageWrapper}>
+                                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                            <img
+                                                                                src={previewSrc}
+                                                                                alt="알림 대표 이미지"
+                                                                                className={styles.tooltipNotificationImage}
+                                                                                loading="lazy"
+                                                                            />
+                                                                        </div>
+                                                                    )}
+                                                                    <div className={styles.notificationFooterContent}>
+                                                                        <span className={styles.notificationTimestamp}>{formatDateOnly(notification.createdDate)}</span>
+                                                                        <div className={styles.notificationActions}>
+                                                                            {!notification.isRead && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    className={styles.markAsReadButton}
+                                                                                    onClick={(e) => handleNotificationMarkReadOnly(e, notification)}
+                                                                                >
+                                                                                    읽음
+                                                                                </button>
+                                                                            )}
                                                                             <button
                                                                                 type="button"
-                                                                                className={styles.markAsReadButton}
-                                                                                onClick={(e) => handleNotificationMarkReadOnly(e, notification)}
+                                                                                className={styles.deleteButton}
+                                                                                onClick={(e) => handleNotificationDelete(e, notification)}
                                                                             >
-                                                                                읽음
+                                                                                <Image src={getCdnUrl('/images/delete.png')} alt="삭제" width={20} height={20} className={styles.deleteIcon} />
                                                                             </button>
-                                                                        )}
-                                                                        <button
-                                                                            type="button"
-                                                                            className={styles.deleteButton}
-                                                                            onClick={(e) => handleNotificationDelete(e, notification)}
-                                                                        >
-                                                                            <Image src={getCdnUrl('/images/delete.png')} alt="삭제" width={20} height={20} className={styles.deleteIcon} />
-                                                                        </button>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    ))
+                                                        )
+                                                    })
                                                 )}
                                             </div>
                                             <div className={styles.notificationFooter} onClick={(e) => e.stopPropagation()}> {/* 이벤트 버블링 방지 */}

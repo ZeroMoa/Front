@@ -148,6 +148,9 @@ export default function ProductPageClient({
     const searchParams = useSearchParams();
     const [, startTransition] = useTransition();
     const [clientContent, setClientContent] = useState<Product[]>(data.content);
+    
+    // User 전용 로직: 항상 nutrition/new/search 모드에서 리셋 버튼 노출
+    const shouldShowInlineResetButton = mode === 'nutrition' || mode === 'new' || mode === 'search';
 
     const SUPPORTED_PAGE_SIZES = [30, 60, 90] as const;
     const pageSizeOptions = (config.pageSizeOptions ?? SUPPORTED_PAGE_SIZES).filter((value) =>
@@ -352,12 +355,11 @@ export default function ProductPageClient({
     };
 
     const handleCollectionNavigate = (nextCollection: NutritionSlug | 'all') => {
-        const nextParams = new URLSearchParams(searchParams.toString());
-
-        const allowToggleToAll = mode === 'search';
-        if (allowToggleToAll && collectionSlug === nextCollection) {
-            nextCollection = 'all';
+        if ((mode === 'nutrition' || mode === 'search') && nextCollection !== 'all' && collectionSlug === nextCollection) {
+            return;
         }
+
+        const nextParams = new URLSearchParams(searchParams.toString());
 
         if (nextCollection === 'all') {
             nextParams.set('collection', 'all');
@@ -399,7 +401,6 @@ export default function ProductPageClient({
 
         const isActive = currentFilters[filterKey];
         if (isActive) {
-            commitUpdates({ [filterKey]: null, isNew: null, page: 0 });
             return;
         }
 
@@ -418,6 +419,9 @@ export default function ProductPageClient({
 
     const handleHeroButtonClick = (slug: NutritionSlug) => {
         if (mode === 'nutrition') {
+            if (collectionSlug === slug) {
+                return;
+            }
             handleCollectionNavigate(slug);
             return;
         }
@@ -487,7 +491,7 @@ export default function ProductPageClient({
                 },
                 {},
             );
-            commitUpdates({ ...resetEntries, page: 0 });
+            commitUpdates({ ...resetEntries, isNew: null, page: 0 });
             return;
         }
         const resetEntries = Object.entries(DEFAULT_FILTER_STATE).reduce<Record<string, null>>(
@@ -497,7 +501,30 @@ export default function ProductPageClient({
             },
             {},
         );
-        commitUpdates({ ...resetEntries, page: 0 });
+        commitUpdates({ ...resetEntries, isNew: null, page: 0 });
+    };
+
+    const handleSidebarInlineReset = () => {
+        const nextParams = new URLSearchParams();
+        if (mode === 'search') {
+            const searchQuery = searchParams.get('q');
+            if (searchQuery) {
+                nextParams.set('q', searchQuery);
+            }
+        } else if (collectionSlug && collectionSlug !== 'all') {
+            nextParams.set('collection', collectionSlug);
+        }
+
+        let basePath = pathname || '/product';
+        if (basePath.includes('?')) {
+            basePath = basePath.split('?')[0];
+        }
+
+        const target = nextParams.toString() ? `${basePath}?${nextParams.toString()}` : basePath;
+
+        startTransition(() => {
+            router.replace(target, { scroll: true });
+        });
     };
 
     const handleNewToggle = () => {
@@ -510,7 +537,7 @@ export default function ProductPageClient({
             const filterReset = Object.fromEntries(
                 PRODUCT_FILTER_KEYS.map((key) => [key, null as string | null]),
             );
-            const newParams: Record<string, string | null> = {
+            const newParams: Record<string, string | number | null> = {
                 ...filterReset,
                 isNew: 'true',
                 page: 0,
@@ -559,168 +586,6 @@ export default function ProductPageClient({
         startTransition(() => {
             router.replace(basePath, { scroll: true });
         });
-    };
-
-    const renderHeroInline = () => {
-        if (mode === 'nutrition') {
-            return (
-                <div className={styles.heroInline}>
-                    <button
-                        type="button"
-                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${isNewActive ? styles.heroCardActive : ''}`}
-                        onClick={handleNewToggle}
-                        aria-pressed={isNewActive}
-                        disabled
-                    >
-                        신제품
-                    </button>
-                    <span className={styles.heroDivider} aria-hidden="true" />
-                    {HERO_BANNER_ITEMS.map((item) => {
-                        const isActive = activeHeroSlug === item.slug;
-                        const accentClass = styles[item.accentClass];
-                        return (
-                            <button
-                                key={item.slug}
-                                type="button"
-                                className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
-                                onClick={() => handleHeroButtonClick(item.slug)}
-                                aria-pressed={isActive}
-                            >
-                                <span className={styles.heroCardLabel}>{item.label}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            );
-        }
-
-        if (mode === 'search') {
-            return (
-                <div className={styles.heroInline}>
-                    <button
-                        type="button"
-                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${isNewActive ? styles.heroCardActive : ''}`}
-                        onClick={handleNewToggle}
-                        aria-pressed={isNewActive}
-                    >
-                        신제품
-                    </button>
-                    <span className={styles.heroDivider} aria-hidden="true" />
-                    {HERO_BANNER_ITEMS.map((item) => {
-                        const isActive = activeHeroSlug === item.slug;
-                        const accentClass = styles[item.accentClass];
-                        return (
-                            <button
-                                key={item.slug}
-                                type="button"
-                                className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
-                                onClick={() => handleHeroButtonClick(item.slug)}
-                                aria-pressed={isActive}
-                            >
-                                <span className={styles.heroCardLabel}>{item.label}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            );
-        }
-
-        if (mode === 'new' && config.kind === 'new') {
-            const heroItems = NEW_HERO_ITEMS;
-            return (
-                <div className={styles.heroInline}>
-                    <button
-                        type="button"
-                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${
-                            isNewActive ? styles.heroCardActive : ''
-                        }`}
-                        onClick={handleNewToggle}
-                        aria-pressed={isNewActive}
-                    >
-                        신제품
-                    </button>
-                    <span className={styles.heroDivider} aria-hidden="true" />
-                    {heroItems.map((item) => {
-                        const isActive = activeHeroSlug === item.slug;
-                        const accentClass = styles[item.accentClass];
-                        return (
-                            <button
-                                key={item.slug}
-                                type="button"
-                                className={`${styles.heroInlineCard} ${accentClass} ${
-                                    isActive ? styles.heroCardActive : ''
-                                }`}
-                                onClick={() => handleNewHeroSelect(item.slug)}
-                                aria-pressed={isActive}
-                            >
-                                <span className={styles.heroCardLabel}>{item.label}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            );
-        }
-
-        return null;
-    };
-
-    const hasSubCategories =
-        'subCategories' in config && Array.isArray(config.subCategories) && config.subCategories.length > 1;
-
-    const renderSubCategoryButtons = (includeNewButton: boolean) => {
-        if (!hasSubCategories) {
-            return null;
-        }
-
-        const subCategories = config.subCategories;
-
-        return (
-            <div className={styles.subCategoryTabs}>
-                {includeNewButton && (
-                    <>
-                        <button
-                            type="button"
-                            className={`${styles.subCategoryButton} ${styles.subCategoryNewButton} ${
-                                isNewActive ? styles.subCategoryButtonActive : ''
-                            }`}
-                            onClick={handleNewToggle}
-                            aria-pressed={isNewActive}
-                        >
-                            신제품
-                        </button>
-                        <span className={styles.subCategoryDivider} aria-hidden="true" />
-                    </>
-                )}
-                {subCategories.map((item) => (
-                    <button
-                        key={item.slug}
-                        type="button"
-                        className={`${styles.subCategoryButton} ${
-                            item.slug === selectedSubCategory.slug ? styles.subCategoryButtonActive : ''
-                        }`}
-                        onClick={() => handleSubCategoryChange(item.slug)}
-                    >
-                        {item.label}
-                    </button>
-                ))}
-            </div>
-        );
-    };
-
-    const renderSubCategorySection = () => {
-        if (!hasSubCategories) {
-            return null;
-        }
-
-        if (mode === 'category') {
-            return (
-                <div className={styles.subCategoryHeader}>
-                    {renderSubCategoryButtons(true)}
-                </div>
-            );
-        }
-
-        return renderSubCategoryButtons(false);
     };
 
     useEffect(() => {
@@ -794,6 +659,142 @@ export default function ProductPageClient({
         };
     }, []);
 
+    const hasSubCategories =
+        'subCategories' in config && Array.isArray(config.subCategories) && config.subCategories.length > 1;
+
+    const renderSubCategoryButtons = (includeNewButton: boolean) => {
+        if (!hasSubCategories) {
+            return null;
+        }
+
+        const subCategories = config.subCategories;
+
+        return (
+            <div className={styles.subCategoryTabs}>
+                {includeNewButton && (
+                    <>
+                        <button
+                            type="button"
+                            className={`${styles.subCategoryButton} ${styles.subCategoryNewButton} ${
+                                isNewActive ? styles.subCategoryButtonActive : ''
+                            }`}
+                            onClick={handleNewToggle}
+                            aria-pressed={isNewActive}
+                        >
+                            신제품
+                        </button>
+                        <span className={styles.subCategoryDivider} aria-hidden="true" />
+                    </>
+                )}
+                {subCategories.map((item) => (
+                    <button
+                        key={item.slug}
+                        type="button"
+                        className={`${styles.subCategoryButton} ${
+                            item.slug === selectedSubCategory.slug ? styles.subCategoryButtonActive : ''
+                        }`}
+                        onClick={() => handleSubCategoryChange(item.slug)}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+        );
+    };
+
+    const renderSubCategorySection = () => {
+        if (!hasSubCategories) {
+            return null;
+        }
+
+        if (mode === 'category') {
+            return (
+                <div className={styles.subCategoryHeader}>
+                    {renderSubCategoryButtons(true)}
+                </div>
+            );
+        }
+
+        return renderSubCategoryButtons(false);
+    };
+
+    const renderHeroInline = () => {
+        const renderButtons = (items: HeroBannerItem[]) => (
+          <>
+            {items.map((item) => {
+              const isActive = activeHeroSlug === item.slug;
+              const accentClass = styles[item.accentClass];
+              return (
+                <button
+                  key={item.slug}
+                  type="button"
+                  className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
+                  onClick={() => handleHeroButtonClick(item.slug)}
+                  aria-pressed={isActive}
+                >
+                  <span className={styles.heroCardLabel}>{item.label}</span>
+                </button>
+              );
+            })}
+          </>
+        );
+
+        if (mode === 'nutrition') {
+            return (
+                <div className={styles.heroInline}>
+                    <button
+                        type="button"
+                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${isNewActive ? styles.heroCardActive : ''}`}
+                        onClick={handleNewToggle}
+                        aria-pressed={isNewActive}
+                    >
+                        신제품
+                    </button>
+                    <span className={styles.heroDivider} aria-hidden="true" />
+                    {renderButtons(HERO_BANNER_ITEMS)}
+                </div>
+            );
+        }
+
+        if (mode === 'search') {
+            return (
+                <div className={styles.heroInline}>
+                    <button
+                        type="button"
+                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${isNewActive ? styles.heroCardActive : ''}`}
+                        onClick={handleNewToggle}
+                        aria-pressed={isNewActive}
+                    >
+                        신제품
+                    </button>
+                    <span className={styles.heroDivider} aria-hidden="true" />
+                    {renderButtons(HERO_BANNER_ITEMS)}
+                </div>
+            );
+        }
+
+        if (mode === 'new' && (config as NewProductsPageConfig).kind === 'new') {
+            return (
+                <div className={styles.heroInline}>
+                    <button
+                        type="button"
+                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${
+                            isNewActive ? styles.heroCardActive : ''
+                        }`}
+                        onClick={handleNewToggle}
+                        aria-pressed={isNewActive}
+                    >
+                        신제품
+                    </button>
+                    <span className={styles.heroDivider} aria-hidden="true" />
+                    {renderButtons(NEW_HERO_ITEMS)}
+                </div>
+            );
+        }
+
+        return null;
+    };
+
     return (
         <div className={styles.layout}>
             <ProductSidebar
@@ -803,6 +804,8 @@ export default function ProductPageClient({
                 onKeywordSubmit={handleKeywordSubmit}
                 onFilterToggle={handleFilterToggle}
                 onResetFilters={handleResetFilters}
+                showInlineResetButton={shouldShowInlineResetButton}
+                onInlineReset={handleSidebarInlineReset}
                 lockedFilters={lockedFilters}
                 selectedCategorySlug={
                     mode === 'nutrition' || mode === 'new' || mode === 'search'
@@ -892,4 +895,3 @@ export default function ProductPageClient({
         </div>
     );
 }
-

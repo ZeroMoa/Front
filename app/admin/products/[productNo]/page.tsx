@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { fetchAdminProductDetailServer } from '@/app/admin/store/api/adminProductServerApi'
 import ProductDetailClient from './ProductDetailClient'
+import styles from './adminDetail.module.css'
 
 type PageParams = {
   productNo: string
@@ -25,7 +26,17 @@ export default async function AdminProductDetailPage({ params }: { params: Await
     if (status === 404) {
       notFound()
     }
-    throw error
+    return (
+      <div className={styles.errorStateWrapper}>
+        <div className={styles.errorStateCard}>
+          <p className={styles.errorStateTitle}>서버와 통신하지 못했습니다.</p>
+          <p className={styles.errorStateDescription}>다시 시도해주세요.</p>
+          <a className={styles.errorStateLink} href="/admin/products">
+            목록으로 돌아가기
+          </a>
+        </div>
+      </div>
+    )
   }
 
   return <ProductDetailClient product={product} />
