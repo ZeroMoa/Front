@@ -475,3 +475,139 @@
     /* color: #333; */
     opacity: 0.8; /* 이미지에 대한 hover 효과 */
 }
+
+.passwordRules {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.passwordRule {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #b0b0b0;
+}
+
+.passwordRuleValid {
+    color: #18a462;
+}
+
+.passwordRuleIcon {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    color: inherit;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* 약관 동의 섹션 스타일 */
+.agreementSection {
+    width: 100%;
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.agreementGroup {
+    width: 100%;
+    text-align: left;
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.checkboxLabel input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.checkboxText {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.termsScrollBox {
+    width: 100%;
+    height: 120px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 12px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #666;
+    box-sizing: border-box;
+}
+
+.privacySummaryBox {
+    width: 100%;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+.privacyTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.privacyTable th, 
+.privacyTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.privacyTable th {
+    background-color: #f0f2f5;
+    color: #333;
+    font-weight: 600;
+}
+
+.privacyTable td {
+    background-color: #fff;
+    color: #555;
+}
+
+.agreementNotice {
+    font-size: 0.75rem;
+    color: #888;
+    margin: 0;
+}
+
+.policyInfo {
+    font-size: 0.85rem;
+    color: #666;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.policyLink {
+    color: #4f7cff;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.policyLink:hover {
+    color: #3a62e0;
+}

@@ -10,6 +10,29 @@ import styles from './page.module.css';
 import { checkExistence, joinUser } from '../../store/api/userAuthApi';
 import { getCdnUrl } from '../../../../lib/cdn';
 
+const PASSWORD_RULES = [
+    {
+        id: 'length',
+        label: '8자 이상',
+        validate: (value: string) => value.length >= 8,
+    },
+    {
+        id: 'letter',
+        label: '영문 대/소문자 포함',
+        validate: (value: string) => /(?=.*[a-z])(?=.*[A-Z])/.test(value),
+    },
+    {
+        id: 'number',
+        label: '숫자 포함',
+        validate: (value: string) => /\d/.test(value),
+    },
+    {
+        id: 'special',
+        label: '특수문자 포함 (!@#$%^&*)',
+        validate: (value: string) => /[!@#$%^&*]/.test(value),
+    },
+];
+
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -33,6 +56,8 @@ export default function JoinPage() {
     const [nickname, setNickname] = useState(''); // 닉네임 (선택 사항)
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [isTermsAgreed, setIsTermsAgreed] = useState(false);
+    const [isPrivacyAgreed, setIsPrivacyAgreed] = useState(false);
     const [passwordMismatchError, setPasswordMismatchError] = useState(false); // 비밀번호 불일치 에러 상태
     const [usernameError, setUsernameError] = useState<string | null>(null); // 아이디 중복 에러 메시지
     const [emailError, setEmailError] = useState<string | null>(null); // 이메일 중복/형식 에러 메시지
@@ -181,6 +206,17 @@ export default function JoinPage() {
             return;
         }
         setPasswordMismatchError(false);
+
+        const isPasswordValid = PASSWORD_RULES.every((rule) => rule.validate(password));
+        if (!isPasswordValid) {
+            alert('비밀번호가 규칙을 모두 충족해야 합니다.');
+            return;
+        }
+
+        if (!isTermsAgreed || !isPrivacyAgreed) {
+            alert('필수 약관에 모두 동의해주세요.');
+            return;
+        }
 
         // 1. 기본 필수 필드 유효성 검사
         const isEmailComplete = emailFront && emailBack && emailFront.trim() !== '' && emailBack.trim() !== '';
@@ -412,6 +448,22 @@ export default function JoinPage() {
                                     />
                                 </button>
                             </div>
+                            <div className={styles.passwordRules}>
+                                {PASSWORD_RULES.map((rule) => {
+                                    const isValid = rule.validate(password);
+                                    return (
+                                        <div
+                                            key={rule.id}
+                                            className={`${styles.passwordRule} ${isValid ? styles.passwordRuleValid : ''}`}
+                                        >
+                                            <span className={styles.passwordRuleIcon} aria-hidden="true">
+                                                {isValid ? '✔' : '✕'}
+                                            </span>
+                                            <span>{rule.label}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         <div className={styles.inputGroup}>
@@ -442,6 +494,66 @@ export default function JoinPage() {
                             {passwordMismatchError && (
                                 <p className={styles.errorMessage}>비밀번호가 일치하지 않습니다.</p>
                             )}
+                        </div>
+
+                        <div className={styles.agreementSection}>
+                            <div className={styles.agreementGroup}>
+                                <label className={styles.checkboxLabel}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={isTermsAgreed} 
+                                        onChange={(e) => setIsTermsAgreed(e.target.checked)} 
+                                    />
+                                    <span className={styles.checkboxText}>[필수] 서비스 이용약관 동의</span>
+                                </label>
+                                <div className={styles.termsScrollBox}>
+                                    제1조(목적) 이 약관은 제로모아(이하 &quot;회사&quot;라 합니다)가 운영하는 웹사이트에서 제공하는 인터넷 관련 서비스(이하 &quot;서비스&quot;라 합니다)를 이용함에 있어 회사와 이용자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
+                                    <br /><br />
+                                    제2조(정의)
+                                    ① &quot;이용자&quot;란 웹사이트에 접속하여 이 약관에 따라 회사가 제공하는 서비스를 받는 회원 및 비회원을 말합니다.
+                                    ② &quot;회원&quot;이라 함은 웹사이트에 개인정보를 제공하여 회원등록을 한 자로서, 회사의 정보를 지속적으로 제공받으며, 회사가 제공하는 서비스를 계속적으로 이용할 수 있는 자를 말합니다.
+                                    <br /><br />
+                                    제3조(약관의 명시와 개정)
+                                    ① 회사는 이 약관의 내용과 상호, 영업소 소재지, 대표자의 성명, 사업자등록번호, 연락처 등을 이용자가 알 수 있도록 서비스 초기 화면에 게시합니다.
+                                    ② 회사는 약관의 규제에 관한 법률, 전자거래기본법, 전자서명법, 정보통신망 이용촉진 및 정보보호 등에 관한 법률 등 관련법을 위배하지 않는 범위에서 이 약관을 개정할 수 있습니다.
+                                </div>
+                            </div>
+
+                            <div className={styles.agreementGroup}>
+                                <label className={styles.checkboxLabel}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={isPrivacyAgreed} 
+                                        onChange={(e) => setIsPrivacyAgreed(e.target.checked)} 
+                                    />
+                                    <span className={styles.checkboxText}>[필수] 개인정보 수집 및 이용 동의</span>
+                                </label>
+                                <div className={styles.privacySummaryBox}>
+                                    <table className={styles.privacyTable}>
+                                        <thead>
+                                            <tr>
+                                                <th>항목</th>
+                                                <th>목적</th>
+                                                <th>보유 기간</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>아이디, 비밀번호, 닉네임, 이메일</td>
+                                                <td>회원 가입 및 식별, 부정 이용 방지</td>
+                                                <td>회원 탈퇴 시 즉시 파기</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <p className={styles.agreementNotice}>
+                                        * 귀하는 개인정보 수집 및 이용에 동의를 거부할 권리가 있으며, 거부 시 회원가입이 제한될 수 있습니다.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className={styles.policyInfo}>
+                                전체 상세 내용은 <Link href="/privacy" className={styles.policyLink}>개인정보처리방침</Link>에서 확인하실 수 있습니다.
+                            </div>
                         </div>
 
                         <div className={styles.buttonGroup}>
