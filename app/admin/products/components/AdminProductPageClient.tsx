@@ -22,6 +22,8 @@ import ProductGrid from '@/app/(user)/product/components/ProductGrid'
 import ProductPagination from '@/app/(user)/product/components/ProductPagination'
 import type { Product, ProductResponse } from '@/types/productTypes'
 import { deleteAdminProduct } from '@/app/admin/store/api/adminProductApi'
+import { ADMIN_PRODUCT_PAGE_SIZE_OPTIONS } from '@/constants/adminProductConstants'
+import { PRODUCT_LIST_SCROLL_STORAGE_KEY } from '@/constants/productNavigationConstants'
 
 type FilterState = typeof DEFAULT_FILTER_STATE
 type PageMode = 'category' | 'nutrition' | 'new' | 'search'
@@ -121,12 +123,43 @@ export default function AdminProductPageClient({
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
   const [clientContent, setClientContent] = useState<Product[]>(data.content)
+  const searchParamString = searchParams?.toString() ?? ''
 
-  const SUPPORTED_PAGE_SIZES = [30, 60, 90] as const
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+    const stored = window.sessionStorage.getItem(PRODUCT_LIST_SCROLL_STORAGE_KEY)
+    if (!stored) {
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as { path?: string; scroll?: number | string }
+      const normalizedPath = pathname + (searchParamString ? `?${searchParamString}` : '')
+      if (!parsed.path || parsed.path !== normalizedPath) {
+        return
+      }
+
+      const resolvedScroll =
+        typeof parsed.scroll === 'number' ? parsed.scroll : Number.parseInt(String(parsed.scroll), 10)
+      const scrollTop = Number.isFinite(resolvedScroll) ? resolvedScroll : 0
+
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollTop, behavior: 'auto' })
+      })
+      window.sessionStorage.removeItem(PRODUCT_LIST_SCROLL_STORAGE_KEY)
+    } catch {
+      window.sessionStorage.removeItem(PRODUCT_LIST_SCROLL_STORAGE_KEY)
+    }
+  }, [pathname, searchParamString])
+
+  const SUPPORTED_PAGE_SIZES = ADMIN_PRODUCT_PAGE_SIZE_OPTIONS
+  type SupportedPageSize = (typeof ADMIN_PRODUCT_PAGE_SIZE_OPTIONS)[number]
   const pageSizeOptions = (config.pageSizeOptions ?? SUPPORTED_PAGE_SIZES).filter((value) =>
-    SUPPORTED_PAGE_SIZES.includes(value as (typeof SUPPORTED_PAGE_SIZES)[number])
+    SUPPORTED_PAGE_SIZES.includes(value as SupportedPageSize)
   )
-  const normalizedSize = pageSizeOptions.includes(size as (typeof SUPPORTED_PAGE_SIZES)[number])
+  const normalizedSize = pageSizeOptions.includes(size as SupportedPageSize)
     ? size
     : pageSizeOptions[0]
 
@@ -250,7 +283,7 @@ export default function AdminProductPageClient({
 
   const handlePageSizeChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
     const nextSize = Number(event.target.value)
-    if (!SUPPORTED_PAGE_SIZES.includes(nextSize as (typeof SUPPORTED_PAGE_SIZES)[number])) {
+    if (!SUPPORTED_PAGE_SIZES.includes(nextSize as SupportedPageSize)) {
       commitUpdates({ size: SUPPORTED_PAGE_SIZES[0], page: 0 })
       return
     }
@@ -674,6 +707,39 @@ export default function AdminProductPageClient({
           return (
             <button
               key={item.slug}
+              type="button"
+              className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
+              onClick={() => handleHeroButtonClick(item.slug)}
+              aria-pressed={isActive}
+            >
+              <span className={styles.heroCardLabel}>{item.label}</span>
+            </button>
+          )
+        })}
+      </>
+    )
+
+    if (mode === 'nutrition' || mode === 'search' || (mode === 'new' && (config as NewProductsPageConfig).kind === 'new')) {
+       return (
+        <div className={styles.heroInline}>
+          <button
+            type="button"
+            className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${isNewActive ? styles.heroCardActive : ''}`}
+            onClick={handleNewToggle}
+            aria-pressed={isNewActive}
+          >
+            신제품
+          </button>
+          <span className={styles.heroDivider} aria-hidden="true" />
+          {mode === 'new' ? renderButtons(NEW_HERO_ITEMS) : renderButtons(HERO_BANNER_ITEMS)}
+        </div>
+      )
+    }
+
+    return null
+  }
+}
+
               type="button"
               className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
               onClick={() => handleHeroButtonClick(item.slug)}

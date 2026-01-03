@@ -1,8 +1,10 @@
 import styles from '@/app/(user)/product/page.module.css'
+import type { ProductResponse } from '@/types/productTypes'
 import {
   CATEGORY_CONFIG,
   DEFAULT_FILTER_STATE,
   NUTRITION_CONFIG,
+  ADMIN_PRODUCT_PAGE_SIZE_OPTIONS,
   getSubCategorySlug,
   isCategorySlug,
   isNutritionSlug,
@@ -48,7 +50,8 @@ export default async function AdminProductsPage({
   const pageParamRaw = parseSingleValue(params.page)
   const parsedPage = pageParamRaw ? Number.parseInt(pageParamRaw, 10) : 1
   const page = Number.isNaN(parsedPage) ? 0 : Math.max(parsedPage - 1, 0)
-  const size = parseNumberParam(parseSingleValue(params.size), baseConfig.pageSizeOptions[0] ?? 30, 1)
+  const adminPageSizeFallback = ADMIN_PRODUCT_PAGE_SIZE_OPTIONS[0]
+  const size = parseNumberParam(parseSingleValue(params.size), adminPageSizeFallback, 1)
   const sort = parseSingleValue(params.sort) ?? baseConfig.defaultSort
   const keyword = parseSingleValue(params.keyword) ?? ''
   const isNewParam = parseBooleanParam(parseSingleValue(params.isNew))
@@ -92,27 +95,29 @@ export default async function AdminProductsPage({
     categoryNo: searchCategoryNo,
   }
 
-  const productResponse = categoryConfig
-    ? await fetchCategoryProducts(
-        {
-          categoryNo: selectedSubCategory.categoryNo,
-          page,
-          size,
-          sort,
-          isNew: isNewParam,
-          filters: activeFilters,
-        },
-        { cache: 'no-store' },
-        { includeProductsWithoutImage: true }
-      )
-    : activeCollection === 'all' || shouldUseSearch
+  let productResponse: ProductResponse
+  try {
+    productResponse = categoryConfig
+      ? await fetchCategoryProducts(
+          {
+            categoryNo: selectedSubCategory.categoryNo,
+            page,
+            size,
+            sort,
+            isNew: isNewParam,
+            filters: activeFilters,
+          },
+          { cache: 'no-store' },
+          { includeProductsWithoutImage: true },
+        )
+      : activeCollection === 'all' || shouldUseSearch
       ? await fetchProductSearch(
           {
             ...searchRequestBase,
             query: keyword || undefined,
           },
           { cache: 'no-store' },
-          { includeProductsWithoutImage: true, requireAuth: true }
+          { includeProductsWithoutImage: true, requireAuth: true },
         )
       : await fetchNutritionProducts(
           baseConfig.slug,
@@ -124,10 +129,26 @@ export default async function AdminProductsPage({
             isNew: isNewParam,
           },
           { cache: 'no-store' },
-          { includeProductsWithoutImage: true }
+          { includeProductsWithoutImage: true },
         )
+  } catch (error) {
+    console.error('[AdminProductsPage] 제품 목록 요청 실패', error)
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.error}>
+          <h2>서버와 연결할 수 없습니다.</h2>
+          <p>잠시 후 다시 시도해주세요.</p>
+        </div>
+      </div>
+    )
+  }
 
   const pageMode = hasKeyword ? 'search' : 'nutrition'
+
+  const adminConfig: NutritionPageConfig = {
+    ...baseConfig,
+    pageSizeOptions: ADMIN_PRODUCT_PAGE_SIZE_OPTIONS,
+  }
 
   return (
     <div className={styles.pageWrapper}>
@@ -135,7 +156,28 @@ export default async function AdminProductsPage({
         mode={pageMode}
         categorySlug={categorySlug}
         collectionSlug={activeCollection}
-        config={baseConfig}
+        config={adminConfig}
+        data={productResponse}
+        selectedSubCategory={selectedSubCategory}
+        page={page}
+        size={size}
+        sort={sort}
+        filters={filters}
+        keyword={keyword}
+        isNew={Boolean(isNewParam)}
+        lockedFilters={baseConfig.lockedFilters}
+      />
+    </div>
+  )
+}
+
+
+    <div className={styles.pageWrapper}>
+      <AdminProductPageClient
+        mode={pageMode}
+        categorySlug={categorySlug}
+        collectionSlug={activeCollection}
+        config={adminConfig}
         data={productResponse}
         selectedSubCategory={selectedSubCategory}
         page={page}

@@ -13,6 +13,7 @@ import { ADMIN_PRODUCT_CATEGORY_TREE } from '@/constants/adminProductCategories'
 import type { AdminProductCategoryGroup } from '@/types/adminCategoryTypes'
 
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png')
+const PRODUCT_IMAGES_DISABLED = true // 이미지 저작권 협의 완료 후 이 플래그를 false로 전환해주세요.
 
 const SWEETENER_KEYWORDS = [
   '알룰로스',
@@ -752,40 +753,47 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           <div className={styles.imageFavoriteOverlay}>
             <span className={styles.imageFavoriteCount}>좋아요 {likesCount.toLocaleString()}</span>
           </div>
-          <button type="button" className={styles.imageUploadButton} onClick={handleImageClick}>
-            <Image
-              src={imageSrc}
-              alt={product.productName || '제품 이미지'}
-              width={300}
-              height={300}
-              className={styles.detailProductImage}
-              unoptimized
-              onError={(event) => {
-                const target = event.target as HTMLImageElement
-                target.src = DEFAULT_IMAGE
-              }}
-            />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className={styles.imageUploadInput}
-            onChange={handleImageInputChange}
-          />
-          <div className={styles.imageActions}>
-            <p className={styles.imageChangeHint}>
-              이미지를 클릭하면 교체할 수 있습니다.
-              
-            </p>
-            {imageFile ? <span className={styles.imageFileName}>파일명 : {imageFile.name}</span> : null}
-
-            {imageFile ? (
-              <button type="button" className={styles.imageResetButton} onClick={handleResetSelectedImage}>
-                선택 취소
+          {PRODUCT_IMAGES_DISABLED ? (
+            <div className={styles.imagePlaceholder}>
+              <p>제품 이미지는 저작권 정리가 완료되면 다시 보여드릴 예정입니다.</p>
+            </div>
+          ) : (
+            <>
+              <button type="button" className={styles.imageUploadButton} onClick={handleImageClick}>
+                <Image
+                  src={imageSrc}
+                  alt={product.productName || '제품 이미지'}
+                  width={300}
+                  height={300}
+                  className={styles.detailProductImage}
+                  unoptimized
+                  onError={(event) => {
+                    const target = event.target as HTMLImageElement
+                    target.src = DEFAULT_IMAGE
+                  }}
+                />
               </button>
-            ) : null}
-          </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className={styles.imageUploadInput}
+                onChange={handleImageInputChange}
+              />
+              <div className={styles.imageActions}>
+                <p className={styles.imageChangeHint}>
+                  이미지를 클릭하면 교체할 수 있습니다.
+                </p>
+                {imageFile ? <span className={styles.imageFileName}>파일명 : {imageFile.name}</span> : null}
+
+                {imageFile ? (
+                  <button type="button" className={styles.imageResetButton} onClick={handleResetSelectedImage}>
+                    선택 취소
+                  </button>
+                ) : null}
+              </div>
+            </>
+          )}
         </div>
 
         <section className={styles.infoSection}>
@@ -819,7 +827,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                           disabled={!formState.parentCategoryNo}
                         >
                           <option value="">
-                            {formState.parentCategoryNo ? '세부를 선택하세요' : '상위를 먼저 선택하세요'}
+                            {formState.parentCategoryNo ? '세부카테고리를 선택하세요' : '상위를 먼저 선택하세요'}
                           </option>
                           {childOptions.map((option) => (
                             <option key={option.value} value={option.value}>

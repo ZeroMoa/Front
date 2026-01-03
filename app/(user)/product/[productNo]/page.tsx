@@ -16,6 +16,7 @@ const PRODUCT_API_BASE_URL =
     'https://localhost:8443';
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
 const ERROR_IMAGE = getCdnUrl('/images/error.jpg');
+const PRODUCT_IMAGES_DISABLED = true; // 주석만 풀면 이미지 노출을 다시 시작할 수 있습니다.
 
 const SWEETENER_KEYWORDS = [
     '알룰로스',
@@ -513,7 +514,7 @@ export default function ProductDetail() {
                     </button>
                 </div>
                 <main className={styles.productContainer}>
-                    <div className={styles.imageSection}>
+                <div className={styles.imageSection}>
                     <div className={styles.imageFavoriteOverlay}>
                         <span className={styles.imageFavoriteCount}>{favoriteState.likesCount.toLocaleString()}</span>
                         <FavoriteToggleButton
@@ -525,19 +526,25 @@ export default function ProductDetail() {
                             }}
                         />
                     </div>
-                            <Image
-                        src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
-                                alt={product?.productName || '제품 이미지'}
-                        width={300}
-                        height={300}
-                        className={styles.detailProductImage}
-                                unoptimized
-                        onError={(event) => {
-                            const target = event.target as HTMLImageElement;
-                            target.src = DEFAULT_IMAGE;
-                        }}
-                    />
-                    </div>
+                    {PRODUCT_IMAGES_DISABLED ? (
+                        <div className={styles.imagePlaceholder}>
+                            <span>제품 사진은 추후 저작권 확보 후 제공됩니다.</span>
+                        </div>
+                    ) : (
+                        <Image
+                            src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
+                            alt={product?.productName || '제품 이미지'}
+                            width={300}
+                            height={300}
+                            className={styles.detailProductImage}
+                            unoptimized
+                            onError={(event) => {
+                                const target = event.target as HTMLImageElement;
+                                target.src = DEFAULT_IMAGE;
+                            }}
+                        />
+                    )}
+                </div>
 
                     <section className={styles.infoSection}>
                     <div className={styles.infoCard}>

@@ -62,6 +62,22 @@
     align-items: center;
 }
 
+.imagePlaceholder {
+    width: 300px;
+    height: 300px;
+    border-radius: 18px;
+    border: 1px solid rgba(200, 210, 235, 0.6);
+    box-shadow: 0 18px 34px rgba(40, 63, 110, 0.12);
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    text-align: center;
+    color: #5f6a89;
+    font-size: 0.95rem;
+}
+
 .detailProductImage {
     width: 300px;
     height: 300px;

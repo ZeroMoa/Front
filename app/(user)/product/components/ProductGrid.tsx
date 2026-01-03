@@ -1,12 +1,16 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../page.module.css';
 import { Product } from '@/types/productTypes';
 import Image from 'next/image';
 import { getCdnUrl } from '@/lib/cdn';
 import FavoriteToggleButton from '../../favorites/components/FavoriteToggleButton';
+import {
+    PRODUCT_GRID_DRAG_THRESHOLD,
+    PRODUCT_LIST_SCROLL_STORAGE_KEY,
+} from '@/constants/productNavigationConstants';
 
 interface ProductGridProps {
     products: Product[];
@@ -18,6 +22,7 @@ interface ProductGridProps {
 }
 
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
+const PRODUCT_IMAGES_DISABLED = true; // toggle to false once image copyright clearance is ready
 
 const WARN_ICON = getCdnUrl('/images/warning.png');
 const CAFFEINE_ICON = getCdnUrl('/images/coffee.png');
@@ -117,6 +122,13 @@ const hasAlternativeSweeteners = (product: Product) =>
     hasPositiveAmount(product.alluloseG) ||
     hasPositiveAmount(product.erythritolG);
 
+type DragState = {
+    startX: number;
+    startY: number;
+    isDragging: boolean;
+    didDrag: boolean;
+};
+
 function ProductCard({
     product,
     variant = 'default',
@@ -129,6 +141,23 @@ function ProductCard({
     getProductHref?: (product: Product) => string;
 }) {
     const router = useRouter();
+    const dragStateRef = useRef<DragState>({
+        startX: 0,
+        startY: 0,
+        isDragging: false,
+        didDrag: false,
+    });
+
+    const recordScrollPosition = useCallback(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const currentPath = `${window.location.pathname}${window.location.search}`;
+        window.sessionStorage.setItem(
+            PRODUCT_LIST_SCROLL_STORAGE_KEY,
+            JSON.stringify({ path: currentPath, scroll: window.scrollY }),
+        );
+    }, []);
 
     const imageSrc = prepareImageUrl(product.imageUrl);
     const totalContent = getTrimmedText(product.totalContent);
@@ -152,10 +181,27 @@ function ProductCard({
     );
     const hasCompany = Boolean(product.companyName && product.companyName.trim());
 
-    const handleNavigate = useCallback(() => {
-        const target = getProductHref ? getProductHref(product) : `/product/${product.productNo}`;
-        router.push(target);
-    }, [router, product, getProductHref]);
+    const handleNavigate = useCallback(
+        (event?: React.MouseEvent<HTMLDivElement>) => {
+            if (dragStateRef.current.didDrag) {
+                dragStateRef.current.didDrag = false;
+                return;
+            }
+
+            const target = getProductHref ? getProductHref(product) : `/product/${product.productNo}`;
+            const shouldOpenInNewTab =
+                Boolean(event && (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1));
+            if (!shouldOpenInNewTab) {
+                recordScrollPosition();
+            }
+            if (shouldOpenInNewTab && typeof window !== 'undefined') {
+                window.open(target, '_blank', 'noopener,noreferrer');
+                return;
+            }
+            router.push(target);
+        },
+        [router, product, getProductHref, recordScrollPosition],
+    );
 
     const handleKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -191,13 +237,36 @@ function ProductCard({
     );
 
     return (
-        <div
-            className={styles.card}
-            role="button"
-            tabIndex={0}
-            onClick={handleNavigate}
-            onKeyDown={handleKeyDown}
-        >
+            <div
+                className={styles.card}
+                role="button"
+                tabIndex={0}
+                onClick={(event) => handleNavigate(event)}
+                onKeyDown={handleKeyDown}
+                onPointerDown={(event) => {
+                    dragStateRef.current.startX = event.clientX;
+                    dragStateRef.current.startY = event.clientY;
+                    dragStateRef.current.isDragging = false;
+                    dragStateRef.current.didDrag = false;
+                }}
+                onPointerMove={(event) => {
+                    if (dragStateRef.current.isDragging) {
+                        return;
+                    }
+                    const deltaX = event.clientX - dragStateRef.current.startX;
+                    const deltaY = event.clientY - dragStateRef.current.startY;
+                    const distance = Math.hypot(deltaX, deltaY);
+                    if (distance >= PRODUCT_GRID_DRAG_THRESHOLD) {
+                        dragStateRef.current.isDragging = true;
+                    }
+                }}
+                onPointerUp={() => {
+                    if (dragStateRef.current.isDragging) {
+                        dragStateRef.current.didDrag = true;
+                    }
+                    dragStateRef.current.isDragging = false;
+                }}
+            >
             {variant === 'admin' ? (
                 <div className={styles.cardFavoriteButton}>
                     <button type="button" className={styles.deleteButton} onClick={handleDelete}>
@@ -240,20 +309,22 @@ function ProductCard({
                     </>
                 )}
             </div>
-            <div className={styles.imageWrapper}>
-                <Image
-                    src={imageSrc}
-                    alt={product.productName || '제품 이미지'}
-                    width={220}
-                    height={220}
-                    className={styles.productImage}
-                    priority={false}
-                    onError={(event) => {
-                        const target = event.target as HTMLImageElement;
-                        target.src = DEFAULT_IMAGE;
-                    }}
-                />
-            </div>
+            {!PRODUCT_IMAGES_DISABLED && (
+                <div className={styles.imageWrapper}>
+                    <Image
+                        src={imageSrc}
+                        alt={product.productName || '제품 이미지'}
+                        width={220}
+                        height={220}
+                        className={styles.productImage}
+                        priority={false}
+                        onError={(event) => {
+                            const target = event.target as HTMLImageElement;
+                            target.src = DEFAULT_IMAGE;
+                        }}
+                    />
+                </div>
+            )}
             <div className={styles.cardBody}>
                 <h3 className={styles.productName}>{product.productName}</h3>
                 <span className={styles.cardDivider} aria-hidden="true" />

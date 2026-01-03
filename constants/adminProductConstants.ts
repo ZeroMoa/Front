@@ -14,5 +14,5 @@ export type {
   ProductFilterKey,
 } from '@/app/(user)/product/config'
 
-export const ADMIN_PRODUCT_PAGE_SIZE_OPTIONS = [30, 60, 90]
+export const ADMIN_PRODUCT_PAGE_SIZE_OPTIONS = [50, 150, 300]
 

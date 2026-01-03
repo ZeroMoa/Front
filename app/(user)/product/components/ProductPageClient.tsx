@@ -23,6 +23,7 @@ import ProductSidebar from './ProductSidebar';
 import ProductGrid from './ProductGrid';
 import ProductPagination from './ProductPagination';
 import type { Product } from '@/types/productTypes';
+import { PRODUCT_LIST_SCROLL_STORAGE_KEY } from '@/constants/productNavigationConstants';
 
 const HERO_FILTER_MAP: Record<NutritionSlug, ProductFilterKey> = {
     'zero-calorie': 'isZeroCalorie',
@@ -148,6 +149,7 @@ export default function ProductPageClient({
     const searchParams = useSearchParams();
     const [, startTransition] = useTransition();
     const [clientContent, setClientContent] = useState<Product[]>(data.content);
+    const searchParamString = searchParams?.toString() ?? '';
     
     // User 전용 로직: 항상 nutrition/new/search 모드에서 리셋 버튼 노출
     const shouldShowInlineResetButton = mode === 'nutrition' || mode === 'new' || mode === 'search';
@@ -595,6 +597,35 @@ export default function ProductPageClient({
             console.log('[ProductPageClient] rendering products', data.content.map((item) => item.productNo));
         }
     }, [data.content]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const stored = window.sessionStorage.getItem(PRODUCT_LIST_SCROLL_STORAGE_KEY);
+        if (!stored) {
+            return;
+        }
+
+        try {
+            const parsed = JSON.parse(stored) as { path?: string; scroll?: number | string };
+            const normalizedPath = pathname + (searchParamString ? `?${searchParamString}` : '');
+            if (!parsed.path || parsed.path !== normalizedPath) {
+                return;
+            }
+
+            const resolvedScroll =
+                typeof parsed.scroll === 'number' ? parsed.scroll : Number.parseInt(String(parsed.scroll), 10);
+            const scrollTop = Number.isFinite(resolvedScroll) ? resolvedScroll : 0;
+
+            window.requestAnimationFrame(() => {
+                window.scrollTo({ top: scrollTop, behavior: 'auto' });
+            });
+            window.sessionStorage.removeItem(PRODUCT_LIST_SCROLL_STORAGE_KEY);
+        } catch {
+            window.sessionStorage.removeItem(PRODUCT_LIST_SCROLL_STORAGE_KEY);
+        }
+    }, [pathname, searchParamString]);
 
     useEffect(() => {
         if (typeof window === 'undefined') {
