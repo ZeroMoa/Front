@@ -41,6 +41,13 @@
     text-align: left;
 }
 
+.sectionDivider {
+    width: 100%;
+    height: 1px;
+    background: rgba(200, 210, 235, 0.6);
+    margin: 24px 0
+}
+
 .subtitle {
     font-size: 1rem;
     color: #666;
@@ -335,12 +342,12 @@
 .boxSelect {
     position: relative;
     flex: 1;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #fff;
-    display: flex; /* 내부 요소들을 배치하기 위해 flex 유지 */
-    align-items: center; /* 세로 중앙 정렬 */
-    height: 44px; /* inputInfo와 높이 맞춤 */
+    border: 1px solid rgba(155, 174, 220, 0.6);
+    border-radius: 10px;
+    background-color: rgba(248, 250, 255, 0.95);
+    display: flex;
+    align-items: center;
+    height: 44px;
 }
 
 .boxSelect.on .boxLayer {
@@ -349,61 +356,57 @@
 
 .domainDisplayField,
 .domainInputField {
-    flex: 1; /* 나머지 공간을 모두 차지 */
-    padding: 12px 15px;
-    background: none;
-    text-align: left;
+    flex: 1;
+    padding: 10px 12px;
     font-size: 1rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    box-sizing: border-box; /* 패딩 포함 너비 계산 */
-    border-radius: 5px; /* 부모 boxSelect와 동일하게 */
-    height: 100%; /* 부모 boxSelect와 높이 맞춤 */
+    box-sizing: border-box;
+    border-radius: 10px;
+    height: 100%;
     display: flex;
     align-items: center;
-}
-
-.domainInputField {
-    border: none; /* input은 별도 보더 없음, 부모 boxSelect의 보더 사용 */
-    outline: none; /* 포커스 시 아웃라인 제거 */
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #2f3f69;
 }
 
 .selectArrowContainer {
-    position: relative; /* boxSelect 내에서 상대 위치 */
-    width: 40px; /* 화살표 영역 너비 */
+    position: relative;
+    width: 40px;
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer; /* 화살표 div만 클릭 가능하도록 */
+    cursor: pointer;
 }
 
 .selectArrow {
-    font-size: 0.8rem;
-    color: #666;
-    pointer-events: none; /* 화살표 자체 클릭 방지, 부모 selectArrowContainer로 이벤트 전달 */
+    font-size: 0.85rem;
+    color: #626f9f;
+    pointer-events: none;
 }
 
 .boxLayer {
-    display: none;
     position: absolute;
-    top: 100%;
+    top: calc(100% + 6px);
     left: 0;
     width: 100%;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    max-height: 200px;
+    background-color: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(155, 174, 220, 0.6);
+    border-radius: 12px;
+    box-shadow: 0 18px 40px rgba(45, 64, 119, 0.18);
+    z-index: 15;
+    max-height: 220px;
     overflow-y: auto;
 }
 
 .listAdress {
     list-style: none;
-    padding: 0;
     margin: 0;
+    padding: 8px 0;
 }
 
 .listItem {
@@ -412,17 +415,18 @@
 
 .buttonMail {
     width: 100%;
-    padding: 10px 15px;
+    padding: 10px 16px;
+    background: transparent;
     border: none;
-    background: none;
     text-align: left;
     font-size: 1rem;
-    color: #333;
+    color: #2f3f69;
     cursor: pointer;
+    transition: background-color 0.18s ease;
 }
 
 .buttonMail:hover {
-    background-color: #f0f0f0;
+    background: rgba(93, 124, 255, 0.12);
 }
 
 .textCont {
@@ -434,8 +438,8 @@
 }
 
 .hasValue {
-    background-color: #f9f9f9; /* 값이 있을 때의 연한 배경색 */
-    transition: background-color 0.2s ease; /* 부드러운 전환 효과 */
+    background-color: rgba(245, 248, 255, 0.92);
+    transition: background-color 0.2s ease;
 }
 
 /* 오류가 있는 경우 배경색이 덮어쓰지 않도록 */
@@ -495,6 +499,10 @@
     color: #18a462;
 }
 
+.passwordRuleInvalid {
+    color: #dc3545;
+}
+
 .passwordRuleIcon {
     width: 18px;
     height: 18px;
@@ -510,7 +518,6 @@
 /* 약관 동의 섹션 스타일 */
 .agreementSection {
     width: 100%;
-    margin-top: 25px;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -533,12 +540,18 @@
     width: 18px;
     height: 18px;
     cursor: pointer;
+    accent-color: #4f7cff;
 }
 
 .checkboxText {
     font-size: 0.95rem;
     font-weight: 600;
     color: #333;
+}
+
+.mandatoryLabel {
+    color: #dc3545;
+    margin-right: 4px;
 }
 
 .termsScrollBox {

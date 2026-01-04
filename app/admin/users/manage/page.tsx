@@ -86,7 +86,14 @@ export default function AdminUserManagePage() {
   const [filters, setFilters] = useState<UserFilters>(INITIAL_FILTERS)
   const [sortState, setSortState] = useState<SortState>(INITIAL_SORT_STATE)
   const [isEmailDomainOpen, setIsEmailDomainOpen] = useState(false)
+  
+  // 커스텀 드롭다운 상태
+  const [showIsLockDropdown, setShowIsLockDropdown] = useState(false)
+  const [showPageSizeDropdown, setShowPageSizeDropdown] = useState(false)
+  
   const emailDropdownRef = useRef<HTMLDivElement | null>(null)
+  const isLockRef = useRef<HTMLDivElement | null>(null)
+  const pageSizeRef = useRef<HTMLDivElement | null>(null)
 
   const fetchUsers = useCallback(async () => {
     const hasUsername = filters.username.trim().length > 0
@@ -122,17 +129,20 @@ export default function AdminUserManagePage() {
   }, [fetchUsers])
 
   useEffect(() => {
-    if (!isEmailDomainOpen) {
-      return
-    }
     const handleClickOutside = (event: MouseEvent) => {
       if (emailDropdownRef.current && !emailDropdownRef.current.contains(event.target as Node)) {
         setIsEmailDomainOpen(false)
       }
+      if (isLockRef.current && !isLockRef.current.contains(event.target as Node)) {
+        setShowIsLockDropdown(false)
+      }
+      if (pageSizeRef.current && !pageSizeRef.current.contains(event.target as Node)) {
+        setShowPageSizeDropdown(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isEmailDomainOpen])
+  }, [])
 
   const handleLockToggle = async (user: ManageUser) => {
     try {
@@ -279,31 +289,7 @@ export default function AdminUserManagePage() {
     setPage(Math.max(nextPage - 1, 0))
   }
 
-  const handlePageSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    setSize(Number(event.target.value))
-    setPage(0)
-  }
-
-  const hasActiveControls = useMemo(() => {
-    const filterActive =
-      filters.username.trim() !== '' ||
-      filters.email.trim() !== '' ||
-      filters.roleType !== 'ALL' ||
-      filters.isLock !== 'ALL'
-    const sortActive = sortState.field !== null
-    return filterActive || sortActive
-  }, [filters, sortState.field])
-
   const handleFilterInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-    setPage(0)
-  }
-
-  const handleFilterSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = event.target
     setFilters((prev) => ({
       ...prev,
@@ -378,26 +364,80 @@ export default function AdminUserManagePage() {
           </label>
           <label className={`${styles.filterLockField} ${styles.filterFieldSmall}`}>
             <span>정지 여부</span>
-            <select name="isLock" value={filters.isLock} onChange={handleFilterSelectChange}>
-              {MANAGE_USER_FILTER_OPTIONS.lock.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <div 
+              ref={isLockRef}
+              className={`${styles.boxSelect} ${showIsLockDropdown ? styles.on : ''}`}
+            >
+              <button 
+                type="button" 
+                className={styles.selectDisplayField}
+                onClick={() => setShowIsLockDropdown(!showIsLockDropdown)}
+              >
+                {MANAGE_USER_FILTER_OPTIONS.lock.find(opt => opt.value === filters.isLock)?.label || '선택'}
+              </button>
+              <div className={styles.selectArrowContainer} onClick={() => setShowIsLockDropdown(!showIsLockDropdown)}>
+                <span className={styles.selectArrowIcon}></span>
+              </div>
+              <div className={styles.boxLayer}>
+                <ul className={styles.listOptions}>
+                  {MANAGE_USER_FILTER_OPTIONS.lock.map((option) => (
+                    <li key={option.value} className={styles.listItem}>
+                      <button
+                        type="button"
+                        className={`${styles.buttonOption} ${option.value === filters.isLock ? styles.buttonOptionSelected : ''}`}
+                        onClick={() => {
+                          setFilters((prev) => ({ ...prev, isLock: option.value as UserFilters['isLock'] }))
+                          setPage(0)
+                          setShowIsLockDropdown(false)
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </label>
           <div className={styles.filtersActions}>
             <div className={styles.pageSizeControl}>
               페이지 크기
-              <select value={size} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-                {PAGE_SIZE_OPTIONS_LIST.map((option) => (
-                  <option key={option} value={option}>
-                    {option}명씩 보기
-                  </option>
-                ))}
-              </select>
+              <div 
+                ref={pageSizeRef}
+                className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''}`}
+              >
+                <button 
+                  type="button" 
+                  className={styles.selectDisplayField}
+                  onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+                >
+                  {size}명씩 보기
+                </button>
+                <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                  <span className={styles.selectArrowIcon}></span>
+                </div>
+                <div className={styles.boxLayer}>
+                  <ul className={styles.listOptions}>
+                    {PAGE_SIZE_OPTIONS_LIST.map((option) => (
+                      <li key={option} className={styles.listItem}>
+                        <button
+                          type="button"
+                          className={`${styles.buttonOption} ${option === size ? styles.buttonOptionSelected : ''}`}
+                          onClick={() => {
+                            setSize(Number(option))
+                            setPage(0)
+                            setShowPageSizeDropdown(false)
+                          }}
+                        >
+                          {option}명씩 보기
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
-            <button type="button" className={styles.resetButton} onClick={handleResetFilters} disabled={!hasActiveControls}>
+            <button type="button" className={styles.resetButton} onClick={handleResetFilters}>
               필터 초기화
             </button>
           </div>
@@ -541,7 +581,7 @@ export default function AdminUserManagePage() {
                                     />
                                   </div>
                                   <span className={styles.textAt}>@</span>
-                                  <div ref={emailDropdownRef} className={styles.boxSelect}>
+                                  <div ref={emailDropdownRef} className={`${styles.boxSelect} ${isEmailDomainOpen ? styles.on : ''}`}>
                                     {editForm.isDirectInput ? (
                                       <input
                                         value={editForm.emailBack}
@@ -553,7 +593,7 @@ export default function AdminUserManagePage() {
                                       />
                                     ) : (
                                       <div
-                                        className={`${styles.domainDisplayField} ${
+                                        className={`${styles.selectDisplayField} ${
                                           editForm.emailBack.trim() ? styles.hasValue : ''
                                         }`}
                                         onClick={() => setIsEmailDomainOpen((prev) => !prev)}
@@ -568,34 +608,32 @@ export default function AdminUserManagePage() {
                                         setIsEmailDomainOpen((prev) => !prev)
                                       }}
                                     >
-                                      <span className={styles.selectArrow}>{isEmailDomainOpen ? '▲' : '▼'}</span>
+                                      <span className={styles.selectArrowIcon}></span>
                                     </div>
-                                    {isEmailDomainOpen && (
-                                      <div className={styles.boxLayer}>
-                                        <ul className={styles.listAdress}>
-                                          <li className={styles.listItem}>
+                                    <div className={styles.boxLayer}>
+                                      <ul className={styles.listOptions}>
+                                        <li className={styles.listItem}>
+                                          <button
+                                            type="button"
+                                            className={`${styles.buttonOption} ${editForm.isDirectInput ? styles.buttonOptionSelected : ''}`}
+                                            onClick={() => handleDomainSelect('직접입력')}
+                                          >
+                                            직접입력
+                                          </button>
+                                        </li>
+                                        {EMAIL_DOMAINS.map((domain) => (
+                                          <li key={domain} className={styles.listItem}>
                                             <button
                                               type="button"
-                                              className={styles.buttonMail}
-                                              onClick={() => handleDomainSelect('직접입력')}
+                                              className={`${styles.buttonOption} ${!editForm.isDirectInput && editForm.emailBack === domain ? styles.buttonOptionSelected : ''}`}
+                                              onClick={() => handleDomainSelect(domain)}
                                             >
-                                              직접입력
+                                              {domain}
                                             </button>
                                           </li>
-                                          {EMAIL_DOMAINS.map((domain) => (
-                                            <li key={domain} className={styles.listItem}>
-                                              <button
-                                                type="button"
-                                                className={styles.buttonMail}
-                                                onClick={() => handleDomainSelect(domain)}
-                                              >
-                                                {domain}
-                                              </button>
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
+                                        ))}
+                                      </ul>
+                                    </div>
                                   </div>
                                 </div>
                               </div>

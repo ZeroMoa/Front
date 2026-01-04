@@ -465,44 +465,135 @@
     color: #5b6787;
 }
 
-.sortLabel {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    color: #4a5d82;
-}
-
-.sortSelect {
-    border-radius: 12px;
-    border: 1px solid rgba(185, 201, 228, 0.6);
-    background: rgba(244, 248, 255, 0.9);
-    padding: 8px 14px;
-    font-size: 0.9rem;
-    cursor: pointer;
-}
-
-.totalCount {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #1f2b46;
-}
-
+.sortLabel,
 .pageSizeLabel {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    color: #4a5d82;
+    gap: 12px;
 }
 
-.pageSizeSelect {
-    border-radius: 12px;
-    border: 1px solid rgba(185, 201, 228, 0.6);
-    background: rgba(244, 248, 255, 0.9);
-    padding: 8px 14px;
+.labelText {
     font-size: 0.9rem;
+    color: #4a5d82;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.boxSelect {
+    position: relative;
+    min-width: 170px;
+    height: 40px;
+    border: 1px solid rgba(157, 175, 205, 0.5);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: inset 0 1px 3px rgba(140, 155, 182, 0.08);
+    display: flex;
+    align-items: center;
     cursor: pointer;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.pageSizeBox {
+    min-width: 140px;
+}
+
+.boxSelect:hover {
+    border-color: #4f7cff;
+}
+
+.boxSelect.on {
+    border-color: #4f7cff;
+    box-shadow: 0 0 0 4px rgba(79, 124, 255, 0.15);
+}
+
+.selectDisplayField {
+    flex: 1;
+    height: 100%;
+    border: none;
+    background: transparent;
+    padding: 0 14px;
+    font-size: 0.92rem;
+    color: #2e3b52;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    outline: none;
+}
+
+.selectArrowContainer {
+    width: 34px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.selectArrowIcon {
+    width: 10px;
+    height: 6px;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M1%201L6%206L11%201%22%20stroke%3D%22%23666%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: transform 0.2s ease;
+}
+
+.boxSelect.on .selectArrowIcon {
+    transform: rotate(180deg);
+}
+
+.boxLayer {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(155, 174, 220, 0.6);
+    border-radius: 12px;
+    box-shadow: 0 18px 40px rgba(45, 64, 119, 0.18);
+    z-index: 50;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.boxSelect.on .boxLayer {
+    display: block;
+}
+
+.listOptions {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+}
+
+.listItem {
+    padding: 0;
+}
+
+.buttonOption {
+    width: 100%;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    font-size: 0.92rem;
+    color: #2e3b52;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+}
+
+.buttonOption:hover {
+    background: rgba(93, 124, 255, 0.12);
+    color: #4f7cff;
+}
+
+.buttonOptionSelected {
+    background: rgba(79, 124, 255, 0.1);
+    color: #4f7cff;
+    font-weight: 700;
 }
 
 .subCategoryHeader {

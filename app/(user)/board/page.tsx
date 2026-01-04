@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import Image from 'next/image';
@@ -73,6 +73,26 @@ export default function BoardPage() {
     const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | BoardType>(
         initialKeyword ? initialBoardType : 'ALL'
     );
+
+    // 커스텀 드롭다운 상태
+    const [showSearchTypeDropdown, setShowSearchTypeDropdown] = useState(false);
+    const [showBoardTypeDropdown, setShowBoardTypeDropdown] = useState(false);
+    const searchTypeRef = useRef<HTMLDivElement>(null);
+    const boardTypeRef = useRef<HTMLDivElement>(null);
+
+    // 외부 클릭 시 닫기
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchTypeRef.current && !searchTypeRef.current.contains(event.target as Node)) {
+                setShowSearchTypeDropdown(false);
+            }
+            if (boardTypeRef.current && !boardTypeRef.current.contains(event.target as Node)) {
+                setShowBoardTypeDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const syncUrlState = useCallback((overrides?: Partial<{
         page: number;
@@ -299,43 +319,99 @@ export default function BoardPage() {
                         </button>
                     </div>
                     <div className={styles.filterSelects}>
-                        <select
-                            className={styles.selectField}
-                            value={searchType}
-                            onChange={(event) => {
-                                const nextType = event.target.value as BoardSearchType;
-                                setSearchType(nextType);
-                                if (keyword) {
-                                    setPage(0);
-                                    syncUrlState({ searchType: nextType, page: 0 });
-                                }
-                            }}
+                        {/* 검색 조건 드롭다운 */}
+                        <div 
+                            ref={searchTypeRef}
+                            className={`${styles.boxSelect} ${showSearchTypeDropdown ? styles.on : ''}`}
                         >
+                            <button 
+                                type="button" 
+                                className={styles.selectDisplayField}
+                                onClick={() => setShowSearchTypeDropdown(!showSearchTypeDropdown)}
+                            >
+                                {BOARD_SEARCH_TYPE_OPTIONS.find(opt => opt.value === searchType)?.label || '검색 조건'}
+                            </button>
+                            <div className={styles.selectArrowContainer} onClick={() => setShowSearchTypeDropdown(!showSearchTypeDropdown)}>
+                                <span className={styles.selectArrowIcon}></span>
+                            </div>
+                            <div className={styles.boxLayer}>
+                                <ul className={styles.listOptions}>
                             {BOARD_SEARCH_TYPE_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
+                                        <li key={option.value} className={styles.listItem}>
+                                            <button
+                                                type="button"
+                                                className={`${styles.buttonOption} ${option.value === searchType ? styles.buttonOptionSelected : ''}`}
+                                                onClick={() => {
+                                                    setSearchType(option.value);
+                                                    setShowSearchTypeDropdown(false);
+                                                    if (keyword) {
+                                                        setPage(0);
+                                                        syncUrlState({ searchType: option.value, page: 0 });
+                                                    }
+                                                }}
+                                            >
                                     {option.label}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            className={styles.selectField}
-                            value={boardTypeFilter}
-                            onChange={(event) => {
-                                const nextType = event.target.value as 'ALL' | BoardType;
-                                setBoardTypeFilter(nextType);
-                                if (keyword) {
-                                    setPage(0);
-                                    syncUrlState({ boardTypeFilter: nextType, page: 0 });
-                                }
-                            }}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* 게시글 타입 드롭다운 */}
+                        <div 
+                            ref={boardTypeRef}
+                            className={`${styles.boxSelect} ${showBoardTypeDropdown ? styles.on : ''}`}
                         >
-                            <option value="ALL">전체</option>
+                            <button 
+                                type="button" 
+                                className={styles.selectDisplayField}
+                                onClick={() => setShowBoardTypeDropdown(!showBoardTypeDropdown)}
+                            >
+                                {boardTypeFilter === 'ALL' ? '전체' : (BOARD_TYPE_LABELS[boardTypeFilter] || boardTypeFilter)}
+                            </button>
+                            <div className={styles.selectArrowContainer} onClick={() => setShowBoardTypeDropdown(!showBoardTypeDropdown)}>
+                                <span className={styles.selectArrowIcon}></span>
+                            </div>
+                            <div className={styles.boxLayer}>
+                                <ul className={styles.listOptions}>
+                                    <li className={styles.listItem}>
+                                        <button
+                                            type="button"
+                                            className={`${styles.buttonOption} ${boardTypeFilter === 'ALL' ? styles.buttonOptionSelected : ''}`}
+                                            onClick={() => {
+                                                setBoardTypeFilter('ALL');
+                                                setShowBoardTypeDropdown(false);
+                                                if (keyword) {
+                                                    setPage(0);
+                                                    syncUrlState({ boardTypeFilter: 'ALL', page: 0 });
+                                                }
+                                            }}
+                                        >
+                                            전체
+                                        </button>
+                                    </li>
                             {BOARD_TYPE_OPTIONS.map((option) => (
-                                <option key={option} value={option}>
+                                        <li key={option} className={styles.listItem}>
+                                            <button
+                                                type="button"
+                                                className={`${styles.buttonOption} ${boardTypeFilter === option ? styles.buttonOptionSelected : ''}`}
+                                                onClick={() => {
+                                                    setBoardTypeFilter(option);
+                                                    setShowBoardTypeDropdown(false);
+                                                    if (keyword) {
+                                                        setPage(0);
+                                                        syncUrlState({ boardTypeFilter: option, page: 0 });
+                                                    }
+                                                }}
+                                            >
                                     {BOARD_TYPE_LABELS[option]}
-                                </option>
+                                            </button>
+                                        </li>
                             ))}
-                        </select>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

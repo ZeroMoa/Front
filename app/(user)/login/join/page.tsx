@@ -18,8 +18,8 @@ const PASSWORD_RULES = [
     },
     {
         id: 'letter',
-        label: '영문 대/소문자 포함',
-        validate: (value: string) => /(?=.*[a-z])(?=.*[A-Z])/.test(value),
+        label: '영문자 포함',
+        validate: (value: string) => /[A-Za-z]/.test(value),
     },
     {
         id: 'number',
@@ -321,7 +321,7 @@ export default function JoinPage() {
                 <div className={styles.card}>
                     <div className={styles.requiredInfo}>은 필수입력사항 입니다.</div>
                     <h2 className={styles.title}>회원가입</h2>
-                    <p className={styles.subtitle}> </p>
+                    <div className={styles.sectionDivider} aria-hidden="true"></div>
 
                     <form onSubmit={handleNext} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <div className={styles.inputGroup}>
@@ -451,10 +451,11 @@ export default function JoinPage() {
                             <div className={styles.passwordRules}>
                                 {PASSWORD_RULES.map((rule) => {
                                     const isValid = rule.validate(password);
+                                    const invalidClass = password && !isValid ? styles.passwordRuleInvalid : '';
                                     return (
                                         <div
                                             key={rule.id}
-                                            className={`${styles.passwordRule} ${isValid ? styles.passwordRuleValid : ''}`}
+                                            className={`${styles.passwordRule} ${isValid ? styles.passwordRuleValid : ''} ${invalidClass}`}
                                         >
                                             <span className={styles.passwordRuleIcon} aria-hidden="true">
                                                 {isValid ? '✔' : '✕'}
@@ -495,6 +496,7 @@ export default function JoinPage() {
                                 <p className={styles.errorMessage}>비밀번호가 일치하지 않습니다.</p>
                             )}
                         </div>
+                        <div className={styles.sectionDivider} aria-hidden="true"></div>
 
                         <div className={styles.agreementSection}>
                             <div className={styles.agreementGroup}>
@@ -504,7 +506,9 @@ export default function JoinPage() {
                                         checked={isTermsAgreed} 
                                         onChange={(e) => setIsTermsAgreed(e.target.checked)} 
                                     />
-                                    <span className={styles.checkboxText}>[필수] 서비스 이용약관 동의</span>
+                                <span className={styles.checkboxText}>
+                                    <span className={styles.mandatoryLabel}>[필수]</span> 서비스 이용약관 동의
+                                </span>
                                 </label>
                                 <div className={styles.termsScrollBox}>
                                     제1조(목적) 이 약관은 제로모아(이하 &quot;회사&quot;라 합니다)가 운영하는 웹사이트에서 제공하는 인터넷 관련 서비스(이하 &quot;서비스&quot;라 합니다)를 이용함에 있어 회사와 이용자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
@@ -526,7 +530,9 @@ export default function JoinPage() {
                                         checked={isPrivacyAgreed} 
                                         onChange={(e) => setIsPrivacyAgreed(e.target.checked)} 
                                     />
-                                    <span className={styles.checkboxText}>[필수] 개인정보 수집 및 이용 동의</span>
+                                <span className={styles.checkboxText}>
+                                    <span className={styles.mandatoryLabel}>[필수]</span> 개인정보 수집 및 이용 동의
+                                </span>
                                 </label>
                                 <div className={styles.privacySummaryBox}>
                                     <table className={styles.privacyTable}>
@@ -537,28 +543,39 @@ export default function JoinPage() {
                                                 <th>보유 기간</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>아이디, 비밀번호, 닉네임, 이메일</td>
-                                                <td>회원 가입 및 식별, 부정 이용 방지</td>
-                                                <td>회원 탈퇴 시 즉시 파기</td>
-                                            </tr>
-                                        </tbody>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                아이디, 비밀번호, 닉네임<br />
+                                                이메일
+                                            </td>
+                                            <td>
+                                                회원 가입 및 식별<br />
+                                                부정 이용 방지
+                                            </td>
+                                            <td>
+                                                3개월 보관 후<br />
+                                                파기
+                                            </td>
+                                        </tr>
+                                    </tbody>
                                     </table>
+                                <p className={styles.agreementNotice}>
+                                    부정 가입 방지를 위해 위 정보는 최대 3개월 동안 보관한 뒤 파기합니다.
+                                </p>
                                     <p className={styles.agreementNotice}>
                                         * 귀하는 개인정보 수집 및 이용에 동의를 거부할 권리가 있으며, 거부 시 회원가입이 제한될 수 있습니다.
                                     </p>
                                 </div>
                             </div>
 
-                            <div className={styles.policyInfo}>
-                                전체 상세 내용은 <Link href="/privacy" className={styles.policyLink}>개인정보처리방침</Link>에서 확인하실 수 있습니다.
-                            </div>
+                           
                         </div>
+                        <div className={styles.sectionDivider} aria-hidden="true"></div>
 
                         <div className={styles.buttonGroup}>
                             <button type="button" className={`${styles.button} ${styles.prevButton}`} onClick={handlePrev} disabled>이전</button>
-                            <button type="submit" className={`${styles.button} ${styles.nextButton}`}>다음</button>
+                            <button type="submit" className={`${styles.button} ${styles.nextButton}`}>가입</button>
                         </div>
                     </form>
                 </div>

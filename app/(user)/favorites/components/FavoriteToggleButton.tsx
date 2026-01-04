@@ -50,7 +50,17 @@ export default function FavoriteToggleButton({
         }
         try {
             window.dispatchEvent(new CustomEvent('favorite-updated', { detail: payload }));
-            window.sessionStorage.setItem('favorite:lastUpdate', JSON.stringify({ ...payload, timestamp: Date.now() }));
+            
+            // 전역 맵 업데이트
+            const storageKey = 'favorite:map';
+            const stored = window.sessionStorage.getItem(storageKey);
+            const map = stored ? JSON.parse(stored) : {};
+            map[payload.productNo] = {
+                isFavorite: payload.isFavorite,
+                likesCount: payload.likesCount,
+                timestamp: Date.now()
+            };
+            window.sessionStorage.setItem(storageKey, JSON.stringify(map));
         } catch (error) {
             console.warn('[FavoriteToggleButton] 상태 동기화 실패', error);
         }

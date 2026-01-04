@@ -64,6 +64,26 @@ export default function FavoritesPage() {
     const [hasHydrated, setHasHydrated] = useState(false);
     const [hasCompletedInitialFetch, setHasCompletedInitialFetch] = useState(false);
 
+    // 커스텀 드롭다운 상태
+    const [showSortDropdown, setShowSortDropdown] = useState(false);
+    const [showPageSizeDropdown, setShowPageSizeDropdown] = useState(false);
+    const sortRef = useRef<HTMLDivElement>(null);
+    const pageSizeRef = useRef<HTMLDivElement>(null);
+
+    // 외부 클릭 시 닫기
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+                setShowSortDropdown(false);
+            }
+            if (pageSizeRef.current && !pageSizeRef.current.contains(event.target as Node)) {
+                setShowPageSizeDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     useEffect(() => {
         setHasHydrated(true);
     }, []);
@@ -168,31 +188,7 @@ export default function FavoritesPage() {
         [currentSize, normalizedSort, router, searchParams, displayPage],
     );
 
-    const handlePageSizeChange = useCallback(
-        (event: React.ChangeEvent<HTMLSelectElement>) => {
-            const nextSize = Number(event.target.value);
-            const params = new URLSearchParams(searchParams.toString());
-            params.set('page', String(PAGE_MIN));
-            params.set('size', String(nextSize));
-            params.set('sort', normalizedSort);
-            router.replace(`/favorites?${params.toString()}`, { scroll: true });
-        },
-        [normalizedSort, router, searchParams],
-    );
-
     const pageSizeOptions = useMemo(() => [20, 40, 60], []);
-
-    const handleSortChange = useCallback(
-        (event: React.ChangeEvent<HTMLSelectElement>) => {
-            const nextSort = event.target.value;
-            const params = new URLSearchParams(searchParams.toString());
-            params.set('page', String(PAGE_MIN));
-            params.set('size', String(currentSize));
-            params.set('sort', nextSort);
-            router.replace(`/favorites?${params.toString()}`, { scroll: true });
-        },
-        [currentSize, router, searchParams],
-    );
 
     return (
         <div className={styles.pageWrapper}>
@@ -202,26 +198,86 @@ export default function FavoritesPage() {
                     <p className={styles.description}>{headerDescription}</p>
                 </div>
                 <div className={styles.controls}>
-                    <label className={styles.sortLabel}>
-                        정렬
-                        <select value={normalizedSort} onChange={handleSortChange} className={styles.sortSelect}>
-                            {SORT_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-                    <label className={styles.pageSizeLabel}>
-                        페이지 크기
-                        <select value={currentSize} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-                            {pageSizeOptions.map((option) => (
-                                <option key={option} value={option}>
-                                    {option}개씩 보기
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                    <div className={styles.sortLabel}>
+                        <span className={styles.labelText}>정렬</span>
+                        <div 
+                            ref={sortRef}
+                            className={`${styles.boxSelect} ${showSortDropdown ? styles.on : ''}`}
+                        >
+                            <button 
+                                type="button" 
+                                className={styles.selectDisplayField}
+                                onClick={() => setShowSortDropdown(!showSortDropdown)}
+                            >
+                                {SORT_OPTIONS.find(opt => opt.value === normalizedSort)?.label || '정렬'}
+                            </button>
+                            <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown(!showSortDropdown)}>
+                                <span className={styles.selectArrowIcon}></span>
+                            </div>
+                            <div className={styles.boxLayer}>
+                                <ul className={styles.listOptions}>
+                                    {SORT_OPTIONS.map((option) => (
+                                        <li key={option.value} className={styles.listItem}>
+                                            <button
+                                                type="button"
+                                                className={`${styles.buttonOption} ${option.value === normalizedSort ? styles.buttonOptionSelected : ''}`}
+                                                onClick={() => {
+                                                    const params = new URLSearchParams(searchParams.toString());
+                                                    params.set('page', String(PAGE_MIN));
+                                                    params.set('size', String(currentSize));
+                                                    params.set('sort', option.value);
+                                                    router.replace(`/favorites?${params.toString()}`, { scroll: true });
+                                                    setShowSortDropdown(false);
+                                                }}
+                                            >
+                                                {option.label}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={styles.pageSizeLabel}>
+                        <span className={styles.labelText}>페이지 크기</span>
+                        <div 
+                            ref={pageSizeRef}
+                            className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''} ${styles.pageSizeBox}`}
+                        >
+                            <button 
+                                type="button" 
+                                className={styles.selectDisplayField}
+                                onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+                            >
+                                {currentSize}개씩 보기
+                            </button>
+                            <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                                <span className={styles.selectArrowIcon}></span>
+                            </div>
+                            <div className={styles.boxLayer}>
+                                <ul className={styles.listOptions}>
+                                    {pageSizeOptions.map((option) => (
+                                        <li key={option} className={styles.listItem}>
+                                            <button
+                                                type="button"
+                                                className={`${styles.buttonOption} ${option === currentSize ? styles.buttonOptionSelected : ''}`}
+                                                onClick={() => {
+                                                    const params = new URLSearchParams(searchParams.toString());
+                                                    params.set('page', String(PAGE_MIN));
+                                                    params.set('size', String(option));
+                                                    params.set('sort', normalizedSort);
+                                                    router.replace(`/favorites?${params.toString()}`, { scroll: true });
+                                                    setShowPageSizeDropdown(false);
+                                                }}
+                                            >
+                                                {option}개씩 보기
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useMemo, useState, type ChangeEvent, type FormEvent, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import styles from './page.module.css'
@@ -50,6 +50,26 @@ export default function AdminNotificationsPage() {
   const [editingTarget, setEditingTarget] = useState<AdminNotificationResponse | null>(null)
   const [editForm, setEditForm] = useState({ title: '', content: '', boardNo: '' })
 
+  // 커스텀 드롭다운 상태
+  const [showIsActiveDropdown, setShowIsActiveDropdown] = useState(false)
+  const [showPageSizeDropdown, setShowPageSizeDropdown] = useState(false)
+  const isActiveRef = useRef<HTMLDivElement>(null)
+  const pageSizeRef = useRef<HTMLDivElement>(null)
+
+  // 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isActiveRef.current && !isActiveRef.current.contains(event.target as Node)) {
+        setShowIsActiveDropdown(false)
+      }
+      if (pageSizeRef.current && !pageSizeRef.current.contains(event.target as Node)) {
+        setShowPageSizeDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const sortParam =
     sortState.field && sortState.direction ? `${SORT_FIELD_MAP[sortState.field]},${sortState.direction}` : undefined
 
@@ -97,13 +117,6 @@ export default function AdminNotificationsPage() {
   const totalPages = data?.totalPages ?? 0
   const currentPageIndex = data?.number ?? page
   const baseRowNumber = currentPageIndex * pageSize
-  const isDefaultFilters =
-    filters.title === INITIAL_FILTERS.title &&
-    filters.boardNo === INITIAL_FILTERS.boardNo &&
-    filters.isActive === INITIAL_FILTERS.isActive
-  const isDefaultSort =
-    sortState.field === INITIAL_SORT_STATE.field && sortState.direction === INITIAL_SORT_STATE.direction
-
   const handleSort = (field: SortKey) => {
     const next = nextSortState(sortState, field)
     setSortState(next)
@@ -112,12 +125,6 @@ export default function AdminNotificationsPage() {
 
   const handlePageChange = (nextPage: number) => {
     setPage(Math.max(nextPage - 1, 0))
-  }
-
-  const handlePageSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const nextSize = Number(event.target.value)
-    setPageSize(nextSize)
-    setPage(0)
   }
 
   const handleFilterChange = (key: keyof FiltersState, value: string) => {
@@ -214,45 +221,117 @@ export default function AdminNotificationsPage() {
           <label className={styles.filterLabel}>
             제목
             <div className={styles.filterInputContainer}>
-            <input
-              type="text"
-              value={filters.title}
-              onChange={(event) => handleFilterChange('title', event.target.value)}
-              placeholder="게시글 제목을 입력하세요"
+              <input
+                type="text"
+                value={filters.title}
+                onChange={(event) => handleFilterChange('title', event.target.value)}
+                placeholder="게시글 제목을 입력하세요"
                 className={styles.filterTextInput}
-            />
+              />
               <Image src={getCdnUrl('/images/search.png')} alt="검색" width={20} height={20} className={styles.filterSearchIcon} />
             </div>
           </label>
 
           <label className={styles.filterLabel}>
             활성화 여부
-            <select
-              value={filters.isActive}
-              onChange={(event) => handleFilterChange('isActive', event.target.value)}
+            <div
+              ref={isActiveRef}
+              className={`${styles.boxSelect} ${showIsActiveDropdown ? styles.on : ''}`}
             >
-              <option value="all">전체</option>
-              <option value="true">활성</option>
-              <option value="false">비활성</option>
-            </select>
+              <button
+                type="button"
+                className={styles.selectDisplayField}
+                onClick={() => setShowIsActiveDropdown(!showIsActiveDropdown)}
+              >
+                {filters.isActive === 'all' ? '전체' : filters.isActive === 'true' ? '활성' : '비활성'}
+              </button>
+              <div className={styles.selectArrowContainer} onClick={() => setShowIsActiveDropdown(!showIsActiveDropdown)}>
+                <span className={styles.selectArrowIcon}></span>
+              </div>
+              <div className={styles.boxLayer}>
+                <ul className={styles.listOptions}>
+                  <li className={styles.listItem}>
+                    <button
+                      type="button"
+                      className={`${styles.buttonOption} ${filters.isActive === 'all' ? styles.buttonOptionSelected : ''}`}
+                      onClick={() => {
+                        handleFilterChange('isActive', 'all')
+                        setShowIsActiveDropdown(false)
+                      }}
+                    >
+                      전체
+                    </button>
+                  </li>
+                  <li className={styles.listItem}>
+                    <button
+                      type="button"
+                      className={`${styles.buttonOption} ${filters.isActive === 'true' ? styles.buttonOptionSelected : ''}`}
+                      onClick={() => {
+                        handleFilterChange('isActive', 'true')
+                        setShowIsActiveDropdown(false)
+                      }}
+                    >
+                      활성
+                    </button>
+                  </li>
+                  <li className={styles.listItem}>
+                    <button
+                      type="button"
+                      className={`${styles.buttonOption} ${filters.isActive === 'false' ? styles.buttonOptionSelected : ''}`}
+                      onClick={() => {
+                        handleFilterChange('isActive', 'false')
+                        setShowIsActiveDropdown(false)
+                      }}
+                    >
+                      비활성
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </label>
         </div>
         <div className={styles.controlsGroup}>
-          <label className={styles.pageSizeLabel}>
+          <div className={styles.pageSizeLabel}>
             페이지 크기
-            <select className={styles.pageSizeSelect} value={pageSize} onChange={handlePageSizeChange}>
-              {PAGE_SIZE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}개씩 보기
-                </option>
-              ))}
-            </select>
-          </label>
-          {(!isDefaultFilters || !isDefaultSort) && (
-        <button type="button" className={styles.resetButton} onClick={handleResetFilters}>
-          필터 초기화
-        </button>
-          )}
+            <div
+              ref={pageSizeRef}
+              className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''}`}
+            >
+              <button
+                type="button"
+                className={styles.selectDisplayField}
+                onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+              >
+                {pageSize}개씩 보기
+              </button>
+              <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                <span className={styles.selectArrowIcon}></span>
+              </div>
+              <div className={styles.boxLayer}>
+                <ul className={styles.listOptions}>
+                  {PAGE_SIZE_OPTIONS.map((option) => (
+                    <li key={option} className={styles.listItem}>
+                      <button
+                        type="button"
+                        className={`${styles.buttonOption} ${option === pageSize ? styles.buttonOptionSelected : ''}`}
+                        onClick={() => {
+                          setPageSize(Number(option))
+                          setPage(0)
+                          setShowPageSizeDropdown(false)
+                        }}
+                      >
+                        {option}개씩 보기
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <button type="button" className={styles.resetButton} onClick={handleResetFilters}>
+            필터 초기화
+          </button>
         </div>
       </div>
 

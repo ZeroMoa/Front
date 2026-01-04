@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import styles from '../page.module.css';
 import {
@@ -151,6 +151,26 @@ export default function ProductPageClient({
     const [clientContent, setClientContent] = useState<Product[]>(data.content);
     const searchParamString = searchParams?.toString() ?? '';
     
+    // 커스텀 드롭다운 상태
+    const [showSortDropdown, setShowSortDropdown] = useState(false);
+    const [showPageSizeDropdown, setShowPageSizeDropdown] = useState(false);
+    const sortRef = useRef<HTMLDivElement>(null);
+    const pageSizeRef = useRef<HTMLDivElement>(null);
+
+    // 외부 클릭 시 닫기
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+                setShowSortDropdown(false);
+            }
+            if (pageSizeRef.current && !pageSizeRef.current.contains(event.target as Node)) {
+                setShowPageSizeDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     // User 전용 로직: 항상 nutrition/new/search 모드에서 리셋 버튼 노출
     const shouldShowInlineResetButton = mode === 'nutrition' || mode === 'new' || mode === 'search';
 
@@ -300,20 +320,6 @@ export default function ProductPageClient({
 
     const handlePageChange = (nextPage: number) => {
         commitUpdates({ page: ensurePositiveInteger(nextPage - 1, 0) });
-    };
-
-    const handlePageSizeChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
-        const nextSize = Number(event.target.value);
-        if (!SUPPORTED_PAGE_SIZES.includes(nextSize as (typeof SUPPORTED_PAGE_SIZES)[number])) {
-            commitUpdates({ size: SUPPORTED_PAGE_SIZES[0], page: 0 });
-            return;
-        }
-        commitUpdates({ size: nextSize, page: 0 });
-    };
-
-    const handleSortChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
-        const nextSort = event.target.value;
-        commitUpdates({ sort: nextSort, page: 0 });
     };
 
     const handleSubCategoryChange = (subSlug: string) => {
@@ -632,63 +638,56 @@ export default function ProductPageClient({
             return;
         }
 
-        const applyUpdate = (detail: unknown) => {
-            if (
-                !detail ||
-                typeof detail !== 'object' ||
-                !('productNo' in detail) ||
-                typeof (detail as { productNo: unknown }).productNo !== 'number'
-            ) {
-                return;
-            }
+        const applyStoredUpdates = () => {
+            try {
+                const storedMap = window.sessionStorage.getItem('favorite:map');
+                if (!storedMap) return;
 
-            const { productNo, isFavorite, likesCount } = detail as {
-                productNo: number;
-                isFavorite: boolean;
-                likesCount: number;
-            };
-
-            setClientContent((prev) => {
-                let updated = false;
-                const next = prev.map((product) => {
-                    if (product.productNo !== productNo) {
+                const map = JSON.parse(storedMap) as Record<number, { isFavorite: boolean; likesCount: number }>;
+                
+                setClientContent((prev) => {
+                    let changed = false;
+                    const next = prev.map((product) => {
+                        const update = map[product.productNo];
+                        if (update && (product.isFavorite !== update.isFavorite || product.likesCount !== update.likesCount)) {
+                            changed = true;
+                            return { ...product, isFavorite: update.isFavorite, likesCount: update.likesCount };
+                        }
                         return product;
-                    }
-                    updated = true;
-                    const resolvedLikesCount =
-                        typeof likesCount === 'number' && !Number.isNaN(likesCount)
-                            ? likesCount
-                            : product.likesCount ?? 0;
-                    return {
-                        ...product,
-                        isFavorite: Boolean(isFavorite),
-                        likesCount: resolvedLikesCount,
-                    };
+                    });
+                    return changed ? next : prev;
                 });
-                return updated ? next : prev;
-            });
+            } catch (error) {
+                console.warn('[ProductPageClient] 좋아요 상태 복구 실패', error);
+            }
         };
 
         const handleFavoriteUpdated = (event: Event) => {
-            const customEvent = event as CustomEvent;
-            applyUpdate(customEvent.detail);
+            const detail = (event as CustomEvent).detail;
+            if (detail && typeof detail.productNo === 'number') {
+                setClientContent((prev) => {
+                    return prev.map((product) => {
+                        if (product.productNo === detail.productNo) {
+                            return {
+                                ...product,
+                                isFavorite: detail.isFavorite,
+                                likesCount: detail.likesCount
+                            };
+                        }
+                        return product;
+                    });
+                });
+            }
         };
 
         window.addEventListener('favorite-updated', handleFavoriteUpdated);
-
-        const lastUpdate = window.sessionStorage.getItem('favorite:lastUpdate');
-        if (lastUpdate) {
-            try {
-                applyUpdate(JSON.parse(lastUpdate));
-            } catch (error) {
-                console.warn('[ProductPageClient] 좋아요 동기화 파싱 실패', error);
-            }
-        }
+        
+        applyStoredUpdates();
 
         return () => {
             window.removeEventListener('favorite-updated', handleFavoriteUpdated);
         };
-    }, []);
+    }, [data.content]);
 
     const hasSubCategories =
         'subCategories' in config && Array.isArray(config.subCategories) && config.subCategories.length > 1;
@@ -890,26 +889,83 @@ export default function ProductPageClient({
                                 <span className={styles.heroDivider} aria-hidden="true" />
                             </>
                         )}
-                        <label className={styles.sortLabel}>
-                            정렬
-                            <select value={normalizedSort} onChange={handleSortChange} className={styles.sortSelect}>
-                                {SORT_OPTIONS.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <label className={styles.pageSizeLabel}>
-                            페이지 크기
-                            <select value={selectedPageSize} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-                                {pageSizeOptions.map((option) => (
-                                    <option key={option} value={option}>
-                                        {option}개씩 보기
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
+                        <div className={styles.sortLabel}>
+                            <span className={styles.labelText}>정렬</span>
+                            <div 
+                                ref={sortRef}
+                                className={`${styles.boxSelect} ${showSortDropdown ? styles.on : ''}`}
+                            >
+                                <button 
+                                    type="button" 
+                                    className={styles.selectDisplayField}
+                                    onClick={() => setShowSortDropdown(!showSortDropdown)}
+                                >
+                                    {SORT_OPTIONS.find(opt => opt.value === normalizedSort)?.label || '정렬'}
+                                </button>
+                                <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown(!showSortDropdown)}>
+                                    <span className={styles.selectArrowIcon}></span>
+                                </div>
+                                <div className={styles.boxLayer}>
+                                    <ul className={styles.listOptions}>
+                                        {SORT_OPTIONS.map((option) => (
+                                            <li key={option.value} className={styles.listItem}>
+                                                <button
+                                                    type="button"
+                                                    className={`${styles.buttonOption} ${option.value === normalizedSort ? styles.buttonOptionSelected : ''}`}
+                                                    onClick={() => {
+                                                        commitUpdates({ sort: option.value, page: 0 });
+                                                        setShowSortDropdown(false);
+                                                    }}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div className={styles.pageSizeLabel}>
+                            <span className={styles.labelText}>페이지 크기</span>
+                            <div 
+                                ref={pageSizeRef}
+                                className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''} ${styles.pageSizeBox}`}
+                            >
+                                <button 
+                                    type="button" 
+                                    className={styles.selectDisplayField}
+                                    onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+                                >
+                                    {selectedPageSize}개씩 보기
+                                </button>
+                                <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                                    <span className={styles.selectArrowIcon}></span>
+                                </div>
+                                <div className={styles.boxLayer}>
+                                    <ul className={styles.listOptions}>
+                                        {pageSizeOptions.map((option) => (
+                                            <li key={option} className={styles.listItem}>
+                                                <button
+                                                    type="button"
+                                                    className={`${styles.buttonOption} ${option === selectedPageSize ? styles.buttonOptionSelected : ''}`}
+                                                    onClick={() => {
+                                                        const nextSize = Number(option);
+                                                        if (!SUPPORTED_PAGE_SIZES.includes(nextSize as (typeof SUPPORTED_PAGE_SIZES)[number])) {
+                                                            commitUpdates({ size: SUPPORTED_PAGE_SIZES[0], page: 0 });
+                                                        } else {
+                                                            commitUpdates({ size: nextSize, page: 0 });
+                                                        }
+                                                        setShowPageSizeDropdown(false);
+                                                    }}
+                                                >
+                                                    {option}개씩 보기
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

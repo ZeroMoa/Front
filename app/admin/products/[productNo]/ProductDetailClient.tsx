@@ -323,6 +323,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [isEditingBasicInfo, setIsEditingBasicInfo] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [, startTransition] = useTransition()
+  
+  // 커스텀 드롭다운 상태
+  const [showParentDropdown, setShowParentDropdown] = useState(false)
+  const [showChildDropdown, setShowChildDropdown] = useState(false)
+  const parentDropdownRef = useRef<HTMLDivElement>(null)
+  const childDropdownRef = useRef<HTMLDivElement>(null)
+
   const initialFormRef = useRef<FormState>(createInitialFormState(product))
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -374,10 +381,17 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   }, [clearImagePreview])
 
   useEffect(() => {
-    if (isEditingBasicInfo) {
-      productNameInputRef.current?.focus()
+    const handleClickOutside = (event: MouseEvent) => {
+      if (parentDropdownRef.current && !parentDropdownRef.current.contains(event.target as Node)) {
+        setShowParentDropdown(false)
+      }
+      if (childDropdownRef.current && !childDropdownRef.current.contains(event.target as Node)) {
+        setShowChildDropdown(false)
+      }
     }
-  }, [isEditingBasicInfo])
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const originalImageUrl = resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)
   const imageSrc = imagePreview ?? originalImageUrl
@@ -565,36 +579,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         [field]: value,
       }))
     }
-
-  const handleParentCategoryChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = event.target
-    setFormState((prev) => {
-      if (!value) {
-        return {
-          ...prev,
-          parentCategoryNo: '',
-          categoryNo: '',
-        }
-      }
-
-      const group = ADMIN_PRODUCT_CATEGORY_TREE.find((item) => String(item.parent.id) === value)
-      const nextCategoryNo = group ? String(group.parent.id) : value
-
-      return {
-        ...prev,
-        parentCategoryNo: value,
-        categoryNo: nextCategoryNo,
-      }
-    })
-  }
-
-  const handleCategoryChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = event.target
-    setFormState((prev) => ({
-      ...prev,
-      categoryNo: value,
-    }))
-  }
 
   const handleHighlightChange = (
     field: 'totalContent' | 'allergens' | 'crossContaminationWarning',
@@ -805,36 +789,106 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     <div className={styles.categoryEditor}>
                       <label className={styles.categoryField}>
                         <span className={styles.categoryFieldLabel}>상위 카테고리</span>
-                        <select
-                          className={styles.categorySelect}
-                          value={formState.parentCategoryNo || ''}
-                          onChange={handleParentCategoryChange}
+                        <div 
+                          ref={parentDropdownRef}
+                          className={`${styles.boxSelect} ${showParentDropdown ? styles.on : ''}`}
                         >
-                          <option value="">상위를 선택하세요</option>
-                          {parentOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
+                          <button 
+                            type="button" 
+                            className={styles.selectDisplayField}
+                            onClick={() => setShowParentDropdown(!showParentDropdown)}
+                          >
+                            {parentOptions.find(opt => opt.value === formState.parentCategoryNo)?.label || '상위를 선택하세요'}
+                          </button>
+                          <div className={styles.selectArrowContainer} onClick={() => setShowParentDropdown(!showParentDropdown)}>
+                            <span className={styles.selectArrowIcon}></span>
+                          </div>
+                          <div className={styles.boxLayer}>
+                            <ul className={styles.listOptions}>
+                              <li className={styles.listItem}>
+                                <button
+                                  type="button"
+                                  className={`${styles.buttonOption} ${!formState.parentCategoryNo ? styles.buttonOptionSelected : ''}`}
+                                  onClick={() => {
+                                    setFormState((prev) => ({ ...prev, parentCategoryNo: '', categoryNo: '' }))
+                                    setShowParentDropdown(false)
+                                  }}
+                                >
+                                  상위를 선택하세요
+                                </button>
+                              </li>
+                              {parentOptions.map((option) => (
+                                <li key={option.value} className={styles.listItem}>
+                                  <button
+                                    type="button"
+                                    className={`${styles.buttonOption} ${option.value === formState.parentCategoryNo ? styles.buttonOptionSelected : ''}`}
+                                    onClick={() => {
+                                      const group = ADMIN_PRODUCT_CATEGORY_TREE.find((item) => String(item.parent.id) === option.value)
+                                      const nextCategoryNo = group ? String(group.parent.id) : option.value
+                                      setFormState((prev) => ({
+                                        ...prev,
+                                        parentCategoryNo: option.value,
+                                        categoryNo: nextCategoryNo,
+                                      }))
+                                      setShowParentDropdown(false)
+                                    }}
+                                  >
+                                    {option.label}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
                       </label>
                       <label className={styles.categoryField}>
                         <span className={styles.categoryFieldLabel}>세부 카테고리</span>
-                        <select
-                          className={styles.categorySelect}
-                          value={formState.categoryNo || ''}
-                          onChange={handleCategoryChange}
-                          disabled={!formState.parentCategoryNo}
+                        <div 
+                          ref={childDropdownRef}
+                          className={`${styles.boxSelect} ${showChildDropdown ? styles.on : ''} ${!formState.parentCategoryNo ? styles.disabled : ''}`}
                         >
-                          <option value="">
-                            {formState.parentCategoryNo ? '세부카테고리를 선택하세요' : '상위를 먼저 선택하세요'}
-                          </option>
-                          {childOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
+                          <button 
+                            type="button" 
+                            className={styles.selectDisplayField}
+                            onClick={() => formState.parentCategoryNo && setShowChildDropdown(!showChildDropdown)}
+                            disabled={!formState.parentCategoryNo}
+                          >
+                            {childOptions.find(opt => opt.value === formState.categoryNo)?.label || (formState.parentCategoryNo ? '세부카테고리를 선택하세요' : '상위를 먼저 선택하세요')}
+                          </button>
+                          <div className={styles.selectArrowContainer} onClick={() => formState.parentCategoryNo && setShowChildDropdown(!showChildDropdown)}>
+                            <span className={styles.selectArrowIcon}></span>
+                          </div>
+                          <div className={styles.boxLayer}>
+                            <ul className={styles.listOptions}>
+                              <li className={styles.listItem}>
+                                <button
+                                  type="button"
+                                  className={`${styles.buttonOption} ${!formState.categoryNo ? styles.buttonOptionSelected : ''}`}
+                                  onClick={() => {
+                                    setFormState((prev) => ({ ...prev, categoryNo: '' }))
+                                    setShowChildDropdown(false)
+                                  }}
+                                >
+                                  {formState.parentCategoryNo ? '세부카테고리를 선택하세요' : '상위를 먼저 선택하세요'}
+                                </button>
+                              </li>
+                              {childOptions.map((option) => (
+                                <li key={option.value} className={styles.listItem}>
+                                  <button
+                                    type="button"
+                                    className={`${styles.buttonOption} ${option.value === formState.categoryNo ? styles.buttonOptionSelected : ''}`}
+                                    onClick={() => {
+                                      setFormState((prev) => ({ ...prev, categoryNo: option.value }))
+                                      setShowChildDropdown(false)
+                                    }}
+                                  >
+                                    {option.label}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
                       </label>
                     </div>
                   ) : (

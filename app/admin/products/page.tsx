@@ -171,24 +171,3 @@ export default async function AdminProductsPage({
   )
 }
 
-
-    <div className={styles.pageWrapper}>
-      <AdminProductPageClient
-        mode={pageMode}
-        categorySlug={categorySlug}
-        collectionSlug={activeCollection}
-        config={adminConfig}
-        data={productResponse}
-        selectedSubCategory={selectedSubCategory}
-        page={page}
-        size={size}
-        sort={sort}
-        filters={filters}
-        keyword={keyword}
-        isNew={Boolean(isNewParam)}
-        lockedFilters={baseConfig.lockedFilters}
-      />
-    </div>
-  )
-}
-

@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
 import Image from 'next/image'
 import { getCdnUrl } from '@/lib/cdn'
@@ -94,6 +94,21 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null)
   const [usernameSearch, setUsernameSearch] = useState(usernameParam ?? '')
   const [emailSearch, setEmailSearch] = useState(emailParam ?? '')
+
+  // 커스텀 드롭다운 상태
+  const [showPageSizeDropdown, setShowPageSizeDropdown] = useState(false)
+  const pageSizeRef = useRef<HTMLDivElement>(null)
+
+  // 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pageSizeRef.current && !pageSizeRef.current.contains(event.target as Node)) {
+        setShowPageSizeDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const pageParamRaw = searchParams.get('page')
   const pageParam = pageParamRaw ? Number(pageParamRaw) : 0
@@ -237,13 +252,6 @@ export default function AdminUsersPage() {
     updateQueryParams({ page: zeroBasedPage.toString() })
   }
 
-  const handlePageSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    updateQueryParams({
-      size: event.target.value,
-      page: '0',
-    })
-  }
-
   const currentPageIndex = Math.max(data?.number ?? page, 0)
   const totalPages = data?.totalPages ?? 0
   const totalElements = data?.totalElements ?? 0
@@ -291,13 +299,42 @@ const renderLoadingState = () => (
             <div className={styles.filtersActions}>
               <div className={styles.pageSizeControl}>
                 페이지 크기
-                <select value={size} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-                  {PAGE_SIZE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}명씩 보기
-                    </option>
-                  ))}
-                </select>
+                <div 
+                  ref={pageSizeRef}
+                  className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''}`}
+                >
+                  <button 
+                    type="button" 
+                    className={styles.selectDisplayField}
+                    onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+                  >
+                    {size}명씩 보기
+                  </button>
+                  <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                    <span className={styles.selectArrowIcon}></span>
+                  </div>
+                  <div className={styles.boxLayer}>
+                    <ul className={styles.listOptions}>
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <li key={option} className={styles.listItem}>
+                          <button
+                            type="button"
+                            className={`${styles.buttonOption} ${option === size ? styles.buttonOptionSelected : ''}`}
+                            onClick={() => {
+                              updateQueryParams({
+                                size: option.toString(),
+                                page: '0',
+                              })
+                              setShowPageSizeDropdown(false)
+                            }}
+                          >
+                            {option}명씩 보기
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </div>
               {((usernameParam && usernameParam.trim()) || (emailParam && emailParam.trim()) || sortState.field) && (
                 <button type="button" className={styles.resetButton} onClick={handleResetFilters}>

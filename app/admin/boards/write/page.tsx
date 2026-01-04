@@ -316,6 +316,8 @@ export default function WriteBoardPage() {
     const [existingAttachments, setExistingAttachments] = useState<EditableAttachment[]>([]);
     const [deletedAttachmentNos, setDeletedAttachmentNos] = useState<number[]>([]);
     const [sendNotification, setSendNotification] = useState(true);
+    const [showBoardTypeDropdown, setShowBoardTypeDropdown] = useState(false);
+    const boardTypeDropdownRef = useRef<HTMLDivElement>(null);
 
     const createBoardMutation = useCreateAdminBoard();
     const updateBoardMutation = useUpdateAdminBoard();
@@ -329,6 +331,18 @@ export default function WriteBoardPage() {
     const handleBackClick = () => {
         router.push('/admin/boards');
     };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (boardTypeDropdownRef.current && !boardTypeDropdownRef.current.contains(event.target as Node)) {
+                setShowBoardTypeDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const editor = useEditor({
         extensions: [
@@ -572,19 +586,45 @@ export default function WriteBoardPage() {
             )}
 
             <div className={styles.inputGroup}>
-                <label htmlFor="boardType">게시판 분류</label>
-                <select
-                    id="boardType"
-                    className={styles.selectField}
-                    value={boardType}
-                    onChange={(event) => setBoardType(event.target.value as BoardType)}
+                <label>게시판 분류</label>
+                <div
+                    ref={boardTypeDropdownRef}
+                    className={`${styles.boxSelect} ${showBoardTypeDropdown ? styles.on : ''}`}
                 >
-                    {BOARD_TYPE_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                            {BOARD_TYPE_LABELS[option]}
-                        </option>
-                    ))}
-                </select>
+                    <button
+                        type="button"
+                        className={styles.selectDisplayField}
+                        onClick={() => setShowBoardTypeDropdown((prev) => !prev)}
+                    >
+                        {BOARD_TYPE_LABELS[boardType]}
+                    </button>
+                    <div
+                        className={styles.selectArrowContainer}
+                        onClick={() => setShowBoardTypeDropdown((prev) => !prev)}
+                    >
+                        <span className={styles.selectArrowIcon}></span>
+                    </div>
+                    <div className={styles.boxLayer}>
+                        <ul className={styles.listOptions}>
+                            {BOARD_TYPE_OPTIONS.map((option) => (
+                                <li key={option} className={styles.listItem}>
+                                    <button
+                                        type="button"
+                                        className={`${styles.buttonOption} ${
+                                            option === boardType ? styles.buttonOptionSelected : ''
+                                        }`}
+                                        onClick={() => {
+                                            setBoardType(option);
+                                            setShowBoardTypeDropdown(false);
+                                        }}
+                                    >
+                                        {BOARD_TYPE_LABELS[option]}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
             </div>
 
             <div className={styles.inputGroup}>

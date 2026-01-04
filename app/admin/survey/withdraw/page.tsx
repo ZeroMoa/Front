@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import styles from './page.module.css'
 import Pagination from '@/components/pagination/Pagination'
 import SortableHeader from '@/components/table/SortableHeader'
@@ -108,6 +108,21 @@ export default function WithdrawSurveyPage() {
   const [usernameFilter, setUsernameFilter] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
+
+  // 커스텀 드롭다운 상태
+  const [showPageSizeDropdown, setShowPageSizeDropdown] = useState(false)
+  const pageSizeRef = useRef<HTMLDivElement>(null)
+
+  // 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pageSizeRef.current && !pageSizeRef.current.contains(event.target as Node)) {
+        setShowPageSizeDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   const [globalReasonCounts, setGlobalReasonCounts] = useState<Array<{ code: string; label: string; count: number }>>([])
   const [globalEarliestDate, setGlobalEarliestDate] = useState<string | null>(null)
 
@@ -162,11 +177,6 @@ export default function WithdrawSurveyPage() {
 
   const handlePageChange = (nextPage: number) => {
     setPage(Math.max(nextPage - 1, 0))
-  }
-
-  const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSize(Number(event.target.value))
-    setPage(0)
   }
 
   const handleSortChange = (field: SortKey) => {
@@ -438,10 +448,6 @@ export default function WithdrawSurveyPage() {
     setPage(0)
   }
 
-  const hasSort = sortField !== null
-  const isFiltered =
-    selectedReasons.length > 0 || usernameFilter.trim() || fromDate || toDate || hasSort
-
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ko">
       <div className={styles.pageWrapper}>
@@ -596,19 +602,45 @@ export default function WithdrawSurveyPage() {
           <div className={styles.controlsGroup}>
             <div className={styles.pageSizeControl}>
               페이지 크기
-              <select className={styles.pageSizeSelect} value={size} onChange={handlePageSizeChange}>
-                {PAGE_SIZE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}개씩 보기
-                  </option>
-                ))}
-              </select>
+              <div 
+                ref={pageSizeRef}
+                className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''}`}
+              >
+                <button 
+                  type="button" 
+                  className={styles.selectDisplayField}
+                  onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+                >
+                  {size}명씩 보기
+                </button>
+                <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                  <span className={styles.selectArrowIcon}></span>
+                </div>
+                <div className={styles.boxLayer}>
+                  <ul className={styles.listOptions}>
+                    {PAGE_SIZE_OPTIONS.map((option) => (
+                      <li key={option} className={styles.listItem}>
+                        <button
+                          type="button"
+                          className={`${styles.buttonOption} ${option === size ? styles.buttonOptionSelected : ''}`}
+                          onClick={() => {
+                            setSize(Number(option))
+                            setPage(0)
+                            setShowPageSizeDropdown(false)
+                          }}
+                        >
+                          {option}명씩 보기
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
             <button
               type="button"
               className={styles.resetButton}
               onClick={handleResetFilters}
-              disabled={!isFiltered}
             >
               필터 초기화
             </button>

@@ -128,6 +128,26 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   const submittingRef = useRef(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
+  // 커스텀 드롭다운 상태
+  const [showParentDropdown, setShowParentDropdown] = useState(false)
+  const [showChildDropdown, setShowChildDropdown] = useState(false)
+  const parentDropdownRef = useRef<HTMLDivElement>(null)
+  const childDropdownRef = useRef<HTMLDivElement>(null)
+
+  // 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (parentDropdownRef.current && !parentDropdownRef.current.contains(event.target as Node)) {
+        setShowParentDropdown(false)
+      }
+      if (childDropdownRef.current && !childDropdownRef.current.contains(event.target as Node)) {
+        setShowChildDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const clearPreview = useCallback(() => {
     if (imagePreview && imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreview)
@@ -213,21 +233,6 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   const handleTextareaChange: React.ChangeEventHandler<HTMLTextAreaElement> = (event) => {
     const { name, value } = event.target
     setFormValues((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleCategoryParentChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
-    const value = event.target.value
-    setCategoryParentId(value)
-    const group = categoryTree.find((item) => String(item.parent.id) === value)
-    if (group) {
-      setCategoryId(String(group.parent.id))
-    } else {
-      setCategoryId('')
-    }
-  }
-
-  const handleCategoryChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
-    setCategoryId(event.target.value)
   }
 
   const handleRenewalChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
@@ -444,39 +449,107 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
             <span className={styles.fieldLabel}>
               상위 카테고리 <span className={styles.requiredMark}>*</span>
             </span>
-            <select
-              value={categoryParentId}
-              onChange={handleCategoryParentChange}
-              className={styles.selectInput}
-              required
+            <div 
+              ref={parentDropdownRef}
+              className={`${styles.boxSelect} ${showParentDropdown ? styles.on : ''}`}
             >
-              <option value="">카테고리를 선택하세요</option>
-              {categoryTree.map((group) => (
-                <option key={group.parent.id} value={group.parent.id}>
-                  {group.parent.name}
-                </option>
-              ))}
-            </select>
+              <button 
+                type="button" 
+                className={styles.selectDisplayField}
+                onClick={() => setShowParentDropdown(!showParentDropdown)}
+              >
+                {categoryTree.find(group => String(group.parent.id) === categoryParentId)?.parent.name || '카테고리를 선택하세요'}
+              </button>
+              <div className={styles.selectArrowContainer} onClick={() => setShowParentDropdown(!showParentDropdown)}>
+                <span className={styles.selectArrowIcon}></span>
+              </div>
+              <div className={styles.boxLayer}>
+                <ul className={styles.listOptions}>
+                  <li className={styles.listItem}>
+                    <button
+                      type="button"
+                      className={`${styles.buttonOption} ${!categoryParentId ? styles.buttonOptionSelected : ''}`}
+                      onClick={() => {
+                        setCategoryParentId('')
+                        setCategoryId('')
+                        setShowParentDropdown(false)
+                      }}
+                    >
+                      카테고리를 선택하세요
+                    </button>
+                  </li>
+                  {categoryTree.map((group) => (
+                    <li key={group.parent.id} className={styles.listItem}>
+                      <button
+                        type="button"
+                        className={`${styles.buttonOption} ${String(group.parent.id) === categoryParentId ? styles.buttonOptionSelected : ''}`}
+                        onClick={() => {
+                          const value = String(group.parent.id)
+                          setCategoryParentId(value)
+                          setCategoryId(value) // 기본적으로 상위 ID를 선택
+                          setShowParentDropdown(false)
+                        }}
+                      >
+                        {group.parent.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </label>
           <label className={styles.field}>
             <span className={styles.fieldLabel}>
               세부 카테고리 <span className={styles.requiredMark}>*</span>
             </span>
-            <select
-              value={categoryId}
-              onChange={handleCategoryChange}
-              className={styles.selectInput}
-              required={canSelectChildCategory}
-              disabled={!categoryParentId || !canSelectChildCategory}
+            <div 
+              ref={childDropdownRef}
+              className={`${styles.boxSelect} ${showChildDropdown ? styles.on : ''} ${(!categoryParentId || !canSelectChildCategory) ? styles.disabled : ''}`}
             >
-              <option value="">{childCategoryPlaceholder}</option>
-             
-              {childCategories.map((child) => (
-                <option key={child.id} value={child.id}>
-                  {child.name}
-                </option>
-              ))}
-            </select>
+              <button 
+                type="button" 
+                className={styles.selectDisplayField}
+                onClick={() => categoryParentId && canSelectChildCategory && setShowChildDropdown(!showChildDropdown)}
+                disabled={!categoryParentId || !canSelectChildCategory}
+              >
+                {childCategories.find(child => String(child.id) === categoryId)?.name || (String(selectedParentGroup?.parent.id) === categoryId ? `${selectedParentGroup?.parent.name} 전체` : childCategoryPlaceholder)}
+              </button>
+              <div className={styles.selectArrowContainer} onClick={() => categoryParentId && canSelectChildCategory && setShowChildDropdown(!showChildDropdown)}>
+                <span className={styles.selectArrowIcon}></span>
+              </div>
+              <div className={styles.boxLayer}>
+                <ul className={styles.listOptions}>
+                  <li className={styles.listItem}>
+                    <button
+                      type="button"
+                      className={`${styles.buttonOption} ${selectedParentGroup && String(selectedParentGroup.parent.id) === categoryId ? styles.buttonOptionSelected : ''}`}
+                      onClick={() => {
+                        if (selectedParentGroup) {
+                          setCategoryId(String(selectedParentGroup.parent.id))
+                        }
+                        setShowChildDropdown(false)
+                      }}
+                    >
+                      {selectedParentGroup ? `${selectedParentGroup.parent.name} 전체` : childCategoryPlaceholder}
+                    </button>
+                  </li>
+                  {childCategories.map((child) => (
+                    <li key={child.id} className={styles.listItem}>
+                      <button
+                        type="button"
+                        className={`${styles.buttonOption} ${String(child.id) === categoryId ? styles.buttonOptionSelected : ''}`}
+                        onClick={() => {
+                          setCategoryId(String(child.id))
+                          setShowChildDropdown(false)
+                        }}
+                      >
+                        {child.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
             {categoryParentId && !canSelectChildCategory && (
               <span className={styles.helperText}>선택한 상위 카테고리에 세부 카테고리는 없습니다.</span>
             )}

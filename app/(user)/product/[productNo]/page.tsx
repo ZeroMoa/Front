@@ -514,7 +514,7 @@ export default function ProductDetail() {
                     </button>
                 </div>
                 <main className={styles.productContainer}>
-                <div className={styles.imageSection}>
+                    <div className={styles.imageSection}>
                     <div className={styles.imageFavoriteOverlay}>
                         <span className={styles.imageFavoriteCount}>{favoriteState.likesCount.toLocaleString()}</span>
                         <FavoriteToggleButton
@@ -531,32 +531,32 @@ export default function ProductDetail() {
                             <span>제품 사진은 추후 저작권 확보 후 제공됩니다.</span>
                         </div>
                     ) : (
-                        <Image
-                            src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
-                            alt={product?.productName || '제품 이미지'}
-                            width={300}
-                            height={300}
-                            className={styles.detailProductImage}
-                            unoptimized
-                            onError={(event) => {
-                                const target = event.target as HTMLImageElement;
-                                target.src = DEFAULT_IMAGE;
-                            }}
-                        />
+                            <Image
+                        src={resolveImageUrl((product as any).imageUrl ?? (product as any).imageurl)}
+                                alt={product?.productName || '제품 이미지'}
+                        width={300}
+                        height={300}
+                        className={styles.detailProductImage}
+                                unoptimized
+                        onError={(event) => {
+                            const target = event.target as HTMLImageElement;
+                            target.src = DEFAULT_IMAGE;
+                        }}
+                    />
                     )}
-                </div>
+                    </div>
 
                     <section className={styles.infoSection}>
                     <div className={styles.infoCard}>
                         <div className={styles.productHeader}>
                             <div className={styles.productMeta}>
                                 <div className={styles.metaTopRow}>
-                                    <span className={styles.category}>
+                                <span className={styles.category}>
                                         {getCategoryNames(
                                             (product as Product & { parentCategoryNo?: number }).parentCategoryNo ?? product.categoryNo,
                                             product.categoryNo,
                                         )}
-                                    </span>
+                                </span>
                                 </div>
                                 <div className={styles.productTitleGroup}>
                                     <div className={styles.productTitleRow}>
@@ -568,7 +568,7 @@ export default function ProductDetail() {
                                             <p className={styles.companyNameDetail}>회사명 : {product.companyName.trim()}</p>
                                             <span className={styles.productHeaderDivider} aria-hidden="true" />
                                         </>
-                                    )}
+                                        )}
                                 </div>
                             </div>
                         </div>
@@ -579,10 +579,10 @@ export default function ProductDetail() {
                                     <div key={item.label} className={styles.servingHighlight}>
                                         <span className={styles.servingHighlightLabel}>{item.label}</span>
                                         <span className={styles.servingHighlightValue}>{item.value}</span>
-                                    </div>
-                                ))}
                             </div>
-                        )}
+                                ))}
+                                        </div>
+                                    )}
 
                         {servingHighlights.length > 0 && nutritionRows.length > 0 && (
                             <div className={styles.sectionDivider} aria-hidden="true" />
@@ -615,19 +615,19 @@ export default function ProductDetail() {
                                             ))}
                                         </tbody>
                                     </table>
-                                </div>
-                            </div>
-                        )}
+                                        </div>
+                                        </div>
+                                    )}
 
                         {nutritionRows.length > 0 && ingredientTokens.length > 0 && (
                             <div className={styles.sectionDivider} aria-hidden="true" />
                         )}
-                    </div>
+                            </div>
 
                     {ingredientTokens.length > 0 && (
-                        <div className={styles.ingredients}>
-                            <h3 className={styles.sectionTitle}>원재료</h3>
-                            <p>
+                                <div className={styles.ingredients}>
+                                    <h3 className={styles.sectionTitle}>원재료</h3>
+                                    <p>
                                 {ingredientTokens.map((ingredient, index) => {
                                     const segments = segmentIngredientText(ingredient);
                                     const resolvedSegments = segments.length > 0 ? segments : [{ text: ingredient }];
@@ -652,8 +652,8 @@ export default function ProductDetail() {
                                                         </span>
                                                     );
                                                 }
-                                                return (
-                                                    <span
+                                    return (
+                                        <span
                                                         key={`${ingredient}-${index}-segment-${segmentIndex}`}
                                                         className={styles.ingredientText}
                                                     >
@@ -661,12 +661,12 @@ export default function ProductDetail() {
                                                     </span>
                                                 );
                                             })}
-                                        </span>
+                                            </span>
                                     );
                                 })}
-                            </p>
-                        </div>
-                    )}
+                                    </p>
+                                </div>
+                            )}
                         </section>
                     </main>
                     

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import styles from '@/app/(user)/product/page.module.css'
 import {
@@ -124,6 +124,26 @@ export default function AdminProductPageClient({
   const [, startTransition] = useTransition()
   const [clientContent, setClientContent] = useState<Product[]>(data.content)
   const searchParamString = searchParams?.toString() ?? ''
+
+  // 커스텀 드롭다운 상태
+  const [showSortDropdown, setShowSortDropdown] = useState(false)
+  const [showPageSizeDropdown, setShowPageSizeDropdown] = useState(false)
+  const sortRef = useRef<HTMLDivElement>(null)
+  const pageSizeRef = useRef<HTMLDivElement>(null)
+
+  // 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setShowSortDropdown(false)
+      }
+      if (pageSizeRef.current && !pageSizeRef.current.contains(event.target as Node)) {
+        setShowPageSizeDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -279,20 +299,6 @@ export default function AdminProductPageClient({
 
   const handlePageChange = (nextPage: number) => {
     commitUpdates({ page: ensurePositiveInteger(nextPage - 1, 0) })
-  }
-
-  const handlePageSizeChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
-    const nextSize = Number(event.target.value)
-    if (!SUPPORTED_PAGE_SIZES.includes(nextSize as SupportedPageSize)) {
-      commitUpdates({ size: SUPPORTED_PAGE_SIZES[0], page: 0 })
-      return
-    }
-    commitUpdates({ size: nextSize, page: 0 })
-  }
-
-  const handleSortChange: React.ChangeEventHandler<HTMLSelectElement> = (event) => {
-    const nextSort = event.target.value
-    commitUpdates({ sort: nextSort, page: 0 })
   }
 
   const handleSubCategoryChange = (subSlug: string) => {
@@ -600,26 +606,83 @@ export default function AdminProductPageClient({
                 <span className={styles.heroDivider} aria-hidden="true" />
               </>
             )}
-            <label className={styles.sortLabel}>
-              정렬
-              <select value={normalizedSort} onChange={handleSortChange} className={styles.sortSelect}>
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={styles.pageSizeLabel}>
-              페이지 크기
-              <select value={pageSizeLabel} onChange={handlePageSizeChange} className={styles.pageSizeSelect}>
-                {pageSizeOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}개씩 보기
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className={styles.sortLabel}>
+              <span className={styles.labelText}>정렬</span>
+              <div 
+                ref={sortRef}
+                className={`${styles.boxSelect} ${showSortDropdown ? styles.on : ''}`}
+              >
+                <button 
+                  type="button" 
+                  className={styles.selectDisplayField}
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                >
+                  {SORT_OPTIONS.find(opt => opt.value === normalizedSort)?.label || '정렬'}
+                </button>
+                <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown(!showSortDropdown)}>
+                  <span className={styles.selectArrowIcon}></span>
+                </div>
+                <div className={styles.boxLayer}>
+                  <ul className={styles.listOptions}>
+                    {SORT_OPTIONS.map((option) => (
+                      <li key={option.value} className={styles.listItem}>
+                        <button
+                          type="button"
+                          className={`${styles.buttonOption} ${option.value === normalizedSort ? styles.buttonOptionSelected : ''}`}
+                          onClick={() => {
+                            commitUpdates({ sort: option.value, page: 0 })
+                            setShowSortDropdown(false)
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className={styles.pageSizeLabel}>
+              <span className={styles.labelText}>페이지 크기</span>
+              <div 
+                ref={pageSizeRef}
+                className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''} ${styles.pageSizeBox}`}
+              >
+                <button 
+                  type="button" 
+                  className={styles.selectDisplayField}
+                  onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+                >
+                  {pageSizeLabel}개씩 보기
+                </button>
+                <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                  <span className={styles.selectArrowIcon}></span>
+                </div>
+                <div className={styles.boxLayer}>
+                  <ul className={styles.listOptions}>
+                    {pageSizeOptions.map((option) => (
+                      <li key={option} className={styles.listItem}>
+                        <button
+                          type="button"
+                          className={`${styles.buttonOption} ${option === pageSizeLabel ? styles.buttonOptionSelected : ''}`}
+                          onClick={() => {
+                            const nextSize = Number(option)
+                            if (!SUPPORTED_PAGE_SIZES.includes(nextSize as SupportedPageSize)) {
+                              commitUpdates({ size: SUPPORTED_PAGE_SIZES[0], page: 0 })
+                            } else {
+                              commitUpdates({ size: nextSize, page: 0 })
+                            }
+                            setShowPageSizeDropdown(false)
+                          }}
+                        >
+                          {option}개씩 보기
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -707,39 +770,6 @@ export default function AdminProductPageClient({
           return (
             <button
               key={item.slug}
-              type="button"
-              className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
-              onClick={() => handleHeroButtonClick(item.slug)}
-              aria-pressed={isActive}
-            >
-              <span className={styles.heroCardLabel}>{item.label}</span>
-            </button>
-          )
-        })}
-      </>
-    )
-
-    if (mode === 'nutrition' || mode === 'search' || (mode === 'new' && (config as NewProductsPageConfig).kind === 'new')) {
-       return (
-        <div className={styles.heroInline}>
-          <button
-            type="button"
-            className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${isNewActive ? styles.heroCardActive : ''}`}
-            onClick={handleNewToggle}
-            aria-pressed={isNewActive}
-          >
-            신제품
-          </button>
-          <span className={styles.heroDivider} aria-hidden="true" />
-          {mode === 'new' ? renderButtons(NEW_HERO_ITEMS) : renderButtons(HERO_BANNER_ITEMS)}
-        </div>
-      )
-    }
-
-    return null
-  }
-}
-
               type="button"
               className={`${styles.heroInlineCard} ${accentClass} ${isActive ? styles.heroCardActive : ''}`}
               onClick={() => handleHeroButtonClick(item.slug)}
