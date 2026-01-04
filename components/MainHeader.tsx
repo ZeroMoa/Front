@@ -209,11 +209,15 @@ export default function Header() {
         const requiresAuth = protectedPrefixes.some(
             (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
         );
+        const isOnHomePage = pathname === '/';
         await logoutUser({
             protectedPrefixes,
             forceRedirectTo: requiresAuth ? '/' : undefined,
         });
         setIsProfileTooltipOpen(false);
+        if (isOnHomePage && typeof window !== 'undefined') {
+            window.location.reload();
+        }
     };
 
     return (

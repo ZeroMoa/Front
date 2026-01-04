@@ -33,6 +33,30 @@ export default function FavoriteToggleButton({
         setLikesCount(initialLikesCount);
     }, [initialIsFavorite, initialLikesCount]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        const handleFavoriteUpdated = (event: Event) => {
+            const detail = (event as CustomEvent).detail;
+            if (detail?.resetAllFavorites) {
+                setIsFavorite(false);
+                setLikesCount(initialLikesCount);
+                return;
+            }
+            if (detail && detail.productNo === productNo) {
+                setIsFavorite(detail.isFavorite);
+                setLikesCount(detail.likesCount);
+            }
+        };
+
+        window.addEventListener('favorite-updated', handleFavoriteUpdated);
+        return () => {
+            window.removeEventListener('favorite-updated', handleFavoriteUpdated);
+        };
+    }, [initialLikesCount, productNo]);
+
     const combinedClassName = useMemo(() => {
         const classes = [styles.favoriteButton];
         if (isFavorite) {

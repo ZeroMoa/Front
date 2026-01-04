@@ -664,6 +664,15 @@ export default function ProductPageClient({
 
         const handleFavoriteUpdated = (event: Event) => {
             const detail = (event as CustomEvent).detail;
+            if (detail?.resetAllFavorites) {
+                setClientContent((prev) =>
+                    prev.map((product) => ({
+                        ...product,
+                        isFavorite: false,
+                    })),
+                );
+                return;
+            }
             if (detail && typeof detail.productNo === 'number') {
                 setClientContent((prev) => {
                     return prev.map((product) => {
@@ -671,7 +680,7 @@ export default function ProductPageClient({
                             return {
                                 ...product,
                                 isFavorite: detail.isFavorite,
-                                likesCount: detail.likesCount
+                                likesCount: detail.likesCount,
                             };
                         }
                         return product;

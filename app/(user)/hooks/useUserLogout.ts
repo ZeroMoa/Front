@@ -8,6 +8,8 @@ import { suppressSessionExpiryAlert, suppressSessionExpiryRedirect } from '@/lib
 import { useAppDispatch } from '../store/slices/store';
 import { logout } from '../store/slices/authSlice';
 
+const FAVORITE_MAP_STORAGE_KEY = 'favorite:map';
+
 interface LogoutOptions {
     forceRedirectTo?: string;
     protectedPrefixes?: string[];
@@ -73,6 +75,14 @@ export function useUserLogout() {
                 queryClient.removeQueries({ queryKey: ['userNotifications'] });
                 queryClient.removeQueries({ queryKey: ['userNotification'] });
                 queryClient.setQueryData(['user'], undefined);
+                if (typeof window !== 'undefined') {
+                    window.sessionStorage.removeItem(FAVORITE_MAP_STORAGE_KEY);
+                    window.dispatchEvent(
+                        new CustomEvent('favorite-updated', {
+                            detail: { resetAllFavorites: true },
+                        }),
+                    );
+                }
                 const requiresAuth = protectedPrefixes.some(
                     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
                 );
