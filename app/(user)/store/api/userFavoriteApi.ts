@@ -2,7 +2,7 @@ import { fetchWithAuth } from '../../../../lib/common/api/fetchWithAuth';
 import { ProductResponse, normalizeProduct } from '@/types/productTypes';
 
 const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL || 'https://localhost:8443';
+    process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL || 'https://api.zeromoa.kr';
 
 const FAVORITE_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/favorites`;
 

@@ -10,7 +10,7 @@ import { setLoggedIn, setUser } from '../app/(user)/store/slices/authSlice'; // 
 import { useQueryClient } from '@tanstack/react-query'; // useQueryClient import
 import { getCdnUrl } from '@/lib/cdn'
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://localhost:8443').replace(/\/$/, '');
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.zeromoa.kr').replace(/\/$/, '');
 type SocialProvider = 'google' | 'naver';
 
 interface LoginModalProps {

@@ -13,7 +13,7 @@ import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth';
 const PRODUCT_API_BASE_URL =
     process.env.NEXT_PUBLIC_PRODUCT_API_BASE_URL ||
     process.env.NEXT_PUBLIC_API_BASE_URL ||
-    'https://localhost:8443';
+    'https://api.zeromoa.kr';
 const DEFAULT_IMAGE = getCdnUrl('/images/default-product.png');
 const ERROR_IMAGE = getCdnUrl('/images/error.jpg');
 const PRODUCT_IMAGES_DISABLED = true; // 주석만 풀면 이미지 노출을 다시 시작할 수 있습니다.
