@@ -17,7 +17,7 @@ import { BoardResponse, BoardSearchType, BoardType } from '@/types/boardTypes'
 import { getCdnUrl } from '@/lib/cdn'
 import Pagination from '@/components/pagination/Pagination'
 import CircularProgress from '@mui/material/CircularProgress'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { ensureAuthSession } from '@/lib/common/api/fetchWithAuth'
 
 const badgeClassMap: Record<BoardType, string> = {
@@ -47,8 +47,9 @@ const parsePageParam = (value: string | null) => {
 
 export default function BoardPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const searchParamsString = searchParams.toString()
+  const getCurrentSearch = () => (typeof window === 'undefined' ? '' : window.location.search)
+  const [searchParamsString, setSearchParamsString] = useState(getCurrentSearch)
+  const searchParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString])
 
   const initialKeyword = searchParams.get('keyword') ?? ''
   const initialSearchType = isValidBoardSearchType(searchParams.get('searchType'))
@@ -113,6 +114,21 @@ export default function BoardPage() {
 
   const emptyMessage = isSearchMode ? '검색 결과가 없습니다.' : '등록된 공지사항이 없습니다.'
 
+  const updateSearchParamsState = useCallback((params: URLSearchParams) => {
+    const queryString = params.toString()
+    setSearchParamsString(queryString ? `?${queryString}` : '')
+  }, [])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setSearchParamsString(getCurrentSearch())
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [])
+
   const syncUrlState = useCallback(
     (overrides?: Partial<{
       page: number
@@ -139,6 +155,7 @@ export default function BoardPage() {
       const queryString = params.toString()
       const nextUrl = queryString ? `/admin/boards?${queryString}` : '/admin/boards'
       router.replace(nextUrl, { scroll: false })
+      updateSearchParamsState(params)
     },
     [router, page, keyword, searchType, boardTypeFilter]
   )

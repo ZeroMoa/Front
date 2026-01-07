@@ -37,14 +37,9 @@ export const deleteUserNotification = async (userNotificationNo: number): Promis
 
 // 읽지 않은 알림 개수 조회
 export const getUnreadNotificationCount = async (): Promise<number> => {
-    const response = await fetch(`${API_BASE_URL}/notification/user/unread-count`, {
+    const response = await fetchWithAuth(`${NOTIFICATION_BASE_PATH}/unread-count`, {
         method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include',
     });
-
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(errorData.message || 'Failed to fetch unread notification count.');

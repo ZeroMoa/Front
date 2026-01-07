@@ -1,5 +1,6 @@
 import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
-import { normalizeSurvey, normalizeReasonCode, type WithdrawSurvey } from '@/lib/utils/surveyUtils'
+import { normalizeSurvey, normalizeReasonCode } from '@/lib/utils/surveyUtils'
+import type { WithdrawSurvey } from '@/types/withdrawSurveyTypes'
 import { type WithdrawSurveyPage, type WithdrawSurveyStatistics } from '@/types/withdrawSurveyTypes'
 
 function parseReasonCounts(raw: unknown): Array<{ code: string; count: number }> {

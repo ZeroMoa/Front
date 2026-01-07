@@ -46,9 +46,7 @@ export const useUserNotificationDetail = (userNotificationNo: number) => {
 // 사용자 알림 읽음 처리 hook
 export const useMarkNotificationAsRead = () => {
     const queryClient = useQueryClient();
-    return useMutation<{
-        message: string
-    }, Error, number>({
+    return useMutation<void, Error, number>({
         mutationFn: markUserNotificationAsRead,
         onSuccess: (data, userNotificationNo) => {
             // 알림 목록 캐시 무효화 및 재요청

@@ -12,19 +12,19 @@ export const fetchBoards = async (params: URLSearchParams): Promise<BoardListRes
 }
 
 export const fetchBoardDetail = async (boardNo: number): Promise<BoardResponse> => {
-  return commonFetchBoardDetail(boardNo, { admin: false })
+  return commonFetchBoardDetail(boardNo)
 }
 
 export const createBoard = async (form: FormData): Promise<BoardResponse> => {
-  return commonCreateBoard(form, { admin: false })
+  return commonCreateBoard(form)
 }
 
 export const updateBoard = async (boardNo: number, form: FormData): Promise<BoardResponse> => {
-  return commonUpdateBoard(boardNo, form, { admin: false })
+  return commonUpdateBoard(boardNo, form)
 }
 
 export const deleteBoard = async (boardNo: number): Promise<void> => {
-  return commonDeleteBoard(boardNo, { admin: false })
+  return commonDeleteBoard(boardNo)
 }
 
 export const searchBoards = async (params: URLSearchParams): Promise<BoardListResponse> => {

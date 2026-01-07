@@ -10,7 +10,7 @@ import { BOARD_TYPE_LABELS, BOARD_TYPE_OPTIONS, BOARD_SEARCH_TYPE_OPTIONS } from
 import { BoardResponse, BoardSearchType, BoardType } from '@/types/boardTypes';
 import { getCdnUrl } from '@/lib/cdn';
 import Pagination from '@/components/pagination/Pagination';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 const PAGE_SIZE = 10;
 const MAX_VISIBLE_PAGES = 7;
@@ -53,8 +53,9 @@ const resolveErrorMessage = (error: unknown) => {
 
 export default function BoardPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const searchParamsString = searchParams.toString();
+    const getCurrentSearch = () => (typeof window === 'undefined' ? '' : window.location.search);
+    const [searchParamsString, setSearchParamsString] = useState(getCurrentSearch);
+    const searchParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
 
     const initialKeyword = searchParams.get('keyword') ?? '';
     const initialSearchType = isValidBoardSearchType(searchParams.get('searchType'))
@@ -94,6 +95,21 @@ export default function BoardPage() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const updateSearchParamsString = useCallback((params: URLSearchParams) => {
+        const queryString = params.toString();
+        setSearchParamsString(queryString ? `?${queryString}` : '');
+    }, []);
+
+    useEffect(() => {
+        const handlePopState = () => {
+            setSearchParamsString(getCurrentSearch());
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, []);
+
     const syncUrlState = useCallback((overrides?: Partial<{
         page: number;
         keyword: string;
@@ -119,6 +135,7 @@ export default function BoardPage() {
         const queryString = params.toString();
         const nextUrl = queryString ? `/board?${queryString}` : '/board';
         router.replace(nextUrl, { scroll: false });
+        updateSearchParamsString(params);
     }, [router, page, keyword, searchType, boardTypeFilter]);
 
     useEffect(() => {

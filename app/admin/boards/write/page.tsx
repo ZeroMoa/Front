@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -305,8 +305,22 @@ const formatSize = (size: number) => {
 
 export default function WriteBoardPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const boardNoParam = searchParams.get('boardNo');
+    const getBoardNoFromSearch = () => {
+        if (typeof window === 'undefined') {
+            return null;
+        }
+        return new URLSearchParams(window.location.search).get('boardNo');
+    };
+    const [boardNoParam, setBoardNoParam] = useState(getBoardNoFromSearch);
+    useEffect(() => {
+        const handlePopState = () => {
+            setBoardNoParam(getBoardNoFromSearch());
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, []);
     const parsedBoardNo = boardNoParam ? Number(boardNoParam) : NaN;
     const isEditMode = Number.isFinite(parsedBoardNo) && parsedBoardNo > 0;
 

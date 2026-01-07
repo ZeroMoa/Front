@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import CircularProgress from '@mui/material/CircularProgress';
 import styles from './page.module.css';
 import ProductGrid from '../product/components/ProductGrid';
@@ -24,7 +24,20 @@ const SORT_OPTIONS: Array<{ value: string; label: string }> = [
 
 export default function FavoritesPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
+    const getCurrentSearch = () => (typeof window === 'undefined' ? '' : window.location.search);
+    const [searchString, setSearchString] = useState(getCurrentSearch);
+    const searchParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
+    const updateSearchString = useCallback((params: URLSearchParams) => {
+        const queryString = params.toString();
+        setSearchString(queryString ? `?${queryString}` : '');
+    }, []);
+    useEffect(() => {
+        const handlePopState = () => {
+            setSearchString(getCurrentSearch());
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
     const { isLoggedIn, isLoading: authLoading } = useIsLoggedIn();
     const alertShownRef = useRef(false);
 
@@ -125,7 +138,7 @@ export default function FavoritesPage() {
                 }
 
                 const totalPages = typeof response.totalPages === 'number' ? response.totalPages : 0;
-                if (totalPages > 0 && currentPageIndex >= totalPages) {
+                    if (totalPages > 0 && currentPageIndex >= totalPages) {
                     const safeLastIndex = Math.max(0, totalPages - 1);
                     if (safeLastIndex !== currentPageIndex) {
                         const params = new URLSearchParams(searchParams.toString());
@@ -133,6 +146,7 @@ export default function FavoritesPage() {
                         params.set('size', String(currentSize));
                         params.set('sort', normalizedSort);
                         router.replace(`/favorites?${params.toString()}`, { scroll: true });
+                            updateSearchString(params);
                         return;
                     }
                 }
@@ -157,7 +171,7 @@ export default function FavoritesPage() {
         return () => {
             cancelled = true;
         };
-    }, [authLoading, isLoggedIn, currentPageIndex, currentSize, normalizedSort, router, searchParams]);
+        }, [authLoading, isLoggedIn, currentPageIndex, currentSize, normalizedSort, router, searchParams, updateSearchString]);
 
     const totalElements = data?.totalElements ?? 0;
     const totalPages = data?.totalPages ?? 0;
@@ -184,8 +198,9 @@ export default function FavoritesPage() {
             params.set('size', String(currentSize));
             params.set('sort', normalizedSort);
             router.replace(`/favorites?${params.toString()}`, { scroll: true });
+            updateSearchString(params);
         },
-        [currentSize, normalizedSort, router, searchParams, displayPage],
+        [currentSize, normalizedSort, router, searchParams, displayPage, updateSearchString],
     );
 
     const pageSizeOptions = useMemo(() => [20, 40, 60], []);
@@ -227,6 +242,7 @@ export default function FavoritesPage() {
                                                     params.set('size', String(currentSize));
                                                     params.set('sort', option.value);
                                                     router.replace(`/favorites?${params.toString()}`, { scroll: true });
+                                                    updateSearchString(params);
                                                     setShowSortDropdown(false);
                                                 }}
                                             >
@@ -267,6 +283,7 @@ export default function FavoritesPage() {
                                                     params.set('size', String(option));
                                                     params.set('sort', normalizedSort);
                                                     router.replace(`/favorites?${params.toString()}`, { scroll: true });
+                                                    updateSearchString(params);
                                                     setShowPageSizeDropdown(false);
                                                 }}
                                             >

@@ -4,7 +4,7 @@ import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from '
 import CircularProgress from '@mui/material/CircularProgress'
 import Image from 'next/image'
 import { getCdnUrl } from '@/lib/cdn'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import styles from './page.module.css'
 import { useAdminHeader } from '../layout'
 import Pagination from '@/components/pagination/Pagination'
@@ -83,7 +83,9 @@ function renderDateCell(value: string | null) {
 export default function AdminUsersPage() {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const getCurrentSearch = () => (typeof window === 'undefined' ? '' : window.location.search)
+  const [searchQuery, setSearchQuery] = useState(getCurrentSearch)
+  const searchParams = useMemo(() => new URLSearchParams(searchQuery), [searchQuery])
   const { setValues: setHeaderValues } = useAdminHeader()
 
   const usernameParam = searchParams.get('username')
@@ -158,6 +160,21 @@ export default function AdminUsersPage() {
     }
   }, [setHeaderValues])
 
+  useEffect(() => {
+    const handlePopState = () => {
+      setSearchQuery(getCurrentSearch())
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [])
+
+  const updateSearchState = useCallback((params: URLSearchParams) => {
+    const queryString = params.toString()
+    setSearchQuery(queryString ? `?${queryString}` : '')
+  }, [])
+
   const updateQueryParams = useCallback(
     (nextParams: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString())
@@ -172,8 +189,9 @@ export default function AdminUsersPage() {
       const queryString = params.toString()
       const url = queryString ? `${pathname}?${queryString}` : pathname
       router.push(url, { scroll: false })
+      updateSearchState(params)
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParams, updateSearchState]
   )
 
   const fetchUsers = useCallback(async () => {

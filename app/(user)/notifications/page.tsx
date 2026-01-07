@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { useUserNotifications, useMarkNotificationAsRead, useDeleteUserNotification } from '../hooks/useNotification';
@@ -25,7 +25,9 @@ function formatDateOnly(value: string | Date | null | undefined) {
 
 export default function NotificationsPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
+    const getCurrentSearch = () => (typeof window === 'undefined' ? '' : window.location.search);
+    const [searchString, setSearchString] = useState(getCurrentSearch);
+    const searchParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
     const userNotificationNoFromUrl = searchParams.get('userNotificationNo');
 
     const { data: notifications, isLoading, error, refetch } = useUserNotifications();
@@ -38,6 +40,13 @@ export default function NotificationsPage() {
 
     useEffect(() => {
         setIsHydrated(true);
+        const handlePopState = () => {
+            setSearchString(getCurrentSearch());
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
     }, []);
 
     useEffect(() => {

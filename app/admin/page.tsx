@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-export default function AdminIndexPage() {
-  const cookieStore = cookies()
+export default async function AdminIndexPage() {
+  const cookieStore = await cookies()
   const hasRefreshToken = cookieStore.get('refreshToken')?.value
 
   if (!hasRefreshToken) {
