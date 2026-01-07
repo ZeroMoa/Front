@@ -7,12 +7,10 @@ type PageParams = {
   productNo: string
 }
 
-type Awaitable<T> = T | Promise<T>
-
 type HttpErrorLike = Error & { status?: number }
 
-export default async function AdminProductDetailPage({ params }: { params: Awaitable<PageParams> }) {
-  const { productNo: productNoParam } = await Promise.resolve(params)
+export default async function AdminProductDetailPage({ params }: { params: PageParams }) {
+  const { productNo: productNoParam } = params
   const productNo = Number(productNoParam)
   if (!Number.isFinite(productNo) || productNo <= 0) {
     notFound()
