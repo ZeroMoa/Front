@@ -9,8 +9,12 @@ type PageParams = {
 
 type HttpErrorLike = Error & { status?: number }
 
-export default async function AdminProductDetailPage({ params }: { params: PageParams }) {
-  const { productNo: productNoParam } = params
+export default async function AdminProductDetailPage({
+  params,
+}: {
+  params: Promise<PageParams>
+}) {
+  const { productNo: productNoParam } = await params
   const productNo = Number(productNoParam)
   if (!Number.isFinite(productNo) || productNo <= 0) {
     notFound()
