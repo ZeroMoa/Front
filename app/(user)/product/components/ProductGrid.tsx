@@ -309,7 +309,11 @@ function ProductCard({
                     </>
                 )}
             </div>
-            {!PRODUCT_IMAGES_DISABLED && (
+            {PRODUCT_IMAGES_DISABLED ? (
+                <div className={styles.imagePlaceholder}>
+                    <span>제품 사진은 추후 저작권 확보 후 제공됩니다.</span>
+                </div>
+            ) : (
                 <div className={styles.imageWrapper}>
                     <Image
                         src={imageSrc}

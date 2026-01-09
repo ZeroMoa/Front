@@ -1,12 +1,13 @@
 import '../styles/global.css'
 // import 'react-quill/dist/quill.snow.css' // Quill 에디터 스타일 (global.css로 이동)
 import { Providers } from './provider'
+import { getCdnUrl } from '@/lib/cdn'
 
 export const metadata = {
   icons: {
     icon: [
-      { url: '/favicon.ico', rel: 'icon' },
-      { url: '/favicon-16x16.png', rel: 'icon', type: 'image/png', sizes: '16x16' },
+      { url: getCdnUrl('/images/favicon.png'), rel: 'icon', type: 'image/png', sizes: '32x32' },
+      { url: getCdnUrl('/images/favicon.png'), rel: 'icon', type: 'image/png', sizes: '16x16' },
     ],
   },
 }

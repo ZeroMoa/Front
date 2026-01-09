@@ -842,6 +842,21 @@
     border-color: rgba(92, 70, 166, 0.94) transparent transparent transparent;
 }
 
+.imagePlaceholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 220px;
+    border-radius: 16px;
+    padding: 18px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(189, 205, 232, 0.6);
+    box-shadow: 0 14px 32px rgba(40, 63, 110, 0.12);
+    color: #5f6a89;
+    font-size: 0.92rem;
+}
+
 .imageWrapper {
     display: flex;
     justify-content: center;
