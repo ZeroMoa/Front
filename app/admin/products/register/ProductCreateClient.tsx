@@ -30,7 +30,19 @@ const DEFAULT_MANUAL_OVERRIDES: Record<HealthFlagKey, boolean> = {
   isLowSugar: false,
 }
 
-const FOOD_TYPE_SUGGESTIONS = ['탄산음료', '커피음료', '혼합음료', '제과류', '아이스크림', '건강기능식품','가공두유(멸균제품)','곡류가공품'] as const
+const BASE_FOOD_TYPE_SUGGESTIONS = [
+  '탄산음료',
+  '커피음료',
+  '혼합음료',
+  '제과류',
+  '아이스크림',
+  '건강기능식품',
+  '가공두유(멸균제품)',
+  '곡류가공품',
+  '기타 코코아 가공품',
+  '균형영양조제식품',
+  '과채음료',
+] as const
 
 const NUMERIC_KEYS = [
   'servingSize',
@@ -245,6 +257,45 @@ const describeProductSearchFailure = (value: unknown): string => {
   return '루트가 객체(JSON)가 아닙니다.'
 }
 
+const normalizeCategoryNo = (value: unknown): number | null => {
+  if (value === undefined || value === null) {
+    return null
+  }
+  const candidate = typeof value === 'string' ? value.trim() : String(value)
+  if (!candidate) {
+    return null
+  }
+  const parsed = Number(candidate)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
+type CategorySelection = {
+  parentId: string
+  childId: string
+}
+
+const findCategorySelection = (
+  categoryTree: AdminProductCategoryGroup[],
+  categoryNoValue: unknown,
+): CategorySelection | null => {
+  const normalized = normalizeCategoryNo(categoryNoValue)
+  if (normalized === null) {
+    return null
+  }
+  const normalizedStr = String(normalized)
+  for (const group of categoryTree) {
+    const parentId = String(group.parent.id)
+    if (parentId === normalizedStr) {
+      return { parentId, childId: parentId }
+    }
+    const childMatch = group.children.find((child) => String(child.id) === normalizedStr)
+    if (childMatch) {
+      return { parentId, childId: normalizedStr }
+    }
+  }
+  return null
+}
+
 const parseNumber = (value: string): number | null => {
   if (!value) {
     return null
@@ -315,6 +366,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   const [isSubmitting, setIsSubmitting] = useState(false)
   const submittingRef = useRef(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [foodTypeOptions, setFoodTypeOptions] = useState<string[]>(() => [...BASE_FOOD_TYPE_SUGGESTIONS])
   const [jsonInput, setJsonInput] = useState('')
   const [jsonError, setJsonError] = useState<string | null>(null)
 
@@ -516,10 +568,25 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
         crossContaminationWarning: toStringValue(
           readValue('cross_contamination_warning', 'crossContaminationWarning'),
         ),
+        foodType: toStringValue(readValue('food_type', 'foodType')),
       }
 
       setFormValues((prev) => ({ ...prev, ...updatedValues }))
+      const categorySelection = findCategorySelection(
+        categoryTree,
+        readValue('category_no', 'categoryNo'),
+      )
+      if (categorySelection) {
+        setCategoryParentId(categorySelection.parentId)
+        setCategoryId(categorySelection.childId)
+      }
       setJsonError(null)
+      const parsedFoodType = updatedValues.foodType?.trim()
+      if (parsedFoodType) {
+        setFoodTypeOptions((prev) =>
+          prev.some((option) => option === parsedFoodType) ? prev : [...prev, parsedFoodType],
+        )
+      }
       const energyValue = parseNumber(updatedValues.energyKcal ?? '')
       const sugarValue = parseNumber(updatedValues.sugarG ?? '')
       const autoFlags = calculateHealthFlags(energyValue, sugarValue)
@@ -534,7 +601,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
     } catch (error) {
       setJsonError('JSON 구문이 올바르지 않습니다.')
     }
-  }, [jsonInput])
+  }, [jsonInput, categoryTree])
 
   const handleFoodTypeSuggestion = (value: string) => {
     setFormValues((prev) => ({ ...prev, foodType: value }))
@@ -1110,7 +1177,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
               placeholder="예: 탄산음료, 발효유"
             />
             <div className={styles.suggestionRow}>
-              {FOOD_TYPE_SUGGESTIONS.map((suggestion) => (
+              {foodTypeOptions.map((suggestion) => (
                 <button
                   key={suggestion}
                   type="button"

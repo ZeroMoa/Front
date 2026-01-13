@@ -433,12 +433,16 @@
 }
 
 .checkboxField {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   font-size: 15px;
   font-weight: 500;
   color: #2e3f6f;
+  padding: 4px 0;
+  width: fit-content;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .checkboxField input {
