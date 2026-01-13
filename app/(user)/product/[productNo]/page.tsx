@@ -31,6 +31,7 @@ const SWEETENER_KEYWORDS = [
     '스테비올',
     '이소말트',
     '타가토스',
+    '알룰로오스'
 ];
 const CAFFEINE_KEYWORDS = ['카페인'];
 const DECAF_PREFIXES = ['디', '디 '];

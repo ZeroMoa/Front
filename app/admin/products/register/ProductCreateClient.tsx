@@ -30,7 +30,7 @@ const DEFAULT_MANUAL_OVERRIDES: Record<HealthFlagKey, boolean> = {
   isLowSugar: false,
 }
 
-const FOOD_TYPE_SUGGESTIONS = ['탄산음료', '커피음료', '혼합음료', '제과류', '아이스크림', '건강기능식품','가공두유(멸균제품)'] as const
+const FOOD_TYPE_SUGGESTIONS = ['탄산음료', '커피음료', '혼합음료', '제과류', '아이스크림', '건강기능식품','가공두유(멸균제품)','곡류가공품'] as const
 
 const NUMERIC_KEYS = [
   'servingSize',
@@ -520,6 +520,17 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
 
       setFormValues((prev) => ({ ...prev, ...updatedValues }))
       setJsonError(null)
+      const energyValue = parseNumber(updatedValues.energyKcal ?? '')
+      const sugarValue = parseNumber(updatedValues.sugarG ?? '')
+      const autoFlags = calculateHealthFlags(energyValue, sugarValue)
+      const hasAnyAutoFlag =
+        autoFlags.isZeroCalorie ||
+        autoFlags.isLowCalorie ||
+        autoFlags.isZeroSugar ||
+        autoFlags.isLowSugar
+      if (!hasAnyAutoFlag) {
+        window.alert('자동 분류된 건강 기준이 없습니다. 직접 체크해 주세요.')
+      }
     } catch (error) {
       setJsonError('JSON 구문이 올바르지 않습니다.')
     }
