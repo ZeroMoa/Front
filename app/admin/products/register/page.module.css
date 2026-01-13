@@ -78,6 +78,39 @@
   margin: 0;
 }
 
+.jsonTextarea {
+  border: 1px solid rgba(155, 174, 220, 0.5);
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 14px;
+  color: #1f2f5c;
+  background: rgba(247, 250, 255, 0.96);
+  min-height: 160px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.jsonActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.jsonHelper {
+  font-size: 13px;
+  color: rgba(70, 88, 140, 0.85);
+  flex: 1;
+  min-width: 200px;
+}
+
+.errorText {
+  margin: 0;
+  font-size: 13px;
+  color: #c0294b;
+}
+
 .fieldGrid {
   display: grid;
   gap: 18px 22px;
@@ -302,6 +335,12 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.pasteHint {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(105, 120, 154, 0.9);
 }
 
 .previewContainer {

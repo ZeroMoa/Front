@@ -53,8 +53,196 @@ const NUMERIC_KEYS = [
 
 type NumericKey = (typeof NUMERIC_KEYS)[number]
 
+const PRODUCT_FIELD_INDICATORS = new Set([
+  'product_name',
+  'productName',
+  'manufacturer_name',
+  'manufacturerName',
+  'company_name',
+  'companyName',
+  'total_content',
+  'totalContent',
+  'serving_size_value',
+  'serving_size',
+  'servingUnit',
+  'serving_size_unit',
+  'nutrition_basis_text',
+  'nutritionBasisText',
+  'nutrition_basis_value',
+  'nutritionBasisValue',
+  'nutrition_basis_unit',
+  'nutritionBasisUnit',
+  'energy_kcal',
+  'energyKcal',
+  'carbohydrate_g',
+  'carbohydrateG',
+  'sugar_g',
+  'sugarG',
+  'fat_g',
+  'fatG',
+  'sodium_mg',
+  'sodiumMg',
+  'protein_g',
+  'proteinG',
+  'cholesterol_mg',
+  'cholesterolMg',
+  'allulose_g',
+  'alluloseG',
+  'erythritol_g',
+  'erythritolG',
+  'trans_fatty_acids_g',
+  'transFattyAcidsG',
+  'saturated_fatty_acids_g',
+  'saturatedFattyAcidsG',
+  'caffeine_mg',
+  'caffeineMg',
+  'taurine_mg',
+  'taurineMg',
+  'other_nutrition',
+  'otherNutrition',
+  'ingredients',
+  'allergens',
+  'cross_contamination_warning',
+  'crossContaminationWarning',
+])
+
 interface ProductCreateClientProps {
   categoryTree: AdminProductCategoryGroup[]
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const findProductData = (value: unknown): Record<string, unknown> | null => {
+  if (!value) {
+    return null
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const nested = findProductData(item)
+      if (nested) {
+        return nested
+      }
+    }
+    return null
+  }
+  if (!isRecord(value)) {
+    return null
+  }
+  const record = value
+  if (Object.keys(record).some((key) => PRODUCT_FIELD_INDICATORS.has(key))) {
+    return record
+  }
+  if ('product_name' in record || 'productName' in record) {
+    return record
+  }
+  if ('products' in record && Array.isArray(record.products)) {
+    return findProductData(record.products[0])
+  }
+  if ('result' in record && isRecord(record.result)) {
+    const resultRecord = record.result as Record<string, unknown>
+    if ('response' in resultRecord && isRecord(resultRecord.response)) {
+      const responseRecord = resultRecord.response as Record<string, unknown>
+      if ('products' in responseRecord && Array.isArray(responseRecord.products)) {
+        return findProductData(responseRecord.products[0])
+      }
+      return findProductData(responseRecord)
+    }
+    return findProductData(resultRecord)
+  }
+  if ('response' in record && isRecord(record.response)) {
+    const responseRecord = record.response as Record<string, unknown>
+    if ('products' in responseRecord && Array.isArray(responseRecord.products)) {
+      return findProductData(responseRecord.products[0])
+    }
+  }
+  for (const key of Object.keys(record)) {
+    const nested = findProductData(record[key])
+    if (nested) {
+      return nested
+    }
+  }
+  return null
+}
+
+const extractDataUrlFromHtml = (html: string): string | null => {
+  const match = html.match(/<img[^>]+src=(['"])(data:image\/[^'"]+)\1/i)
+  return match ? match[2] : null
+}
+
+const createFileFromDataUrl = (dataUrl: string): File | null => {
+  const matches = dataUrl.match(/^data:(image\/[a-zA-Z+.-]+);base64,(.*)$/)
+  if (!matches) {
+    return null
+  }
+  const mime = matches[1]
+  const base64Data = matches[2]
+  const binary = atob(base64Data)
+  const array = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) {
+    array[i] = binary.charCodeAt(i)
+  }
+  const extension = mime.split('/')[1] ?? 'png'
+  return new File([array], `pasted-image.${extension}`, { type: mime })
+}
+
+const getImageFileFromClipboard = (event: ClipboardEvent): File | null => {
+  const clipboardData = event.clipboardData
+  if (!clipboardData) {
+    return null
+  }
+
+  const file = Array.from(clipboardData.files).find((item) => item.type.startsWith('image/'))
+  if (file) {
+    return file
+  }
+
+  const htmlData = clipboardData.getData('text/html')
+  if (htmlData) {
+    const dataUrl = extractDataUrlFromHtml(htmlData)
+    if (dataUrl) {
+      return createFileFromDataUrl(dataUrl)
+    }
+  }
+
+  const textData = clipboardData.getData('text/plain')
+  if (textData && textData.startsWith('data:image')) {
+    return createFileFromDataUrl(textData)
+  }
+
+  return null
+}
+
+const describeProductSearchFailure = (value: unknown): string => {
+  if (!value) {
+    return 'JSON이 비어 있거나 잘못된 형식입니다.'
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return '배열이 비어 있어서 제품을 찾을 수 없습니다.'
+    }
+    return '루트가 배열입니다. products 배열을 포함하거나 객체를 전달해주셔야 합니다.'
+  }
+  if (isRecord(value)) {
+    if ('products' in value) {
+      const products = value.products
+      if (!Array.isArray(products)) {
+        return 'products 키가 존재하지만 배열이 아닙니다.'
+      }
+      if (products.length === 0) {
+        return 'products 배열이 비어 있습니다.'
+      }
+      const first = products[0]
+      if (!isRecord(first)) {
+        return 'products 배열의 첫 항목이 객체 형식이 아닙니다.'
+      }
+      if (!Object.keys(first).some((key) => PRODUCT_FIELD_INDICATORS.has(key))) {
+        return 'products 배열의 항목에 product_name 또는 영양성분 필드가 없습니다.'
+      }
+    }
+    return 'product_name/productName 또는 영양성분 관련 키가 누락되었습니다.'
+  }
+  return '루트가 객체(JSON)가 아닙니다.'
 }
 
 const parseNumber = (value: string): number | null => {
@@ -77,7 +265,7 @@ const calculateHealthFlags = (energy: number | null, sugar: number | null): Reco
     isZeroCalorie: safeEnergy <= ZERO_CALORIE_THRESHOLD && safeEnergy >= 0,
     isLowCalorie: safeEnergy <= LOW_CALORIE_THRESHOLD && safeEnergy >= 0,
     isZeroSugar: safeSugar <= ZERO_SUGAR_THRESHOLD,
-    isLowSugar: safeSugar <= LOW_SUGAR_THRESHOLD && safeSugar > ZERO_SUGAR_THRESHOLD,
+    isLowSugar: safeSugar <= LOW_SUGAR_THRESHOLD && safeSugar >= 0,
   }
 }
 
@@ -127,6 +315,8 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   const [isSubmitting, setIsSubmitting] = useState(false)
   const submittingRef = useRef(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [jsonInput, setJsonInput] = useState('')
+  const [jsonError, setJsonError] = useState<string | null>(null)
 
   // 커스텀 드롭다운 상태
   const [showParentDropdown, setShowParentDropdown] = useState(false)
@@ -256,6 +446,85 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
     })
   }
 
+  const handleJsonInputChange: React.ChangeEventHandler<HTMLTextAreaElement> = (event) => {
+    setJsonInput(event.target.value)
+    if (jsonError) {
+      setJsonError(null)
+    }
+  }
+
+  const handleApplyJson = useCallback(() => {
+    const trimmed = jsonInput.trim()
+    if (!trimmed) {
+      setJsonError('OCR JSON을 붙여넣고 적용 버튼을 눌러주세요.')
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(trimmed)
+      const productData = findProductData(parsed)
+      if (!productData) {
+        const failureReason = describeProductSearchFailure(parsed)
+        setJsonError(`제품 정보를 찾을 수 없습니다. ${failureReason}`)
+        return
+      }
+
+      const readValue = (...keys: string[]): unknown | undefined => {
+        for (const key of keys) {
+          if (key in productData) {
+            return productData[key]
+          }
+        }
+        return undefined
+      }
+
+      const toStringValue = (value: unknown): string => {
+        if (value === undefined || value === null) {
+          return ''
+        }
+        return String(value)
+      }
+
+      const updatedValues: Partial<Record<string, string>> = {
+        productName: toStringValue(readValue('product_name', 'productName')),
+        companyName: toStringValue(readValue('company_name', 'companyName')),
+        manufacturerName: toStringValue(readValue('manufacturer_name', 'manufacturerName')),
+        distributorName: toStringValue(readValue('distributor_name', 'distributorName')),
+        totalContent: toStringValue(readValue('total_content', 'totalContent')),
+        servingSize: toStringValue(readValue('serving_size_value', 'serving_size')),
+        servingUnit: toStringValue(readValue('serving_size_unit', 'serving_unit')),
+        nutritionBasisText: toStringValue(readValue('nutrition_basis_text', 'nutritionBasisText')),
+        nutritionBasisValue: toStringValue(readValue('nutrition_basis_value', 'nutritionBasisValue')),
+        nutritionBasisUnit: toStringValue(readValue('nutrition_basis_unit', 'nutritionBasisUnit')),
+        energyKcal: toStringValue(readValue('energy_kcal', 'energyKcal')),
+        carbohydrateG: toStringValue(readValue('carbohydrate_g', 'carbohydrateG')),
+        proteinG: toStringValue(readValue('protein_g', 'proteinG')),
+        fatG: toStringValue(readValue('fat_g', 'fatG')),
+        saturatedFattyAcidsG: toStringValue(readValue('saturated_fatty_acids_g', 'saturatedFattyAcidsG')),
+        transFattyAcidsG: toStringValue(readValue('trans_fatty_acids_g', 'transFattyAcidsG')),
+        cholesterolMg: toStringValue(readValue('cholesterol_mg', 'cholesterolMg')),
+        sodiumMg: toStringValue(readValue('sodium_mg', 'sodiumMg')),
+        sugarG: toStringValue(readValue('sugar_g', 'sugarG')),
+        sugarAlcoholG: toStringValue(readValue('sugar_alcohol_g', 'sugarAlcoholG')),
+        alluloseG: toStringValue(readValue('allulose_g', 'alluloseG')),
+        erythritolG: toStringValue(readValue('erythritol_g', 'erythritolG')),
+        caffeineMg: toStringValue(readValue('caffeine_mg', 'caffeineMg')),
+        taurineMg: toStringValue(readValue('taurine_mg', 'taurineMg')),
+        otherNutrition: toStringValue(readValue('other_nutrition', 'otherNutrition')),
+        ingredients: toStringValue(readValue('ingredients')),
+        allergens: toStringValue(readValue('allergens')),
+        crossContaminationWarning: toStringValue(
+          readValue('cross_contamination_warning', 'crossContaminationWarning'),
+        ),
+      }
+
+      setFormValues((prev) => ({ ...prev, ...updatedValues }))
+      setJsonError(null)
+    } catch (error) {
+      setJsonError('JSON 구문이 올바르지 않습니다.')
+    }
+  }, [jsonInput])
+
   const handleFoodTypeSuggestion = (value: string) => {
     setFormValues((prev) => ({ ...prev, foodType: value }))
   }
@@ -303,6 +572,19 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
     accept: { 'image/*': [] },
     multiple: false,
   })
+
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      const pastedFile = getImageFileFromClipboard(event)
+      if (pastedFile) {
+        event.preventDefault()
+        updateImageFile(pastedFile)
+      }
+    }
+
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  }, [updateImageFile])
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault()
@@ -382,6 +664,30 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       {successMessage && <div className={styles.successBanner}>{successMessage}</div>}
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>OCR JSON 자동 입력</h2>
+          <p className={styles.sectionDescription}>
+            OCR 처리 결과 JSON을 붙여넣고 “JSON 적용” 버튼을 누르면 자동으로 입력 필드가 채워집니다.
+            키 순서는 상관없습니다.
+          </p>
+        </div>
+        <textarea
+          value={jsonInput}
+          onChange={handleJsonInputChange}
+          className={styles.jsonTextarea}
+          placeholder="예: { ... JSON ... }"
+          rows={8}
+        />
+        <div className={styles.jsonActions}>
+          <span className={styles.jsonHelper}>추출된 OCR 결과를 한 번에 저장하고 싶은 경우에 활용하세요.</span>
+          <button type="button" className={styles.secondaryButton} onClick={handleApplyJson}>
+            JSON 적용
+          </button>
+        </div>
+        {jsonError && <p className={styles.errorText}>{jsonError}</p>}
+      </section>
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
@@ -575,6 +881,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
               </button>
             )}
           </div>
+        <p className={styles.pasteHint}>이미지 복사 후 현재 창에서 붙여넣기(Ctrl/Cmd + V)를 해도 업로드할 수 있습니다.</p>
           {resolvedImagePreview && (
             <div className={styles.previewContainer}>
               <div className={styles.previewBox}>
