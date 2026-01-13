@@ -165,6 +165,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
 
     let handledExpiration = false
+    let checkInProgress = false
+    let lastCheckTimestamp = 0
+    const SESSION_CHECK_THROTTLE_MS = 2000
 
     const forceLogout = () => {
       if (handledExpiration) {
@@ -176,23 +179,32 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
 
     const runCheckSession = async () => {
+      if (checkInProgress) {
+        return
+      }
+      checkInProgress = true
+      lastCheckTimestamp = Date.now()
       try {
         await ensureAuthSession()
       } catch (error) {
         console.error('관리자 세션 확인 실패:', error)
         forceLogout()
+      } finally {
+        checkInProgress = false
       }
     }
-
-    void runCheckSession()
 
     const handleFocus = () => {
       if (document.visibilityState !== 'visible') {
         return
       }
+      if (Date.now() - lastCheckTimestamp < SESSION_CHECK_THROTTLE_MS) {
+        return
+      }
       void runCheckSession()
     }
 
+    void runCheckSession()
     window.addEventListener('focus', handleFocus)
 
     return () => {

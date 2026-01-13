@@ -30,7 +30,7 @@ const DEFAULT_MANUAL_OVERRIDES: Record<HealthFlagKey, boolean> = {
   isLowSugar: false,
 }
 
-const FOOD_TYPE_SUGGESTIONS = ['탄산음료', '커피음료', '혼합음료', '제과류', '아이스크림', '건강기능식품'] as const
+const FOOD_TYPE_SUGGESTIONS = ['탄산음료', '커피음료', '혼합음료', '제과류', '아이스크림', '건강기능식품','가공두유(멸균제품)'] as const
 
 const NUMERIC_KEYS = [
   'servingSize',

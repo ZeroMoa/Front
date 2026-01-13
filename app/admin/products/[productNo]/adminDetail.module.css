@@ -660,6 +660,7 @@ categ
     border: 1px solid rgba(210, 220, 245, 0.6);
     line-height: 1.2;
     font-size: 13px;
+    align-self: anchor-center;
 }
 
 .ingredientText {
