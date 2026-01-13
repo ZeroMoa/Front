@@ -12,9 +12,11 @@ import type { AdminProductCategoryGroup } from '@/types/adminCategoryTypes'
 type HealthFlagKey = 'isZeroCalorie' | 'isLowCalorie' | 'isZeroSugar' | 'isLowSugar'
 
 const ZERO_CALORIE_THRESHOLD = 4
-const LOW_CALORIE_THRESHOLD = 40
-const ZERO_SUGAR_THRESHOLD = 0
-const LOW_SUGAR_THRESHOLD = 10
+const LOW_CALORIE_THRESHOLD_G = 40
+const LOW_CALORIE_THRESHOLD_ML = 20
+const ZERO_SUGAR_THRESHOLD = 0.5
+const LOW_SUGAR_THRESHOLD_G = 5
+const LOW_SUGAR_THRESHOLD_ML = 2.5
 
 const DEFAULT_HEALTH_FLAGS: Record<HealthFlagKey, boolean> = {
   isZeroCalorie: false,
@@ -257,6 +259,27 @@ const describeProductSearchFailure = (value: unknown): string => {
   return '루트가 객체(JSON)가 아닙니다.'
 }
 
+const normalizeNumericValue = (value: unknown): number | null => {
+  if (value === undefined || value === null) {
+    return null
+  }
+  if (typeof value === 'number') {
+    return Number.isNaN(value) ? null : value
+  }
+  const textValue = String(value)
+  return parseNumber(textValue)
+}
+
+const convertToBasis100 = (value: number | null, basis: number | null): number | null => {
+  if (value === null) {
+    return null
+  }
+  if (!basis || basis === 0) {
+    return value
+  }
+  return (value / basis) * 100
+}
+
 const normalizeCategoryNo = (value: unknown): number | null => {
   if (value === undefined || value === null) {
     return null
@@ -308,15 +331,23 @@ const parseNumber = (value: string): number | null => {
   return Number.isNaN(parsed) ? null : parsed
 }
 
-const calculateHealthFlags = (energy: number | null, sugar: number | null): Record<HealthFlagKey, boolean> => {
+const calculateHealthFlags = (
+  energy: number | null,
+  sugar: number | null,
+  basisUnit?: string | null,
+): Record<HealthFlagKey, boolean> => {
   const safeEnergy = energy ?? 0
   const safeSugar = sugar ?? 0
+  const unit = basisUnit?.trim().toLowerCase() ?? ''
+  const isMl = unit.includes('ml')
+  const lowCalorieThreshold = isMl ? LOW_CALORIE_THRESHOLD_ML : LOW_CALORIE_THRESHOLD_G
+  const lowSugarThreshold = isMl ? LOW_SUGAR_THRESHOLD_ML : LOW_SUGAR_THRESHOLD_G
 
   return {
-    isZeroCalorie: safeEnergy <= ZERO_CALORIE_THRESHOLD && safeEnergy >= 0,
-    isLowCalorie: safeEnergy <= LOW_CALORIE_THRESHOLD && safeEnergy >= 0,
-    isZeroSugar: safeSugar <= ZERO_SUGAR_THRESHOLD,
-    isLowSugar: safeSugar <= LOW_SUGAR_THRESHOLD && safeSugar >= 0,
+    isZeroCalorie: safeEnergy < ZERO_CALORIE_THRESHOLD && safeEnergy >= 0,
+    isLowCalorie: safeEnergy < lowCalorieThreshold && safeEnergy >= 0,
+    isZeroSugar: safeSugar < ZERO_SUGAR_THRESHOLD && safeSugar >= 0,
+    isLowSugar: safeSugar < lowSugarThreshold && safeSugar >= 0,
   }
 }
 
@@ -454,7 +485,8 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   useEffect(() => {
     const energy = parseNumber(formValues.energyKcal)
     const sugar = parseNumber(formValues.sugarG)
-    const auto = calculateHealthFlags(energy, sugar)
+    const basisUnit = formValues.nutritionBasisUnit
+    const auto = calculateHealthFlags(energy, sugar, basisUnit)
     setAutoHealthFlags(auto)
     setHealthFlags((previous) => {
       const next: Record<HealthFlagKey, boolean> = { ...previous }
@@ -537,6 +569,12 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
         return String(value)
       }
 
+      const basisValue = normalizeNumericValue(readValue('nutrition_basis_value', 'nutritionBasisValue'))
+      const parsedEnergy = normalizeNumericValue(readValue('energy_kcal', 'energyKcal'))
+      const parsedSugar = normalizeNumericValue(readValue('sugar_g', 'sugarG'))
+      const energyPerHundred = convertToBasis100(parsedEnergy, basisValue)
+      const sugarPerHundred = convertToBasis100(parsedSugar, basisValue)
+
       const updatedValues: Partial<Record<string, string>> = {
         productName: toStringValue(readValue('product_name', 'productName')),
         companyName: toStringValue(readValue('company_name', 'companyName')),
@@ -548,7 +586,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
         nutritionBasisText: toStringValue(readValue('nutrition_basis_text', 'nutritionBasisText')),
         nutritionBasisValue: toStringValue(readValue('nutrition_basis_value', 'nutritionBasisValue')),
         nutritionBasisUnit: toStringValue(readValue('nutrition_basis_unit', 'nutritionBasisUnit')),
-        energyKcal: toStringValue(readValue('energy_kcal', 'energyKcal')),
+        energyKcal: toStringValue(energyPerHundred ?? parsedEnergy ?? readValue('energy_kcal', 'energyKcal')),
         carbohydrateG: toStringValue(readValue('carbohydrate_g', 'carbohydrateG')),
         proteinG: toStringValue(readValue('protein_g', 'proteinG')),
         fatG: toStringValue(readValue('fat_g', 'fatG')),
@@ -556,7 +594,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
         transFattyAcidsG: toStringValue(readValue('trans_fatty_acids_g', 'transFattyAcidsG')),
         cholesterolMg: toStringValue(readValue('cholesterol_mg', 'cholesterolMg')),
         sodiumMg: toStringValue(readValue('sodium_mg', 'sodiumMg')),
-        sugarG: toStringValue(readValue('sugar_g', 'sugarG')),
+        sugarG: toStringValue(sugarPerHundred ?? parsedSugar ?? readValue('sugar_g', 'sugarG')),
         sugarAlcoholG: toStringValue(readValue('sugar_alcohol_g', 'sugarAlcoholG')),
         alluloseG: toStringValue(readValue('allulose_g', 'alluloseG')),
         erythritolG: toStringValue(readValue('erythritol_g', 'erythritolG')),
@@ -589,7 +627,9 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       }
       const energyValue = parseNumber(updatedValues.energyKcal ?? '')
       const sugarValue = parseNumber(updatedValues.sugarG ?? '')
-      const autoFlags = calculateHealthFlags(energyValue, sugarValue)
+      const basisUnitValue =
+        updatedValues.nutritionBasisUnit ?? toStringValue(readValue('nutrition_basis_unit', 'nutritionBasisUnit'))
+      const autoFlags = calculateHealthFlags(energyValue, sugarValue, basisUnitValue)
       const hasAnyAutoFlag =
         autoFlags.isZeroCalorie ||
         autoFlags.isLowCalorie ||
@@ -1215,7 +1255,9 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
             />
             <div>
               <span>저칼로리</span>
-              <p className={styles.helperText}>자동 기준: ≤ {LOW_CALORIE_THRESHOLD} kcal</p>
+              <p className={styles.helperText}>
+                자동 기준: 100g당 ≤ {LOW_CALORIE_THRESHOLD_G} kcal / 100ml당 ≤ {LOW_CALORIE_THRESHOLD_ML} kcal
+              </p>
             </div>
           </label>
           <label className={styles.checkboxField}>
@@ -1237,7 +1279,9 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
             />
             <div>
               <span>저당</span>
-              <p className={styles.helperText}>자동 기준: 당류 ≤ {LOW_SUGAR_THRESHOLD} g</p>
+              <p className={styles.helperText}>
+                자동 기준: 100g당 ≤ {LOW_SUGAR_THRESHOLD_G} g / 100ml당 ≤ {LOW_SUGAR_THRESHOLD_ML} g
+              </p>
             </div>
           </label>
         </div>
