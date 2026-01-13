@@ -32,6 +32,12 @@ const DEFAULT_MANUAL_OVERRIDES: Record<HealthFlagKey, boolean> = {
   isLowSugar: false,
 }
 
+type BasisUnitType = 'ml' | 'g' | 'unknown'
+type BasisInfo = {
+  normalizedValue: number
+  unitType: BasisUnitType
+}
+
 const BASE_FOOD_TYPE_SUGGESTIONS = [
   '탄산음료',
   '커피음료',
@@ -50,17 +56,17 @@ const NUMERIC_KEYS = [
   'servingSize',
   'nutritionBasisValue',
   'energyKcal',
-  'carbohydrateG',
-  'proteinG',
-  'fatG',
-  'saturatedFattyAcidsG',
-  'transFattyAcidsG',
-  'cholesterolMg',
   'sodiumMg',
+  'carbohydrateG',
   'sugarG',
   'sugarAlcoholG',
   'alluloseG',
   'erythritolG',
+  'fatG',
+  'transFattyAcidsG',
+  'saturatedFattyAcidsG',
+  'cholesterolMg',
+  'proteinG',
   'caffeineMg',
   'taurineMg',
 ] as const
@@ -270,14 +276,42 @@ const normalizeNumericValue = (value: unknown): number | null => {
   return parseNumber(textValue)
 }
 
-const convertToBasis100 = (value: number | null, basis: number | null): number | null => {
+const getBasisInfo = (basisValue: number | null, basisUnit?: string | null): BasisInfo | null => {
+  if (basisValue === null) {
+    return null
+  }
+  const sanitizedUnit = basisUnit?.toLowerCase().replace(/\s+/g, '') ?? ''
+  let unitType: BasisUnitType = 'unknown'
+  let multiplier = 1
+
+  if (sanitizedUnit.includes('ml')) {
+    unitType = 'ml'
+    multiplier = 1
+  } else if (sanitizedUnit.includes('l')) {
+    unitType = 'ml'
+    multiplier = 1000
+  } else if (sanitizedUnit.includes('kg')) {
+    unitType = 'g'
+    multiplier = 1000
+  } else if (sanitizedUnit.includes('g')) {
+    unitType = 'g'
+    multiplier = 1
+  }
+
+  return {
+    normalizedValue: basisValue * multiplier,
+    unitType,
+  }
+}
+
+const convertToBasis100 = (value: number | null, basisInfo: BasisInfo | null): number | null => {
   if (value === null) {
     return null
   }
-  if (!basis || basis === 0) {
+  if (!basisInfo || !basisInfo.normalizedValue) {
     return value
   }
-  return (value / basis) * 100
+  return (value / basisInfo.normalizedValue) * 100
 }
 
 const normalizeCategoryNo = (value: unknown): number | null => {
@@ -334,12 +368,11 @@ const parseNumber = (value: string): number | null => {
 const calculateHealthFlags = (
   energy: number | null,
   sugar: number | null,
-  basisUnit?: string | null,
+  basisUnitType: BasisUnitType | null = null,
 ): Record<HealthFlagKey, boolean> => {
   const safeEnergy = energy ?? 0
   const safeSugar = sugar ?? 0
-  const unit = basisUnit?.trim().toLowerCase() ?? ''
-  const isMl = unit.includes('ml')
+  const isMl = basisUnitType === 'ml'
   const lowCalorieThreshold = isMl ? LOW_CALORIE_THRESHOLD_ML : LOW_CALORIE_THRESHOLD_G
   const lowSugarThreshold = isMl ? LOW_SUGAR_THRESHOLD_ML : LOW_SUGAR_THRESHOLD_G
 
@@ -486,10 +519,10 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
     const energy = parseNumber(formValues.energyKcal)
     const sugar = parseNumber(formValues.sugarG)
     const basisValue = parseNumber(formValues.nutritionBasisValue)
-    const energyPerHundred = convertToBasis100(energy, basisValue)
-    const sugarPerHundred = convertToBasis100(sugar, basisValue)
-    const basisUnit = formValues.nutritionBasisUnit
-    const auto = calculateHealthFlags(energyPerHundred, sugarPerHundred, basisUnit)
+    const basisInfo = getBasisInfo(basisValue, formValues.nutritionBasisUnit)
+    const energyPerHundred = convertToBasis100(energy, basisInfo)
+    const sugarPerHundred = convertToBasis100(sugar, basisInfo)
+    const auto = calculateHealthFlags(energyPerHundred, sugarPerHundred, basisInfo?.unitType ?? null)
     setAutoHealthFlags(auto)
     setHealthFlags((previous) => {
       const next: Record<HealthFlagKey, boolean> = { ...previous }
@@ -575,8 +608,8 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       const basisValue = normalizeNumericValue(readValue('nutrition_basis_value', 'nutritionBasisValue'))
       const parsedEnergy = normalizeNumericValue(readValue('energy_kcal', 'energyKcal'))
       const parsedSugar = normalizeNumericValue(readValue('sugar_g', 'sugarG'))
-      const energyPerHundred = convertToBasis100(parsedEnergy, basisValue)
-      const sugarPerHundred = convertToBasis100(parsedSugar, basisValue)
+      const basisUnitString = toStringValue(readValue('nutrition_basis_unit', 'nutritionBasisUnit'))
+      const basisInfoForJson = getBasisInfo(basisValue, basisUnitString)
 
       const updatedValues: Partial<Record<string, string>> = {
         productName: toStringValue(readValue('product_name', 'productName')),
@@ -588,7 +621,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
         servingUnit: toStringValue(readValue('serving_size_unit', 'serving_unit')),
         nutritionBasisText: toStringValue(readValue('nutrition_basis_text', 'nutritionBasisText')),
         nutritionBasisValue: toStringValue(readValue('nutrition_basis_value', 'nutritionBasisValue')),
-        nutritionBasisUnit: toStringValue(readValue('nutrition_basis_unit', 'nutritionBasisUnit')),
+        nutritionBasisUnit: basisUnitString,
         energyKcal: toStringValue(readValue('energy_kcal', 'energyKcal')),
         carbohydrateG: toStringValue(readValue('carbohydrate_g', 'carbohydrateG')),
         proteinG: toStringValue(readValue('protein_g', 'proteinG')),
@@ -628,11 +661,9 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
           prev.some((option) => option === parsedFoodType) ? prev : [...prev, parsedFoodType],
         )
       }
-      const basisUnitValue =
-        updatedValues.nutritionBasisUnit ?? toStringValue(readValue('nutrition_basis_unit', 'nutritionBasisUnit'))
-      const energyForHealth = convertToBasis100(parsedEnergy, basisValue)
-      const sugarForHealth = convertToBasis100(parsedSugar, basisValue)
-      const autoFlags = calculateHealthFlags(energyForHealth, sugarForHealth, basisUnitValue)
+      const energyForHealth = convertToBasis100(parsedEnergy, basisInfoForJson)
+      const sugarForHealth = convertToBasis100(parsedSugar, basisInfoForJson)
+      const autoFlags = calculateHealthFlags(energyForHealth, sugarForHealth, basisInfoForJson?.unitType ?? null)
       const hasAnyAutoFlag =
         autoFlags.isZeroCalorie ||
         autoFlags.isLowCalorie ||
@@ -1106,18 +1137,18 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
             const labelMap: Record<NumericKey, string> = {
               servingSize: '1회 제공량',
               nutritionBasisValue: '영양 기준량',
-              energyKcal: '에너지 (kcal)',
-              carbohydrateG: '탄수화물 (g)',
-              proteinG: '단백질 (g)',
-              fatG: '지방 (g)',
-              saturatedFattyAcidsG: '포화지방 (g)',
-              transFattyAcidsG: '트랜스지방 (g)',
-              cholesterolMg: '콜레스테롤 (mg)',
+              energyKcal: '열량 (kcal)',
               sodiumMg: '나트륨 (mg)',
+              carbohydrateG: '탄수화물 (g)',
               sugarG: '당류 (g)',
               sugarAlcoholG: '당알코올 (g)',
               alluloseG: '알룰로스 (g)',
               erythritolG: '에리스리톨 (g)',
+              fatG: '지방 (g)',
+              transFattyAcidsG: '트랜스지방 (g)',
+              saturatedFattyAcidsG: '포화지방 (g)',
+              cholesterolMg: '콜레스테롤 (mg)',
+              proteinG: '단백질 (g)',
               caffeineMg: '카페인 (mg)',
               taurineMg: '타우린 (mg)',
             }
