@@ -485,8 +485,11 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   useEffect(() => {
     const energy = parseNumber(formValues.energyKcal)
     const sugar = parseNumber(formValues.sugarG)
+    const basisValue = parseNumber(formValues.nutritionBasisValue)
+    const energyPerHundred = convertToBasis100(energy, basisValue)
+    const sugarPerHundred = convertToBasis100(sugar, basisValue)
     const basisUnit = formValues.nutritionBasisUnit
-    const auto = calculateHealthFlags(energy, sugar, basisUnit)
+    const auto = calculateHealthFlags(energyPerHundred, sugarPerHundred, basisUnit)
     setAutoHealthFlags(auto)
     setHealthFlags((previous) => {
       const next: Record<HealthFlagKey, boolean> = { ...previous }
@@ -497,7 +500,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       }
       return next
     })
-  }, [formValues.energyKcal, formValues.sugarG, manualOverrides])
+  }, [formValues.energyKcal, formValues.sugarG, formValues.nutritionBasisValue, formValues.nutritionBasisUnit, manualOverrides])
 
   const handleInputChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     const { name, value } = event.target
@@ -586,7 +589,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
         nutritionBasisText: toStringValue(readValue('nutrition_basis_text', 'nutritionBasisText')),
         nutritionBasisValue: toStringValue(readValue('nutrition_basis_value', 'nutritionBasisValue')),
         nutritionBasisUnit: toStringValue(readValue('nutrition_basis_unit', 'nutritionBasisUnit')),
-        energyKcal: toStringValue(energyPerHundred ?? parsedEnergy ?? readValue('energy_kcal', 'energyKcal')),
+        energyKcal: toStringValue(readValue('energy_kcal', 'energyKcal')),
         carbohydrateG: toStringValue(readValue('carbohydrate_g', 'carbohydrateG')),
         proteinG: toStringValue(readValue('protein_g', 'proteinG')),
         fatG: toStringValue(readValue('fat_g', 'fatG')),
@@ -594,7 +597,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
         transFattyAcidsG: toStringValue(readValue('trans_fatty_acids_g', 'transFattyAcidsG')),
         cholesterolMg: toStringValue(readValue('cholesterol_mg', 'cholesterolMg')),
         sodiumMg: toStringValue(readValue('sodium_mg', 'sodiumMg')),
-        sugarG: toStringValue(sugarPerHundred ?? parsedSugar ?? readValue('sugar_g', 'sugarG')),
+        sugarG: toStringValue(readValue('sugar_g', 'sugarG')),
         sugarAlcoholG: toStringValue(readValue('sugar_alcohol_g', 'sugarAlcoholG')),
         alluloseG: toStringValue(readValue('allulose_g', 'alluloseG')),
         erythritolG: toStringValue(readValue('erythritol_g', 'erythritolG')),
@@ -625,11 +628,11 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
           prev.some((option) => option === parsedFoodType) ? prev : [...prev, parsedFoodType],
         )
       }
-      const energyValue = parseNumber(updatedValues.energyKcal ?? '')
-      const sugarValue = parseNumber(updatedValues.sugarG ?? '')
       const basisUnitValue =
         updatedValues.nutritionBasisUnit ?? toStringValue(readValue('nutrition_basis_unit', 'nutritionBasisUnit'))
-      const autoFlags = calculateHealthFlags(energyValue, sugarValue, basisUnitValue)
+      const energyForHealth = convertToBasis100(parsedEnergy, basisValue)
+      const sugarForHealth = convertToBasis100(parsedSugar, basisValue)
+      const autoFlags = calculateHealthFlags(energyForHealth, sugarForHealth, basisUnitValue)
       const hasAnyAutoFlag =
         autoFlags.isZeroCalorie ||
         autoFlags.isLowCalorie ||
