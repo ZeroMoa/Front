@@ -389,6 +389,80 @@
   margin: 0;
 }
 
+.categoryCrudGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.categoryCrudFormPanel {
+  border: 1px solid rgba(155, 174, 220, 0.55);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(250, 252, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.categoryCrudInlineRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.categoryCrudInlineRow .field {
+  flex: 1;
+  min-width: 220px;
+}
+
+.categoryCrudFormTitle {
+  font-size: 16px;
+  margin: 0;
+  color: #1f2f5c;
+}
+
+.categoryCrudFormActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.categoryCrudActionButton {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(91, 118, 255, 0.4);
+  background: rgba(91, 118, 255, 0.1);
+  color: #3c4da2;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.categoryCrudActionButton:hover {
+  background: rgba(91, 118, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.categoryCrudActionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.categoryCrudDangerButton {
+  border-color: rgba(220, 98, 98, 0.5);
+  background: rgba(255, 241, 241, 0.8);
+  color: #ba3c3c;
+}
+
+.categoryCrudDangerButton:hover {
+  background: rgba(255, 225, 225, 0.95);
+}
+
 .helperText {
   font-size: 14px;
   color: rgba(70, 88, 140, 0.85);
@@ -558,3 +632,10 @@
   transform: translateY(-1px);
 }
 
+.sectionDivider {
+  width: 100%;
+  max-width: 1400px;
+  height: 1px;
+  margin: 12px auto;
+  background: rgba(200, 210, 235, 0.6);
+}

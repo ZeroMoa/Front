@@ -1,3 +1,9 @@
+  const [showCategoryCreateParentDropdown, setShowCategoryCreateParentDropdown] = useState(false)
+  const [showCategorySelectDropdown, setShowCategorySelectDropdown] = useState(false)
+  const [showCategoryEditParentDropdown, setShowCategoryEditParentDropdown] = useState(false)
+  const createParentDropdownRef = useRef<HTMLDivElement>(null)
+  const categorySelectDropdownRef = useRef<HTMLDivElement>(null)
+  const editParentDropdownRef = useRef<HTMLDivElement>(null)
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -5,9 +11,10 @@ import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import styles from './page.module.css'
 import { createAdminProduct } from '@/app/admin/store/api/adminProductApi'
+import { fetchWithAuth } from '@/lib/common/api/fetchWithAuth'
 import { getCdnUrl } from '@/lib/cdn'
 import { createSafeImageFile } from '@/lib/utils/imageUtils'
-import type { AdminProductCategoryGroup } from '@/types/adminCategoryTypes'
+import type { AdminProductCategoryGroup, AdminProductCategoryNode } from '@/types/adminCategoryTypes'
 
 type HealthFlagKey = 'isZeroCalorie' | 'isLowCalorie' | 'isZeroSugar' | 'isLowSugar'
 
@@ -36,6 +43,12 @@ type BasisUnitType = 'ml' | 'g' | 'unknown'
 type BasisInfo = {
   normalizedValue: number
   unitType: BasisUnitType
+}
+
+type RawCategoryResponse = {
+  categoryNo: number
+  categoryName: string
+  parentCategoryNo: number | null
 }
 
 const BASE_FOOD_TYPE_SUGGESTIONS = [
@@ -353,6 +366,88 @@ const findCategorySelection = (
   return null
 }
 
+const buildCategoryTreeFromApi = (items: RawCategoryResponse[]): AdminProductCategoryGroup[] => {
+  const parentMap = new Map<number, AdminProductCategoryGroup>()
+
+  const ensureParentEntry = (parentId: number, parentName: string) => {
+    if (!parentMap.has(parentId)) {
+      parentMap.set(parentId, {
+        parent: { id: parentId, name: parentName },
+        children: [],
+      })
+    } else {
+      const existing = parentMap.get(parentId)
+      if (existing && existing.parent.name !== parentName) {
+        existing.parent = { id: parentId, name: parentName }
+      }
+    }
+    return parentMap.get(parentId)!
+  }
+
+  for (const item of items) {
+    if (item.parentCategoryNo === null) {
+      ensureParentEntry(item.categoryNo, item.categoryName)
+    } else {
+      const parentName =
+        items.find((parent) => parent.categoryNo === item.parentCategoryNo)?.categoryName ??
+        `카테고리 ${item.parentCategoryNo}`
+      ensureParentEntry(item.parentCategoryNo, parentName).children.push({
+        id: item.categoryNo,
+        name: item.categoryName,
+      })
+    }
+  }
+
+  const sortedGroups = Array.from(parentMap.values()).sort((a, b) => a.parent.id - b.parent.id)
+  sortedGroups.forEach((group) => {
+    group.children.sort((a, b) => a.id - b.id)
+  })
+  return sortedGroups
+}
+
+const parseCategoryList = (payload: unknown): RawCategoryResponse[] => {
+  if (!Array.isArray(payload)) {
+    throw new Error('카테고리 목록이 잘못된 형식으로 전달되었습니다.')
+  }
+  return payload
+    .map((item) => {
+      if (!isRecord(item)) {
+        return null
+      }
+      const record = item as Record<string, unknown>
+      const rawCategoryName = record.categoryName ?? record.category_name
+      const categoryName =
+        typeof rawCategoryName === 'string'
+          ? rawCategoryName.trim()
+          : rawCategoryName !== undefined && rawCategoryName !== null
+          ? String(rawCategoryName).trim()
+          : ''
+      const categoryNo = normalizeNumericValue(record.categoryNo ?? record.category_no)
+      const parentCategoryNo = normalizeNumericValue(
+        record.parentCategoryNo ?? record.parent_category_no,
+      )
+      if (!categoryName || categoryNo === null) {
+        return null
+      }
+      return {
+        categoryNo,
+        categoryName,
+        parentCategoryNo: parentCategoryNo ?? null,
+      }
+    })
+    .filter((item): item is RawCategoryResponse => item !== null)
+}
+
+const resolveCategoryError = (payload: unknown, fallback: string): string => {
+  if (isRecord(payload)) {
+    const maybeMessage = payload.message ?? payload.error ?? payload.detail
+    if (typeof maybeMessage === 'string' && maybeMessage.trim()) {
+      return maybeMessage
+    }
+  }
+  return fallback
+}
+
 const parseNumber = (value: string): number | null => {
   if (!value) {
     return null
@@ -384,7 +479,7 @@ const calculateHealthFlags = (
   }
 }
 
-export default function ProductCreateClient({ categoryTree }: ProductCreateClientProps) {
+export default function ProductCreateClient({ categoryTree: initialCategoryTree }: ProductCreateClientProps) {
   const router = useRouter()
 
   const [formValues, setFormValues] = useState<Record<string, string>>({
@@ -419,6 +514,17 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
     foodType: '',
   })
 
+  const [categoryTreeState, setCategoryTreeState] = useState(initialCategoryTree)
+  const [categoryTreeLoading, setCategoryTreeLoading] = useState(false)
+  const [categoryCrudLoading, setCategoryCrudLoading] = useState(false)
+  const [categoryCrudError, setCategoryCrudError] = useState<string | null>(null)
+  const [categoryCrudMessage, setCategoryCrudMessage] = useState<string | null>(null)
+  const [categoryCreateName, setCategoryCreateName] = useState('')
+  const [categoryCreateParentId, setCategoryCreateParentId] = useState('')
+  const [categoryEditId, setCategoryEditId] = useState<string | null>(null)
+  const [categoryEditName, setCategoryEditName] = useState('')
+  const [categoryEditParentId, setCategoryEditParentId] = useState('')
+
   const [categoryParentId, setCategoryParentId] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -443,11 +549,30 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   // 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (parentDropdownRef.current && !parentDropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (parentDropdownRef.current && !parentDropdownRef.current.contains(target)) {
         setShowParentDropdown(false)
       }
-      if (childDropdownRef.current && !childDropdownRef.current.contains(event.target as Node)) {
+      if (childDropdownRef.current && !childDropdownRef.current.contains(target)) {
         setShowChildDropdown(false)
+      }
+      if (
+        createParentDropdownRef.current &&
+        !createParentDropdownRef.current.contains(target)
+      ) {
+        setShowCategoryCreateParentDropdown(false)
+      }
+      if (
+        categorySelectDropdownRef.current &&
+        !categorySelectDropdownRef.current.contains(target)
+      ) {
+        setShowCategorySelectDropdown(false)
+      }
+      if (
+        editParentDropdownRef.current &&
+        !editParentDropdownRef.current.contains(target)
+      ) {
+        setShowCategoryEditParentDropdown(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -487,8 +612,8 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
   }, [imagePreview])
 
   const selectedParentGroup = useMemo(
-    () => categoryTree.find((group) => String(group.parent.id) === categoryParentId),
-    [categoryParentId, categoryTree]
+    () => categoryTreeState.find((group) => String(group.parent.id) === categoryParentId),
+    [categoryParentId, categoryTreeState]
   )
 
   const childCategories = selectedParentGroup?.children ?? []
@@ -504,7 +629,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       return '선택되지 않음'
     }
     if (!selectedParentGroup) {
-      const fallbackParent = categoryTree.find((group) => String(group.parent.id) === categoryId)
+      const fallbackParent = categoryTreeState.find((group) => String(group.parent.id) === categoryId)
       return fallbackParent ? `${fallbackParent.parent.name} (ID: ${categoryId})` : `카테고리 ID: ${categoryId}`
     }
     const parentName = selectedParentGroup.parent.name
@@ -513,7 +638,53 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
     }
     const child = childCategories.find((item) => String(item.id) === categoryId)
     return child ? `${parentName} > ${child.name} (ID: ${categoryId})` : `${parentName} (ID: ${categoryId})`
-  }, [categoryId, selectedParentGroup, childCategories, categoryTree])
+  }, [categoryId, selectedParentGroup, childCategories, categoryTreeState])
+
+  const selectedCrudCategoryLabel = useMemo(() => {
+    if (!categoryEditId) {
+      return '카테고리를 선택하세요'
+    }
+    for (const group of categoryTreeState) {
+      if (String(group.parent.id) === categoryEditId) {
+        return `${group.parent.name} (상위 카테고리)`
+      }
+      const child = group.children.find((item) => String(item.id) === categoryEditId)
+      if (child) {
+        return `${group.parent.name} > ${child.name}`
+      }
+    }
+    return `카테고리 ID: ${categoryEditId}`
+  }, [categoryEditId, categoryTreeState])
+
+  const createParentLabel = useMemo(() => {
+    if (!categoryCreateParentId) {
+      return '상위 카테고리를 선택하세요'
+    }
+    const parent = categoryTreeState.find(
+      (group) => String(group.parent.id) === categoryCreateParentId,
+    )
+    return parent ? parent.parent.name : '상위 카테고리를 선택하세요'
+  }, [categoryCreateParentId, categoryTreeState])
+
+  const editParentLabel = useMemo(() => {
+    if (!categoryEditParentId) {
+      return '새로운 상위 카테고리'
+    }
+    const parent = categoryTreeState.find(
+      (group) => String(group.parent.id) === categoryEditParentId,
+    )
+    return parent ? parent.parent.name : '새로운 상위 카테고리'
+  }, [categoryEditParentId, categoryTreeState])
+
+  const handleCreateParentOption = useCallback((value: string) => {
+    setCategoryCreateParentId(value)
+    setShowCategoryCreateParentDropdown(false)
+  }, [])
+
+  const handleEditParentOption = useCallback((value: string) => {
+    setCategoryEditParentId(value)
+    setShowCategoryEditParentDropdown(false)
+  }, [])
 
   useEffect(() => {
     const energy = parseNumber(formValues.energyKcal)
@@ -572,6 +743,222 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
       setJsonError(null)
     }
   }
+
+  const loadCategoryTree = useCallback(async () => {
+    setCategoryTreeLoading(true)
+    setCategoryCrudError(null)
+    try {
+      const response = await fetchWithAuth('/admin/product-categories')
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) {
+        throw new Error(
+          resolveCategoryError(payload, '카테고리 목록을 불러오지 못했습니다.'),
+        )
+      }
+      if (payload === null) {
+        throw new Error('카테고리 목록이 비어 있습니다.')
+      }
+      const normalizedTree = buildCategoryTreeFromApi(parseCategoryList(payload))
+      setCategoryTreeState(normalizedTree)
+    } catch (error) {
+      setCategoryCrudError(error instanceof Error ? error.message : '카테고리 목록을 불러오지 못했습니다.')
+    } finally {
+      setCategoryTreeLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadCategoryTree()
+  }, [loadCategoryTree])
+
+  const handleSelectCategoryForEdit = useCallback(
+    (node: AdminProductCategoryNode, parentId: number | null) => {
+      setCategoryEditId(String(node.id))
+      setCategoryEditName(node.name)
+      setCategoryEditParentId(parentId !== null ? String(parentId) : '')
+      setCategoryCrudError(null)
+      setCategoryCrudMessage(null)
+    },
+    [],
+  )
+
+  const handleCategorySelectOption = useCallback(
+    (node: AdminProductCategoryNode, parentId: number | null) => {
+      setShowCategorySelectDropdown(false)
+      handleSelectCategoryForEdit(node, parentId)
+    },
+    [handleSelectCategoryForEdit],
+  )
+
+  const handleCreateCategory = useCallback(async () => {
+    const trimmedName = categoryCreateName.trim()
+    if (!trimmedName) {
+      setCategoryCrudError('카테고리명을 입력해주세요.')
+      setCategoryCrudMessage(null)
+      return
+    }
+    setCategoryCrudLoading(true)
+    setCategoryCrudError(null)
+    setCategoryCrudMessage(null)
+    try {
+      const response = await fetchWithAuth('/admin/product-categories', {
+        method: 'POST',
+        body: JSON.stringify({
+          categoryName: trimmedName,
+          parentCategoryNo: categoryCreateParentId ? Number(categoryCreateParentId) : null,
+        }),
+      })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) {
+        throw new Error(
+          resolveCategoryError(payload, '카테고리 생성에 실패했습니다.'),
+        )
+      }
+      setCategoryCreateName('')
+      setCategoryCreateParentId('')
+      setCategoryCrudMessage('카테고리를 추가했습니다.')
+      await loadCategoryTree()
+    } catch (error) {
+      setCategoryCrudError(
+        error instanceof Error ? error.message : '카테고리 생성 중 오류가 발생했습니다.',
+      )
+    } finally {
+      setCategoryCrudLoading(false)
+    }
+  }, [categoryCreateName, categoryCreateParentId, loadCategoryTree])
+
+  const handleUpdateCategory = useCallback(async () => {
+    if (!categoryEditId) {
+      setCategoryCrudError('수정할 카테고리를 선택해주세요.')
+      setCategoryCrudMessage(null)
+      return
+    }
+    const trimmedName = categoryEditName.trim()
+    if (!trimmedName) {
+      setCategoryCrudError('카테고리명을 입력해주세요.')
+      setCategoryCrudMessage(null)
+      return
+    }
+    if (categoryEditParentId && categoryEditParentId === categoryEditId) {
+      setCategoryCrudError('자기 자신을 상위 카테고리로 지정할 수 없습니다.')
+      setCategoryCrudMessage(null)
+      return
+    }
+    setCategoryCrudLoading(true)
+    setCategoryCrudError(null)
+    setCategoryCrudMessage(null)
+    try {
+      const response = await fetchWithAuth(`/admin/product-categories/${categoryEditId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          categoryName: trimmedName,
+          parentCategoryNo: categoryEditParentId ? Number(categoryEditParentId) : null,
+        }),
+      })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) {
+        throw new Error(
+          resolveCategoryError(payload, '카테고리 수정에 실패했습니다.'),
+        )
+      }
+      setCategoryCrudMessage('카테고리를 저장했습니다.')
+      await loadCategoryTree()
+      setCategoryEditId(null)
+      setCategoryEditName('')
+      setCategoryEditParentId('')
+    } catch (error) {
+      setCategoryCrudError(
+        error instanceof Error ? error.message : '카테고리 수정 중 오류가 발생했습니다.',
+      )
+    } finally {
+      setCategoryCrudLoading(false)
+    }
+  }, [categoryEditId, categoryEditName, categoryEditParentId, loadCategoryTree])
+
+  const handleDeleteCategory = useCallback(
+    async (categoryNo: number, label: string) => {
+      if (
+        !window.confirm(
+          `${label} 카테고리를 삭제하면 해당 카테고리에 속한 제품은 카테고리 없음으로 이동합니다. 계속하시겠습니까?`,
+        )
+      ) {
+        return
+      }
+      setCategoryCrudLoading(true)
+      setCategoryCrudError(null)
+      setCategoryCrudMessage(null)
+      try {
+        const response = await fetchWithAuth(`/admin/product-categories/${categoryNo}`, {
+          method: 'DELETE',
+        })
+        const payload = await response.json().catch(() => null)
+        if (!response.ok) {
+          throw new Error(
+            resolveCategoryError(payload, '카테고리 삭제에 실패했습니다.'),
+          )
+        }
+        setCategoryCrudMessage('카테고리를 삭제했습니다.')
+        if (categoryEditId === String(categoryNo)) {
+          setCategoryEditId(null)
+          setCategoryEditName('')
+          setCategoryEditParentId('')
+        }
+        await loadCategoryTree()
+      } catch (error) {
+        setCategoryCrudError(
+          error instanceof Error ? error.message : '카테고리 삭제 중 오류가 발생했습니다.',
+        )
+      } finally {
+        setCategoryCrudLoading(false)
+      }
+    },
+    [categoryEditId, loadCategoryTree],
+  )
+
+  const categoryLookup = useMemo(() => {
+    const record: Record<
+      string,
+      { node: AdminProductCategoryNode; parentId: number | null }
+    > = {}
+    for (const group of categoryTreeState) {
+      record[String(group.parent.id)] = { node: group.parent, parentId: null }
+      for (const child of group.children) {
+        record[String(child.id)] = { node: child, parentId: group.parent.id }
+      }
+    }
+    return record
+  }, [categoryTreeState])
+
+  const handleCategorySelectionChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = event.target.value
+      if (!value) {
+        setCategoryEditId(null)
+        setCategoryEditName('')
+        setCategoryEditParentId('')
+        setCategoryCrudError(null)
+        setCategoryCrudMessage(null)
+        return
+      }
+      const entry = categoryLookup[value]
+      if (!entry) {
+        return
+      }
+      handleSelectCategoryForEdit(entry.node, entry.parentId)
+    },
+    [categoryLookup, handleSelectCategoryForEdit],
+  )
+
+  const handleDeleteSelectedCategory = useCallback(() => {
+    if (!categoryEditId) {
+      return
+    }
+    const numericId = Number(categoryEditId)
+    if (!Number.isFinite(numericId)) {
+      return
+    }
+    handleDeleteCategory(numericId, categoryEditName || '선택된 카테고리')
+  }, [categoryEditId, categoryEditName, handleDeleteCategory])
 
   const handleApplyJson = useCallback(() => {
     const trimmed = jsonInput.trim()
@@ -647,7 +1034,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
 
       setFormValues((prev) => ({ ...prev, ...updatedValues }))
       const categorySelection = findCategorySelection(
-        categoryTree,
+        categoryTreeState,
         readValue('category_no', 'categoryNo'),
       )
       if (categorySelection) {
@@ -675,7 +1062,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
     } catch (error) {
       setJsonError('JSON 구문이 올바르지 않습니다.')
     }
-  }, [jsonInput, categoryTree])
+  }, [jsonInput, categoryTreeState])
 
   const handleFoodTypeSuggestion = (value: string) => {
     setFormValues((prev) => ({ ...prev, foodType: value }))
@@ -841,6 +1228,303 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
         {jsonError && <p className={styles.errorText}>{jsonError}</p>}
       </section>
 
+      <section className={`${styles.section} ${styles.categoryCrudSection}`}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>카테고리 관리</h2>
+          <p className={styles.sectionDescription}>
+            등록된 카테고리를 선택하고, 수정 혹은 삭제 버튼을 눌러 작업하세요.
+          </p>
+        </div>
+        {categoryCrudError && <p className={styles.errorText}>{categoryCrudError}</p>}
+        {categoryCrudMessage && <p className={styles.helperText}>{categoryCrudMessage}</p>}
+        <div className={styles.categoryCrudGrid}>
+          <div className={styles.categoryCrudFormPanel}>
+              <h3 className={styles.categoryCrudFormTitle}>카테고리 추가</h3>
+              <div className={styles.categoryCrudInlineRow}>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>카테고리명</span>
+                  <input
+                    type="text"
+                    className={styles.textInput}
+                    value={categoryCreateName}
+                    onChange={(event) => setCategoryCreateName(event.target.value)}
+                    placeholder="새 카테고리명을 입력하세요"
+                    disabled={categoryCrudLoading}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>상위 카테고리</span>
+                  <div
+                    className={`${styles.boxSelect} ${
+                      showCategoryCreateParentDropdown ? styles.on : ''
+                    } ${categoryCrudLoading ? styles.disabled : ''}`}
+                    ref={createParentDropdownRef}
+                  >
+                    <button
+                      type="button"
+                      className={styles.selectDisplayField}
+                      onClick={() =>
+                        !categoryCrudLoading &&
+                        setShowCategoryCreateParentDropdown((prev) => !prev)
+                      }
+                      disabled={categoryCrudLoading}
+                    >
+                      {createParentLabel}
+                    </button>
+                    <div
+                      className={styles.selectArrowContainer}
+                      onClick={() =>
+                        !categoryCrudLoading &&
+                        setShowCategoryCreateParentDropdown((prev) => !prev)
+                      }
+                    >
+                      <span className={styles.selectArrowIcon}></span>
+                    </div>
+                    <div className={styles.boxLayer}>
+                      <ul className={styles.listOptions}>
+                        <li className={styles.listItem}>
+                          <button
+                            type="button"
+                            className={`${styles.buttonOption} ${
+                              !categoryCreateParentId ? styles.buttonOptionSelected : ''
+                            }`}
+                            onClick={() => handleCreateParentOption('')}
+                          >
+                            최상위
+                          </button>
+                        </li>
+                        {categoryTreeState.map((group) => (
+                          <li
+                            key={`create-parent-li-${group.parent.id}`}
+                            className={styles.listItem}
+                          >
+                            <button
+                              type="button"
+                              className={`${styles.buttonOption} ${
+                                String(group.parent.id) === categoryCreateParentId
+                                  ? styles.buttonOptionSelected
+                                  : ''
+                              }`}
+                              onClick={() => handleCreateParentOption(String(group.parent.id))}
+                            >
+                              {group.parent.name}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={handleCreateCategory}
+              disabled={categoryCrudLoading}
+            >
+              카테고리 추가
+            </button>
+          </div>
+          <div className={styles.categoryCrudFormPanel}>
+            <h3 className={styles.categoryCrudFormTitle}>선택한 카테고리 수정/삭제</h3>
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>수정/삭제할 카테고리</span>
+              <div
+                className={`${styles.boxSelect} ${
+                  showCategorySelectDropdown ? styles.on : ''
+                } ${categoryCrudLoading || categoryTreeLoading ? styles.disabled : ''}`}
+                ref={categorySelectDropdownRef}
+              >
+                <button
+                  type="button"
+                  className={styles.selectDisplayField}
+                  onClick={() =>
+                    !categoryCrudLoading &&
+                    !categoryTreeLoading &&
+                    setShowCategorySelectDropdown((prev) => !prev)
+                  }
+                  disabled={categoryCrudLoading || categoryTreeLoading}
+                >
+                  {selectedCrudCategoryLabel}
+                </button>
+                <div
+                  className={styles.selectArrowContainer}
+                  onClick={() =>
+                    !categoryCrudLoading &&
+                    !categoryTreeLoading &&
+                    setShowCategorySelectDropdown((prev) => !prev)
+                  }
+                >
+                  <span className={styles.selectArrowIcon}></span>
+                </div>
+                <div className={styles.boxLayer}>
+                  <ul className={styles.listOptions}>
+                    <li className={styles.listItem}>
+                      <button
+                        type="button"
+                        className={`${styles.buttonOption} ${
+                          !categoryEditId ? styles.buttonOptionSelected : ''
+                        }`}
+                        onClick={() => {
+                          setCategoryEditId(null)
+                          setCategoryEditName('')
+                          setCategoryEditParentId('')
+                          setShowCategorySelectDropdown(false)
+                        }}
+                      >
+                        카테고리를 선택하세요
+                      </button>
+                    </li>
+                    {categoryTreeState.map((group) => (
+                      <li key={`parent-option-${group.parent.id}`} className={styles.listItem}>
+                        <button
+                          type="button"
+                          className={`${styles.buttonOption} ${
+                            String(group.parent.id) === categoryEditId
+                              ? styles.buttonOptionSelected
+                              : ''
+                          }`}
+                          onClick={() => handleCategorySelectOption(group.parent, null)}
+                        >
+                          {group.parent.name} (상위 카테고리)
+                        </button>
+                        {group.children.map((child) => (
+                          <button
+                            key={`child-option-${child.id}`}
+                            type="button"
+                            className={`${styles.buttonOption} ${
+                              String(child.id) === categoryEditId ? styles.buttonOptionSelected : ''
+                            }`}
+                            onClick={() => handleCategorySelectOption(child, group.parent.id)}
+                          >
+                            └ {child.name}
+                          </button>
+                        ))}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </label>
+            <p className={styles.helperText}>
+              선택 항목을 변경하고 저장하거나, 아래 버튼으로 삭제할 수 있습니다.
+            </p>
+            <div className={styles.sectionDivider} aria-hidden="true" />
+            <div className={styles.categoryCrudInlineRow}>
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>카테고리명</span>
+                <input
+                  type="text"
+                  className={styles.textInput}
+                  value={categoryEditName}
+                  onChange={(event) => setCategoryEditName(event.target.value)}
+                  placeholder="선택한 카테고리 이름"
+                  disabled={!categoryEditId || categoryCrudLoading}
+                />
+              </label>
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>상위 카테고리</span>
+                <div
+                  className={`${styles.boxSelect} ${
+                    showCategoryEditParentDropdown ? styles.on : ''
+                  } ${!categoryEditId || categoryCrudLoading ? styles.disabled : ''}`}
+                  ref={editParentDropdownRef}
+                >
+                  <button
+                    type="button"
+                    className={styles.selectDisplayField}
+                    onClick={() =>
+                      categoryEditId &&
+                      !categoryCrudLoading &&
+                      setShowCategoryEditParentDropdown((prev) => !prev)
+                    }
+                    disabled={!categoryEditId || categoryCrudLoading}
+                  >
+                    {editParentLabel}
+                  </button>
+                  <div
+                    className={styles.selectArrowContainer}
+                    onClick={() =>
+                      categoryEditId &&
+                      !categoryCrudLoading &&
+                      setShowCategoryEditParentDropdown((prev) => !prev)
+                    }
+                  >
+                    <span className={styles.selectArrowIcon}></span>
+                  </div>
+                  <div className={styles.boxLayer}>
+                    <ul className={styles.listOptions}>
+                      <li className={styles.listItem}>
+                        <button
+                          type="button"
+                          className={`${styles.buttonOption} ${
+                            !categoryEditParentId ? styles.buttonOptionSelected : ''
+                          }`}
+                          onClick={() => handleEditParentOption('')}
+                        >
+                          최상위
+                        </button>
+                      </li>
+                      {categoryTreeState.map((group) => (
+                        <li
+                          key={`edit-parent-li-${group.parent.id}`}
+                          className={styles.listItem}
+                        >
+                          <button
+                            type="button"
+                            className={`${styles.buttonOption} ${
+                              String(group.parent.id) === categoryEditParentId
+                                ? styles.buttonOptionSelected
+                                : ''
+                            }`}
+                            onClick={() => handleEditParentOption(String(group.parent.id))}
+                          >
+                            {group.parent.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <div className={styles.categoryCrudFormActions}>
+                <button
+                  type="button"
+                  className={styles.categoryCrudActionButton}
+                  onClick={handleUpdateCategory}
+                  disabled={!categoryEditId || categoryCrudLoading}
+                >
+                  저장
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.categoryCrudActionButton} ${styles.categoryCrudDangerButton}`}
+                  onClick={handleDeleteSelectedCategory}
+                  disabled={!categoryEditId || categoryCrudLoading}
+                >
+                  삭제
+                </button>
+                <button
+                  type="button"
+                  className={styles.categoryCrudActionButton}
+                  onClick={() => {
+                    if (categoryCrudLoading) {
+                      return
+                    }
+                    setCategoryEditId(null)
+                    setCategoryEditName('')
+                    setCategoryEditParentId('')
+                  }}
+                  disabled={categoryCrudLoading}
+                >
+                  선택 취소
+                </button>
+              </div>
+          </div>
+        </div>
+      </section>
+
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <div className={styles.sectionHeaderTop}>
@@ -916,7 +1600,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
                 className={styles.selectDisplayField}
                 onClick={() => setShowParentDropdown(!showParentDropdown)}
               >
-                {categoryTree.find(group => String(group.parent.id) === categoryParentId)?.parent.name || '카테고리를 선택하세요'}
+                {categoryTreeState.find(group => String(group.parent.id) === categoryParentId)?.parent.name || '카테고리를 선택하세요'}
               </button>
               <div className={styles.selectArrowContainer} onClick={() => setShowParentDropdown(!showParentDropdown)}>
                 <span className={styles.selectArrowIcon}></span>
@@ -936,7 +1620,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
                       카테고리를 선택하세요
                     </button>
                   </li>
-                  {categoryTree.map((group) => (
+                  {categoryTreeState.map((group) => (
                     <li key={group.parent.id} className={styles.listItem}>
                       <button
                         type="button"
@@ -948,10 +1632,10 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
                           setShowParentDropdown(false)
                         }}
                       >
-                        {group.parent.name}
+                  {group.parent.name}
                       </button>
                     </li>
-                  ))}
+              ))}
                 </ul>
               </div>
             </div>
@@ -991,7 +1675,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
                       {selectedParentGroup ? `${selectedParentGroup.parent.name} 전체` : childCategoryPlaceholder}
                     </button>
                   </li>
-                  {childCategories.map((child) => (
+              {childCategories.map((child) => (
                     <li key={child.id} className={styles.listItem}>
                       <button
                         type="button"
@@ -1001,7 +1685,7 @@ export default function ProductCreateClient({ categoryTree }: ProductCreateClien
                           setShowChildDropdown(false)
                         }}
                       >
-                        {child.name}
+                  {child.name}
                       </button>
                     </li>
                   ))}
