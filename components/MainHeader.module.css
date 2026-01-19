@@ -461,3 +461,88 @@
     color: #4b5563;
     line-height: 1;
 }
+
+@media (max-width: 768px) {
+    .wrap {
+        padding: 10px 16px 8px;
+        height: auto;
+        min-width: 0;
+    }
+
+    .navContainer {
+        width: 100%;
+        height: auto;
+        margin: 0;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "logo actions"
+            "tabs tabs";
+        align-items: center;
+        row-gap: 8px;
+    }
+
+    .logo {
+        position: static;
+        left: auto;
+        grid-area: logo;
+        display: flex;
+        align-items: center;
+    }
+
+    .logo :global(img) {
+        width: 120px;
+        height: auto;
+    }
+
+    .authSection {
+        position: static;
+        right: auto;
+        bottom: auto;
+        grid-area: actions;
+        justify-content: flex-end;
+    }
+
+    .nav_links {
+        grid-area: tabs;
+        width: 100%;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 1rem;
+        padding-bottom: 6px;
+    }
+
+    .linkButton {
+        gap: 6px;
+        font-size: 0.95rem;
+    }
+
+    .headerIcon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .iconGroup {
+        gap: 12px;
+    }
+
+    .iconButtonWithLabel {
+        gap: 6px;
+    }
+
+    .iconLabel {
+        font-size: 0.65rem;
+    }
+
+    .notificationTooltip {
+        width: min(320px, calc(100vw - 24px));
+        right: 0;
+        left: auto;
+    }
+
+    .profileTooltip {
+        right: 0;
+        left: auto;
+        min-width: 120px;
+    }
+}

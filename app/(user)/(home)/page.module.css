@@ -7,6 +7,142 @@
     transform: translateY(-2px); /* 클릭 시 약간 눌리는 효과 */
 }
 
+@media (max-width: 768px) {
+    .heroSection {
+        padding-top: 6.5rem;
+        padding-bottom: 1.5rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .heroTitle {
+        font-size: 1.1rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .searchContainer {
+        max-width: 90%;
+    }
+
+    .searchInput {
+        font-size: 0.95rem;
+        padding: 0.75rem 2.5rem 0.75rem 1rem;
+    }
+
+    .searchButton {
+        right: 14px;
+    }
+
+    .searchTags {
+        justify-content: flex-start;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 0 4px 6px;
+    }
+
+    .searchTags::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tag {
+        padding: 0.45rem 1rem;
+        font-size: 0.9rem;
+        border-radius: 18px;
+    }
+
+    .tagEmoji {
+        margin-right: 6px;
+    }
+
+    .tagLabel {
+        font-weight: 600;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px;
+        margin-top: 16px;
+    }
+
+    .featureItem {
+        height: auto;
+        padding: 12px;
+    }
+
+    .featureImage {
+        width: 48px;
+        height: 48px;
+        margin-right: 12px;
+    }
+
+    .featureText h3 {
+        font-size: 1rem;
+    }
+
+    .featureText span {
+        font-size: 0.8rem;
+    }
+
+    .noticeSection {
+        margin: 20px 16px;
+        padding: 14px;
+    }
+
+    .noticeItem {
+        padding: 10px;
+    }
+
+    .noticeImage {
+        width: 42px;
+        height: 42px;
+        margin-right: 12px;
+    }
+
+    .noticeText h3 {
+        font-size: 1rem;
+    }
+
+    .noticeText span {
+        font-size: 0.82rem;
+    }
+
+    .newSection,
+    .favoriteSection {
+        padding: 0 16px 20px;
+        margin: 0 auto 24px;
+        gap: 18px;
+    }
+
+    .favoriteHeader {
+        gap: 12px;
+    }
+
+    .favoriteTitle {
+        font-size: 1.2rem;
+    }
+
+    .favoriteViewAllButton {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+    }
+
+    .favoriteGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .sectionDivider {
+        margin: 24px auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .favoriteGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .featureText span {
     margin: 0;
     font-weight: 400;
