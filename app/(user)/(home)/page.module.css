@@ -7,6 +7,57 @@
     transform: translateY(-2px); /* 클릭 시 약간 눌리는 효과 */
 }
 
+@media (max-width: 360px) {
+    .features {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding: 12px;
+        margin-top: 8px;
+    }
+
+    .featureItem {
+        height: 96px;
+        padding: 10px;
+    }
+
+    .featureImage {
+        width: 36px;
+        height: 36px;
+        margin-right: 8px;
+    }
+
+    .noticeSection {
+        margin: 12px;
+        padding: 10px;
+        min-height: 96px;
+        display: flex;
+        align-items: center;
+    }
+
+    .noticeItem {
+        padding: 0;
+    }
+
+    .noticeImage {
+        width: 36px;
+        height: 36px;
+        margin-right: 8px;
+    }
+
+    .noticeText h3 {
+        font-size: 0.95rem;
+    }
+
+    .noticeText span {
+        font-size: 0.75rem;
+    }
+
+    .favoriteGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+}
+
 @media (max-width: 768px) {
     .searchTags {
         justify-content: center;
@@ -234,7 +285,12 @@
     }
 
     .favoriteTitle {
-        font-size: 1.35rem;
+        font-size: 1.1rem;
+    }
+
+    .favoriteViewAllButton {
+        padding: 6px 10px;
+        font-size: 0.75rem;
     }
 }
 
@@ -507,7 +563,7 @@
     }
 
     .featureText span {
-        font-size: 0.75rem;
+        font-size: 0.6rem;
     }
 
     .noticeText h3 {
@@ -532,11 +588,61 @@
 
 .favoriteSection {
     max-width: 1400px;
-    margin: 20px auto 100px;
-    padding: 0 20px 20px;
+    margin: 16px auto 70px;
+    padding: 0 18px 18px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
+}
+
+@media (max-width: 360px) {
+    .features {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding: 12px;
+        margin-top: 8px;
+    }
+
+    .featureItem {
+        height: 96px;
+        padding: 10px;
+    }
+
+    .featureImage {
+        width: 36px;
+        height: 36px;
+        margin-right: 8px;
+    }
+
+    .noticeSection {
+        margin: 12px;
+        padding: 10px;
+        height: 96px;
+        min-height: 96px;
+        display: flex;
+        align-items: center;
+    }
+
+    .noticeItem {
+        height: 100%;
+        padding: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .noticeImage {
+        width: 36px;
+        height: 36px;
+        margin-right: 8px;
+    }
+
+    .noticeText h3 {
+        font-size: 0.95rem;
+    }
+
+    .noticeText span {
+        font-size: 0.75rem;
+    }
 }
 
 .favoriteHeader {
@@ -546,7 +652,7 @@
 }
 
 .favoriteTitle {
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: #1f2f5c;
     margin: 0;
@@ -600,8 +706,8 @@
     border: 1px solid rgba(189, 205, 232, 0.7);
     border-radius: 999px;
     background: linear-gradient(135deg, rgba(248, 252, 255, 0.96), rgba(230, 239, 255, 0.92));
-    padding: 10px 20px;
-    font-size: 0.95rem;
+    padding: 8px 16px;
+    font-size: 0.85rem;
     color: #3a4d72;
     font-weight: 600;
     cursor: pointer;
@@ -628,10 +734,10 @@
 .newSection {
     max-width: 1400px;
     margin: 0 auto 20px;
-    padding: 0 20px 20px;
+    padding: 0 18px 18px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
 }
 
 .sectionDivider {
