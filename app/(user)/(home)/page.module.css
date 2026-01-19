@@ -386,6 +386,59 @@
     display: block; /* 줄바꿈 */
 }
 
+@media (max-width: 768px) {
+    .heroTitle {
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+
+    .searchInput {
+        font-size: 16px;
+    }
+
+    .searchTags {
+        gap: 8px;
+    }
+
+    .tag {
+        font-size: 0.85rem;
+        padding: 0.4rem 1rem;
+        border-radius: 16px;
+    }
+
+    .featureText h3 {
+        font-size: 1rem;
+    }
+
+    .featureText span {
+        font-size: 0.75rem;
+    }
+
+    .noticeText h3 {
+        font-size: 1.05rem;
+    }
+
+    .noticeText span {
+        font-size: 0.78rem;
+    }
+
+    .favoriteTitle {
+        font-size: 1.1rem;
+    }
+
+    .favoriteTitle span {
+        font-size: 1.05rem;
+    }
+
+    .favoriteMessage,
+    .favoriteError,
+    .sectionErrorBox,
+    .sectionLoadingBox {
+        font-size: 0.9rem;
+    }
+}
+
 .favoriteSection {
     max-width: 1400px;
     margin: 20px auto 100px;
