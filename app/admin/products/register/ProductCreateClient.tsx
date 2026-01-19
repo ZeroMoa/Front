@@ -1,9 +1,3 @@
-  const [showCategoryCreateParentDropdown, setShowCategoryCreateParentDropdown] = useState(false)
-  const [showCategorySelectDropdown, setShowCategorySelectDropdown] = useState(false)
-  const [showCategoryEditParentDropdown, setShowCategoryEditParentDropdown] = useState(false)
-  const createParentDropdownRef = useRef<HTMLDivElement>(null)
-  const categorySelectDropdownRef = useRef<HTMLDivElement>(null)
-  const editParentDropdownRef = useRef<HTMLDivElement>(null)
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -543,8 +537,14 @@ export default function ProductCreateClient({ categoryTree: initialCategoryTree 
   // 커스텀 드롭다운 상태
   const [showParentDropdown, setShowParentDropdown] = useState(false)
   const [showChildDropdown, setShowChildDropdown] = useState(false)
+  const [showCategoryCreateParentDropdown, setShowCategoryCreateParentDropdown] = useState(false)
+  const [showCategorySelectDropdown, setShowCategorySelectDropdown] = useState(false)
+  const [showCategoryEditParentDropdown, setShowCategoryEditParentDropdown] = useState(false)
   const parentDropdownRef = useRef<HTMLDivElement>(null)
   const childDropdownRef = useRef<HTMLDivElement>(null)
+  const createParentDropdownRef = useRef<HTMLDivElement>(null)
+  const categorySelectDropdownRef = useRef<HTMLDivElement>(null)
+  const editParentDropdownRef = useRef<HTMLDivElement>(null)
 
   // 외부 클릭 시 닫기
   useEffect(() => {
