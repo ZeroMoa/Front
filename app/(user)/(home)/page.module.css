@@ -8,6 +8,51 @@
 }
 
 @media (max-width: 768px) {
+    .searchTags {
+        justify-content: center;
+        flex-wrap: wrap;
+        overflow-x: visible;
+        row-gap: 8px;
+        column-gap: 10px;
+        padding: 0 8px 6px;
+    }
+
+    .features {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 14px;
+        margin-top: 12px;
+    }
+
+    .featureItem {
+        height: 96px;
+        padding: 10px;
+    }
+
+    .featureImage {
+        width: 42px;
+        height: 42px;
+        margin-right: 10px;
+    }
+
+    .noticeSection {
+        margin: 16px;
+        padding: 12px;
+        min-height: 96px;
+    }
+
+    .favoriteTitle {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .favoriteGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
     .heroSection {
         padding-top: 6.5rem;
         padding-bottom: 1.5rem;
@@ -140,6 +185,56 @@
 @media (max-width: 480px) {
     .favoriteGrid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 360px) {
+    .searchTags {
+        gap: 6px;
+        padding: 0 6px 6px;
+    }
+
+    .searchInput {
+        font-size: 0.85rem;
+        padding: 0.65rem 2.2rem 0.65rem 0.8rem;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 12px;
+        margin-top: 8px;
+    }
+
+    .featureItem {
+        height: 84px;
+        padding: 8px;
+    }
+
+    .featureImage {
+        width: 36px;
+        height: 36px;
+        margin-right: 8px;
+    }
+
+    .noticeSection {
+        margin: 12px;
+        padding: 10px;
+        min-height: 84px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-radius: 12px;
+    }
+
+    .favoriteGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .favoriteTitle {
+        font-size: 1.35rem;
     }
 }
 
@@ -425,10 +520,6 @@
 
     .favoriteTitle {
         font-size: 1.1rem;
-    }
-
-    .favoriteTitle span {
-        font-size: 1.05rem;
     }
 
     .favoriteMessage,
