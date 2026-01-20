@@ -147,6 +147,9 @@ function ProductCard({
         isDragging: false,
         didDrag: false,
     });
+    const stopCardNavigation = (event: React.SyntheticEvent) => {
+        event.stopPropagation();
+    };
 
     const recordScrollPosition = useCallback(() => {
         if (typeof window === 'undefined') {
@@ -285,7 +288,12 @@ function ProductCard({
                 {(hasAlternativeSweeteners(product) || product.caffeineMg > 0) && (
                     <>
                         {hasAlternativeSweeteners(product) && (
-                            <span className={styles.badgeWrapper}>
+                            <span
+                                className={styles.badgeWrapper}
+                                onClick={stopCardNavigation}
+                                onPointerDown={stopCardNavigation}
+                                onKeyDown={stopCardNavigation}
+                            >
                                 <span className={styles.badge} tabIndex={0} aria-label="대체당 경고">
                                     <Image src={WARN_ICON} alt="대체당 경고" width={20} height={20} />
                                     <span>대체당</span>
@@ -296,7 +304,12 @@ function ProductCard({
                             </span>
                         )}
                         {product.caffeineMg > 0 && (
-                            <span className={styles.badgeWrapper}>
+                            <span
+                                className={styles.badgeWrapper}
+                                onClick={stopCardNavigation}
+                                onPointerDown={stopCardNavigation}
+                                onKeyDown={stopCardNavigation}
+                            >
                                 <span className={styles.badge} tabIndex={0} aria-label="카페인 경고">
                                     <Image src={CAFFEINE_ICON} alt="카페인 경고" width={20} height={20} />
                                     <span>카페인</span>

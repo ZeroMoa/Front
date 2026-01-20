@@ -24,6 +24,8 @@ import ProductGrid from './ProductGrid';
 import ProductPagination from './ProductPagination';
 import type { Product } from '@/types/productTypes';
 import { PRODUCT_LIST_SCROLL_STORAGE_KEY } from '@/constants/productNavigationConstants';
+import Image from 'next/image';
+import { getCdnUrl } from '@/lib/cdn';
 
 const HERO_FILTER_MAP: Record<NutritionSlug, ProductFilterKey> = {
     'zero-calorie': 'isZeroCalorie',
@@ -150,6 +152,7 @@ export default function ProductPageClient({
     const [, startTransition] = useTransition();
     const [clientContent, setClientContent] = useState<Product[]>(data.content);
     const searchParamString = searchParams?.toString() ?? '';
+    const [mobileKeyword, setMobileKeyword] = useState(keyword);
     
     // 커스텀 드롭다운 상태
     const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -485,6 +488,17 @@ export default function ProductPageClient({
         commitUpdates({ [filterKey]: nextValue ? 'true' : null, page: 0 });
     };
 
+    const activeFilterCount = useMemo(
+        () =>
+            PRODUCT_FILTER_KEYS.filter((key) => {
+                if (lockedFilters?.includes(key)) {
+                    return false;
+                }
+                return currentFilters[key];
+            }).length,
+        [currentFilters, lockedFilters],
+    );
+
     const handleResetFilters = () => {
         if (lockedFilters?.length) {
             const resetEntries = Object.entries(DEFAULT_FILTER_STATE).reduce<Record<string, string | null>>(
@@ -603,6 +617,10 @@ export default function ProductPageClient({
             console.log('[ProductPageClient] rendering products', data.content.map((item) => item.productNo));
         }
     }, [data.content]);
+
+    useEffect(() => {
+        setMobileKeyword(keyword);
+    }, [keyword]);
 
     useEffect(() => {
         if (typeof window === 'undefined') {
@@ -757,6 +775,116 @@ export default function ProductPageClient({
         return renderSubCategoryButtons(false);
     };
 
+
+    const handleMobileKeywordSubmit = () => {
+        const trimmed = mobileKeyword.trim();
+        if (!trimmed) {
+            alert('검색어를 입력해주세요.');
+            setMobileKeyword('');
+            return;
+        }
+        handleKeywordSubmit(trimmed);
+    };
+
+    const handleMobileKeywordKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
+        if (event.key === 'Enter') {
+            handleMobileKeywordSubmit();
+        }
+    };
+
+    const renderMobileFilterCheckbox = (label: string, filterKey: ProductFilterKey, checked: boolean, locked?: boolean) => (
+        <label className={`${styles.filterItem} ${locked ? styles.filterItemLocked : ''}`}>
+            <input type="checkbox" checked={checked} disabled={locked} onChange={() => handleFilterToggle(filterKey)} />
+            <span>{label}</span>
+            {locked && <span className={styles.lockBadge}>고정</span>}
+        </label>
+    );
+
+    const renderSortControls = () => (
+        <>
+            <div className={styles.sortLabel}>
+                <span className={styles.labelText}>정렬</span>
+                <div ref={sortRef} className={`${styles.boxSelect} ${showSortDropdown ? styles.on : ''}`}>
+                    <button
+                        type="button"
+                        className={styles.selectDisplayField}
+                        onClick={() => setShowSortDropdown(!showSortDropdown)}
+                    >
+                        {SORT_OPTIONS.find((opt) => opt.value === normalizedSort)?.label || '정렬'}
+                    </button>
+                    <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown(!showSortDropdown)}>
+                        <span className={styles.selectArrowIcon}></span>
+                    </div>
+                    <div className={styles.boxLayer}>
+                        <ul className={styles.listOptions}>
+                            {SORT_OPTIONS.map((option) => (
+                                <li key={option.value} className={styles.listItem}>
+                                    <button
+                                        type="button"
+                                        className={`${styles.buttonOption} ${
+                                            option.value === normalizedSort ? styles.buttonOptionSelected : ''
+                                        }`}
+                                        onClick={() => {
+                                            commitUpdates({ sort: option.value, page: 0 });
+                                            setShowSortDropdown(false);
+                                        }}
+                                    >
+                                        {option.label}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div className={styles.sectionDivider} aria-hidden="true" />
+            <div className={styles.pageSizeLabel}>
+                <span className={styles.labelText}>페이지 크기</span>
+                <div
+                    ref={pageSizeRef}
+                    className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''} ${styles.pageSizeBox}`}
+                >
+                    <button
+                        type="button"
+                        className={styles.selectDisplayField}
+                        onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+                    >
+                        {selectedPageSize}개씩 보기
+                    </button>
+                    <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                        <span className={styles.selectArrowIcon}></span>
+                    </div>
+                    <div className={styles.boxLayer}>
+                        <ul className={styles.listOptions}>
+                            {pageSizeOptions.map((option) => (
+                                <li key={option} className={styles.listItem}>
+                                    <button
+                                        type="button"
+                                        className={`${styles.buttonOption} ${
+                                            option === selectedPageSize ? styles.buttonOptionSelected : ''
+                                        }`}
+                                        onClick={() => {
+                                            const nextSize = Number(option);
+                                            if (!SUPPORTED_PAGE_SIZES.includes(nextSize as (typeof SUPPORTED_PAGE_SIZES)[number])) {
+                                                commitUpdates({ size: SUPPORTED_PAGE_SIZES[0], page: 0 });
+                                            } else {
+                                                commitUpdates({ size: nextSize, page: 0 });
+                                            }
+                                            setShowPageSizeDropdown(false);
+                                        }}
+                                    >
+                                        {option}개씩 보기
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div className={styles.sectionDivider} aria-hidden="true" />
+        </>
+    );
+
     const renderHeroInline = () => {
         const renderButtons = (items: HeroBannerItem[]) => (
           <>
@@ -858,6 +986,64 @@ export default function ProductPageClient({
                 highlightParentCategory={showParentCategoryActive}
             />
             <section className={styles.content}>
+                <div className={styles.mobileHeader}>
+                    <div className={styles.mobileTitleRow}>
+                        <h1 className={styles.mobileTitle}>{config.title}</h1>
+                        <span className={styles.mobileCount}>총 {totalCountLabel}개</span>
+                    </div>
+                    <div className={styles.searchBox}>
+                        <input
+                            type="text"
+                            value={mobileKeyword}
+                            onChange={(event) => setMobileKeyword(event.target.value)}
+                            onKeyDown={handleMobileKeywordKeyDown}
+                            placeholder="상품명을 검색하세요"
+                            className={styles.searchInput}
+                        />
+                        <button type="button" className={styles.searchButton} onClick={handleMobileKeywordSubmit}>
+                            <Image
+                                src={getCdnUrl('/images/search.png')}
+                                alt="검색"
+                                width={18}
+                                height={18}
+                                className={styles.searchButtonIcon}
+                            />
+                        </button>
+                    </div>
+                    {hasSubCategories && (
+                        <>
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                            <div className={styles.mobileChips}>
+                                {renderSubCategoryButtons(true)}
+                                <span className={styles.mobileChipArrow} aria-hidden="true">
+                                    {'>'}
+                                </span>
+                            </div>
+                        </>
+                    )}
+                    {mode === 'category' && (
+                        <>
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                            <div className={styles.mobileFilters}>
+                                <div className={styles.mobileFilterHeader}>
+                                    <span className={styles.mobileFilterTitle}>칼로리 · 당류 필터</span>
+                                    {activeFilterCount > 0 && (
+                                        <button type="button" className={styles.mobileFilterReset} onClick={handleResetFilters}>
+                                            초기화 ({activeFilterCount})
+                                        </button>
+                                    )}
+                                </div>
+                                <div className={styles.mobileFilterGrid}>
+                                    {renderMobileFilterCheckbox('제로 칼로리', 'isZeroCalorie', currentFilters.isZeroCalorie)}
+                                    {renderMobileFilterCheckbox('제로 슈거', 'isZeroSugar', currentFilters.isZeroSugar)}
+                                    {renderMobileFilterCheckbox('저칼로리', 'isLowCalorie', currentFilters.isLowCalorie)}
+                                    {renderMobileFilterCheckbox('저당', 'isLowSugar', currentFilters.isLowSugar)}
+                                </div>
+                            </div>
+                        </>
+                    )}
+                    <div className={styles.sectionDivider} aria-hidden="true" />
+                </div>
                 <header className={styles.header}>
                     <div>
                         <h1 className={styles.title}>{config.title}</h1>
@@ -898,83 +1084,7 @@ export default function ProductPageClient({
                                 <span className={styles.heroDivider} aria-hidden="true" />
                             </>
                         )}
-                        <div className={styles.sortLabel}>
-                            <span className={styles.labelText}>정렬</span>
-                            <div 
-                                ref={sortRef}
-                                className={`${styles.boxSelect} ${showSortDropdown ? styles.on : ''}`}
-                            >
-                                <button 
-                                    type="button" 
-                                    className={styles.selectDisplayField}
-                                    onClick={() => setShowSortDropdown(!showSortDropdown)}
-                                >
-                                    {SORT_OPTIONS.find(opt => opt.value === normalizedSort)?.label || '정렬'}
-                                </button>
-                                <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown(!showSortDropdown)}>
-                                    <span className={styles.selectArrowIcon}></span>
-                                </div>
-                                <div className={styles.boxLayer}>
-                                    <ul className={styles.listOptions}>
-                                        {SORT_OPTIONS.map((option) => (
-                                            <li key={option.value} className={styles.listItem}>
-                                                <button
-                                                    type="button"
-                                                    className={`${styles.buttonOption} ${option.value === normalizedSort ? styles.buttonOptionSelected : ''}`}
-                                                    onClick={() => {
-                                                        commitUpdates({ sort: option.value, page: 0 });
-                                                        setShowSortDropdown(false);
-                                                    }}
-                                                >
-                                                    {option.label}
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div className={styles.pageSizeLabel}>
-                            <span className={styles.labelText}>페이지 크기</span>
-                            <div 
-                                ref={pageSizeRef}
-                                className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''} ${styles.pageSizeBox}`}
-                            >
-                                <button 
-                                    type="button" 
-                                    className={styles.selectDisplayField}
-                                    onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
-                                >
-                                    {selectedPageSize}개씩 보기
-                                </button>
-                                <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
-                                    <span className={styles.selectArrowIcon}></span>
-                                </div>
-                                <div className={styles.boxLayer}>
-                                    <ul className={styles.listOptions}>
-                                        {pageSizeOptions.map((option) => (
-                                            <li key={option} className={styles.listItem}>
-                                                <button
-                                                    type="button"
-                                                    className={`${styles.buttonOption} ${option === selectedPageSize ? styles.buttonOptionSelected : ''}`}
-                                                    onClick={() => {
-                                                        const nextSize = Number(option);
-                                                        if (!SUPPORTED_PAGE_SIZES.includes(nextSize as (typeof SUPPORTED_PAGE_SIZES)[number])) {
-                                                            commitUpdates({ size: SUPPORTED_PAGE_SIZES[0], page: 0 });
-                                                        } else {
-                                                            commitUpdates({ size: nextSize, page: 0 });
-                                                        }
-                                                        setShowPageSizeDropdown(false);
-                                                    }}
-                                                >
-                                                    {option}개씩 보기
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                        {renderSortControls()}
                     </div>
                 </div>
 

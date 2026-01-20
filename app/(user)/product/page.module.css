@@ -335,6 +335,13 @@
     gap: 28px;
 }
 
+.sectionDivider {
+    width: 100%;
+    height: 1px;
+    background: rgba(185, 201, 228, 0.6);
+    margin: 8px 0;
+}
+
 
 .heroSection {
     padding: 15px 100px;
@@ -463,6 +470,19 @@
     margin: 0;
     font-size: 0.95rem;
     color: #5b6787;
+}
+
+.mobileHeader {
+    display: none;
+}
+
+.mobileTitleRow {
+    display: flex;
+}
+
+.mobileTitle,
+.mobileCount {
+    margin: 0;
 }
 
 .sortLabel,
@@ -607,10 +627,12 @@
 
 .subCategoryTabs {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 10px;
     align-items: center;
     justify-content: flex-end;
+    overflow-x: auto;
+    scrollbar-width: none;
 }
 
 .subCategoryButton {
@@ -622,6 +644,7 @@
     color: #46619a;
     cursor: pointer;
     transition: all 0.18s ease;
+    white-space: nowrap;
 }
 
 .subCategoryNewButton {
@@ -1105,6 +1128,168 @@
     }
 }
 
+@media (max-width: 430px) {
+    .layout {
+        display: block;
+        margin: 20px auto 48px;
+        padding: 0 12px;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .content {
+        padding: 16px 14px 24px;
+        border-radius: 16px;
+        gap: 16px;
+    }
+
+    .header,
+    .subCategoryHeader,
+    .listSummary,
+    .listActions {
+        display: none;
+    }
+
+    .mobileHeader {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .mobileTitleRow {
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .mobileTitle {
+        font-size: 1.2rem;
+        color: #1f2b46;
+        font-weight: 700;
+    }
+
+    .mobileCount {
+        font-size: 0.8rem;
+        color: #5b6787;
+        white-space: nowrap;
+    }
+
+    .mobileChips {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mobileChips .subCategoryTabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .mobileChips .subCategoryTabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mobileChipArrow {
+        color: #9aa7c5;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .subCategoryTabs {
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .subCategoryButton {
+        padding: 6px 12px;
+        font-size: 0.78rem;
+    }
+
+    .subCategoryDivider {
+        height: 18px;
+    }
+
+    .mobileFilters {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .mobileFilterHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .mobileFilterTitle {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #2f3c58;
+    }
+
+    .mobileFilterReset {
+        border: none;
+        background: none;
+        color: #4f6fbf;
+        font-size: 0.75rem;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .mobileFilterGrid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 12px;
+    }
+
+    .filterItem {
+        font-size: 0.8rem;
+        gap: 8px;
+    }
+
+    .labelText {
+        font-size: 0.78rem;
+    }
+
+    .boxSelect {
+        min-width: 0;
+        height: 36px;
+    }
+
+    .pageSizeBox {
+        min-width: 0;
+    }
+
+    .selectDisplayField {
+        padding: 0 10px;
+        font-size: 0.78rem;
+    }
+
+    .badgeRow {
+        gap: 6px;
+        min-height: 24px;
+    }
+
+    .badge {
+        padding: 3px 8px;
+        font-size: 0.68rem;
+    }
+
+    .badge :global(img) {
+        width: 16px;
+        height: 16px;
+    }
+
+    .badgeTooltip {
+        font-size: 0.72rem;
+        padding: 8px 12px;
+        border-radius: 12px;
+    }
+}
+
 .cardFavoriteButton {
     position: absolute;
     top: 14px;
@@ -1212,5 +1397,19 @@
     align-items: center;
     gap: 16px;
     margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 100%;
+}
+
+.listActionsControls .sortLabel,
+.listActionsControls .pageSizeLabel {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.listActionsControls .boxSelect {
+    min-width: 0;
+    max-width: 100%;
 }
 
