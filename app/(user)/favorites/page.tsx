@@ -272,7 +272,7 @@ export default function FavoritesPage() {
                             </div>
                             <div className={styles.boxLayer}>
                                 <ul className={styles.listOptions}>
-                                    {pageSizeOptions.map((option) => (
+                            {pageSizeOptions.map((option) => (
                                         <li key={option} className={styles.listItem}>
                                             <button
                                                 type="button"
@@ -287,7 +287,7 @@ export default function FavoritesPage() {
                                                     setShowPageSizeDropdown(false);
                                                 }}
                                             >
-                                                {option}개씩 보기
+                                    {option}개씩 보기
                                             </button>
                                         </li>
                                     ))}

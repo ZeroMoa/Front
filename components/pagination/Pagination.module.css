@@ -110,3 +110,32 @@
   white-space: nowrap;
   border: 0;
 }
+
+@media (max-width: 430px) {
+  .pagination {
+    margin: 24px 0;
+    gap: 12px;
+  }
+
+  .pageNumberGroup {
+    gap: 6px;
+    padding: 8px 12px;
+  }
+
+  .pageArrow {
+    width: 32px;
+    height: 32px;
+    border-width: 2px;
+  }
+
+  .pageArrow::before {
+    width: 12px;
+    height: 12px;
+  }
+
+  .pageButton {
+    width: 30px;
+    height: 30px;
+    font-size: 0.82rem;
+  }
+}

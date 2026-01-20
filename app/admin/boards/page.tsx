@@ -182,9 +182,9 @@ export default function BoardPage() {
     setBoardTypeFilter(resolvedBoardType)
   }, [searchParamsString])
 
-  const handleSearch = () => {
+    const handleSearch = () => {
     const trimmed = searchQuery.trim()
-    if (!trimmed) {
+        if (!trimmed) {
       setKeyword('')
       setSearchType('TITLE_OR_CONTENT')
       setBoardTypeFilter('ALL')
@@ -198,18 +198,18 @@ export default function BoardPage() {
     syncUrlState({ keyword: trimmed, page: 0 })
   }
 
-  const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
-    if (event.key === 'Enter') {
+    const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
+        if (event.key === 'Enter') {
       event.preventDefault()
       handleSearch()
     }
-  }
+        }
 
     const getDisplayNumber = (index: number) => {
         return totalElements - (currentPageIndex * BOARD_PAGE_SIZE + index);
     };
 
-  const handlePageChange = (pageIndex: number) => {
+    const handlePageChange = (pageIndex: number) => {
     const nextPage = Math.max(pageIndex - 1, 0)
     setPage(nextPage)
     syncUrlState({ page: nextPage })
@@ -271,7 +271,7 @@ export default function BoardPage() {
     router.replace('/admin/boards')
   }
 
-  const listContent = () => {
+    const listContent = () => {
     if (isLoading) {
       return (
         <div className={styles.loadingState}>
@@ -281,29 +281,29 @@ export default function BoardPage() {
       )
     }
 
-    if (notices.length === 0) {
+        if (notices.length === 0) {
       return <div className={styles.noNotices}>{emptyMessage}</div>
-    }
+        }
 
-    return (
-      <>
-        <div className={styles.noticeTable}>
-          <div className={styles.tableHeader}>
-            <span className={styles.headerNo}>번호</span>
-            <span className={styles.headerTitle}>제목</span>
-            <span className={styles.headerDate}>작성일자</span>
+        return (
+            <>
+                <div className={styles.noticeTable}>
+                    <div className={styles.tableHeader}>
+                        <span className={styles.headerNo}>번호</span>
+                        <span className={styles.headerTitle}>제목</span>
+                        <span className={styles.headerDate}>작성일자</span>
             <span className={styles.headerManage}>관리</span>
-          </div>
-          {notices.map((notice, index) => (
-            <Link href={`/admin/boards/${notice.boardNo}`} key={notice.boardNo} className={styles.noticeLink}>
-              <div className={styles.noticeItem}>
-                <span className={styles.itemNo}>{getDisplayNumber(index)}</span>
-                <div className={styles.itemTitle}>
+                    </div>
+                    {notices.map((notice, index) => (
+                        <Link href={`/admin/boards/${notice.boardNo}`} key={notice.boardNo} className={styles.noticeLink}>
+                            <div className={styles.noticeItem}>
+                                <span className={styles.itemNo}>{getDisplayNumber(index)}</span>
+                                <div className={styles.itemTitle}>
                   <span className={`${styles.noticeBadge} ${badgeClassMap[notice.boardType] ?? ''}`}>
-                    {BOARD_TYPE_LABELS[notice.boardType] ?? notice.boardType}
-                  </span>
-                  <span className={styles.itemTitleText}>{notice.title}</span>
-                </div>
+                                        {BOARD_TYPE_LABELS[notice.boardType] ?? notice.boardType}
+                                    </span>
+                                    <span className={styles.itemTitleText}>{notice.title}</span>
+                                </div>
                 <span className={styles.itemDate}>
                   {new Date(notice.createdAt).toLocaleDateString('ko-KR')}
                 </span>
@@ -326,22 +326,22 @@ export default function BoardPage() {
                     <Image src={getCdnUrl('/images/delete.png')} alt="삭제" width={20} height={20} />
                   </button>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
 
-        {totalPages > 0 && (
-          <Pagination
+                {totalPages > 0 && (
+                    <Pagination
             currentPage={currentPageIndex + 1}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
             pageGroupSize={BOARD_MAX_VISIBLE_PAGES}
-          />
-        )}
-      </>
+                    />
+                )}
+            </>
     )
-  }
+    }
 
     if (isError) {
         return (
@@ -414,7 +414,7 @@ export default function BoardPage() {
                             </div>
                             <div className={styles.boxLayer}>
                                 <ul className={styles.listOptions}>
-                                    {BOARD_SEARCH_TYPE_OPTIONS.map((option) => (
+                            {BOARD_SEARCH_TYPE_OPTIONS.map((option) => (
                                         <li key={option.value} className={styles.listItem}>
                                             <button
                                                 type="button"
@@ -429,7 +429,7 @@ export default function BoardPage() {
                                                     }
                                                 }}
                                             >
-                                                {option.label}
+                                    {option.label}
                                             </button>
                                         </li>
                                     ))}
@@ -470,7 +470,7 @@ export default function BoardPage() {
                                             전체
                                         </button>
                                     </li>
-                                    {BOARD_TYPE_OPTIONS.map((option) => (
+                            {BOARD_TYPE_OPTIONS.map((option) => (
                                         <li key={option} className={styles.listItem}>
                                             <button
                                                 type="button"
@@ -485,10 +485,10 @@ export default function BoardPage() {
                                                     }
                                                 }}
                                             >
-                                                {BOARD_TYPE_LABELS[option]}
+                                    {BOARD_TYPE_LABELS[option]}
                                             </button>
                                         </li>
-                                    ))}
+                            ))}
                                 </ul>
                             </div>
                         </div>
