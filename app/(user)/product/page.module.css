@@ -1288,33 +1288,6 @@
         padding: 8px 12px;
         border-radius: 12px;
     }
-
-    .pagination {
-        gap: 12px;
-        margin-top: 24px;
-    }
-
-    .pageNumberGroup {
-        gap: 6px;
-        padding: 8px 12px;
-    }
-
-    .pageArrow {
-        width: 32px;
-        height: 32px;
-        border-width: 2px;
-    }
-
-    .pageArrow::before {
-        width: 12px;
-        height: 12px;
-    }
-
-    .pageButton {
-        width: 30px;
-        height: 30px;
-        font-size: 0.82rem;
-    }
 }
 
 .cardFavoriteButton {

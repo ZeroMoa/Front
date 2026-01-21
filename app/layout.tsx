@@ -4,6 +4,8 @@ import { Providers } from './provider'
 import { getCdnUrl } from '@/lib/cdn'
 import Footer from '@/components/Footer'
 
+import type { Viewport } from 'next'
+
 export const metadata = {
   icons: {
     icon: [
@@ -11,6 +13,13 @@ export const metadata = {
       { url: getCdnUrl('/images/favicon4.png'), rel: 'icon', type: 'image/png', sizes: '16x16' },
     ],
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({
