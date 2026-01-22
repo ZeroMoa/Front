@@ -78,6 +78,13 @@ const NEW_HERO_ITEMS: Array<{ slug: NutritionSlug; label: string; accentClass: H
     ...HERO_BANNER_ITEMS,
 ];
 
+const MOBILE_FILTER_ITEMS: Array<{ slug: NutritionSlug; label: string; image: string }> = [
+    { slug: 'zero-calorie', label: '제로칼로리', image: '/images/zero_calorie2.png' },
+    { slug: 'zero-sugar', label: '제로슈가', image: '/images/zero_sugar2.png' },
+    { slug: 'low-calorie', label: '저칼로리', image: '/images/low_calorie2.png' },
+    { slug: 'low-sugar', label: '저당', image: '/images/low_sugar4.png' },
+];
+
 interface ProductPageClientProps {
     mode: PageMode;
     categorySlug?: CategorySlug;
@@ -775,6 +782,16 @@ export default function ProductPageClient({
         return renderSubCategoryButtons(false);
     };
 
+    const mobileParentCategories = CATEGORY_SLUG_ORDER;
+    const activeMobileParentCategory = resolvedSidebarCategorySlug ?? null;
+    const mobileSubCategoryOptions = useMemo(() => {
+        if (!activeMobileParentCategory) {
+            return [];
+        }
+        return CATEGORY_CONFIG[activeMobileParentCategory].subCategories.filter((item) => item.slug !== 'all');
+    }, [activeMobileParentCategory]);
+    const activeMobileParentLabel = activeMobileParentCategory ? CATEGORY_LABELS[activeMobileParentCategory] : '';
+
 
     const handleMobileKeywordSubmit = () => {
         const trimmed = mobileKeyword.trim();
@@ -808,11 +825,11 @@ export default function ProductPageClient({
                     <button
                         type="button"
                         className={styles.selectDisplayField}
-                        onClick={() => setShowSortDropdown(!showSortDropdown)}
+                        onClick={() => setShowSortDropdown((prev) => !prev)}
                     >
                         {SORT_OPTIONS.find((opt) => opt.value === normalizedSort)?.label || '정렬'}
                     </button>
-                    <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown(!showSortDropdown)}>
+                    <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown((prev) => !prev)}>
                         <span className={styles.selectArrowIcon}></span>
                     </div>
                     <div className={styles.boxLayer}>
@@ -837,7 +854,6 @@ export default function ProductPageClient({
                     </div>
                 </div>
             </div>
-            <div className={styles.sectionDivider} aria-hidden="true" />
             <div className={styles.pageSizeLabel}>
                 <span className={styles.labelText}>페이지 크기</span>
                 <div
@@ -847,11 +863,11 @@ export default function ProductPageClient({
                     <button
                         type="button"
                         className={styles.selectDisplayField}
-                        onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+                        onClick={() => setShowPageSizeDropdown((prev) => !prev)}
                     >
                         {selectedPageSize}개씩 보기
                     </button>
-                    <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                    <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown((prev) => !prev)}>
                         <span className={styles.selectArrowIcon}></span>
                     </div>
                     <div className={styles.boxLayer}>
@@ -881,7 +897,6 @@ export default function ProductPageClient({
                     </div>
                 </div>
             </div>
-            <div className={styles.sectionDivider} aria-hidden="true" />
         </>
     );
 
@@ -987,30 +1002,28 @@ export default function ProductPageClient({
             />
             <section className={styles.content}>
                 <div className={styles.mobileHeader}>
-                    <div className={styles.mobileTitleRow}>
-                        <h1 className={styles.mobileTitle}>{config.title}</h1>
-                        <span className={styles.mobileCount}>총 {totalCountLabel}개</span>
-                    </div>
-                    <div className={styles.searchBox}>
-                        <input
-                            type="text"
-                            value={mobileKeyword}
-                            onChange={(event) => setMobileKeyword(event.target.value)}
-                            onKeyDown={handleMobileKeywordKeyDown}
-                            placeholder="상품명을 검색하세요"
-                            className={styles.searchInput}
-                        />
-                        <button type="button" className={styles.searchButton} onClick={handleMobileKeywordSubmit}>
-                            <Image
-                                src={getCdnUrl('/images/search.png')}
-                                alt="검색"
-                                width={18}
-                                height={18}
-                                className={styles.searchButtonIcon}
+                    <div className={styles.mobileSearchSticky}>
+                        <div className={styles.searchBox}>
+                            <input
+                                type="text"
+                                value={mobileKeyword}
+                                onChange={(event) => setMobileKeyword(event.target.value)}
+                                onKeyDown={handleMobileKeywordKeyDown}
+                                placeholder="상품명을 검색하세요"
+                                className={styles.searchInput}
                             />
-                        </button>
+                            <button type="button" className={styles.searchButton} onClick={handleMobileKeywordSubmit}>
+                                <Image
+                                    src={getCdnUrl('/images/search.png')}
+                                    alt="검색"
+                                    width={18}
+                                    height={18}
+                                    className={styles.searchButtonIcon}
+                                />
+                            </button>
+                        </div>
                     </div>
-                    {hasSubCategories && (
+                    {hasSubCategories && mode === 'category' && (
                         <>
                             <div className={styles.sectionDivider} aria-hidden="true" />
                             <div className={styles.mobileChips}>
@@ -1018,6 +1031,36 @@ export default function ProductPageClient({
                                 <span className={styles.mobileChipArrow} aria-hidden="true">
                                     {'>'}
                                 </span>
+                            </div>
+                        </>
+                    )}
+                    {(mode === 'nutrition' || mode === 'new' || mode === 'search') && (
+                        <>
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                            <div className={styles.mobileFilterFeatures}>
+                                {MOBILE_FILTER_ITEMS.map((item) => {
+                                    const isActive = activeHeroSlug === item.slug;
+                                    return (
+                                        <button
+                                            key={item.slug}
+                                            type="button"
+                                            className={`${styles.mobileFilterFeature} ${
+                                                isActive ? styles.mobileFilterFeatureActive : ''
+                                            }`.trim()}
+                                            onClick={() => handleHeroButtonClick(item.slug)}
+                                            aria-pressed={isActive}
+                                        >
+                                            <Image
+                                                src={getCdnUrl(item.image)}
+                                                alt={item.label}
+                                                width={48}
+                                                height={48}
+                                                className={styles.mobileFilterFeatureImage}
+                                            />
+                                            <span className={styles.mobileFilterFeatureLabel}>{item.label}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </>
                     )}
@@ -1042,7 +1085,64 @@ export default function ProductPageClient({
                             </div>
                         </>
                     )}
+                    {(mode === 'nutrition' || mode === 'new' || mode === 'search') && (
+                        <>
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                            <div className={styles.mobileCategoryChips}>
+                                <button
+                                    type="button"
+                                    className={`${styles.mobileCategoryButton} ${
+                                        !activeMobileParentCategory ? styles.mobileCategoryButtonActive : ''
+                                    }`.trim()}
+                                    onClick={() => handleCategorySelect('all')}
+                                >
+                                    전체
+                                </button>
+                            {mobileParentCategories.map((slug) => (
+                                    <button
+                                        key={slug}
+                                        type="button"
+                                        className={`${styles.mobileCategoryButton} ${
+                                            activeMobileParentCategory === slug ? styles.mobileCategoryButtonActive : ''
+                                        }`.trim()}
+                                        onClick={() => handleCategorySelect(slug)}
+                                    >
+                                        <span>{CATEGORY_LABELS[slug]}</span>
+                                    {slug !== 'icecream' && (
+                                        <span className={styles.mobileCategoryArrow} aria-hidden="true">
+                                            ▼
+                                        </span>
+                                    )}
+                                    </button>
+                                ))}
+                            </div>
+                            {activeMobileParentCategory && mobileSubCategoryOptions.length > 0 && (
+                                <div className={styles.mobileSubCategoryCard}>
+                                    <span className={styles.mobileSubCategoryHeader}>
+                                            {activeMobileParentLabel} 카테고리
+                                        </span>
+                                    <div className={styles.mobileSubCategoryRow}>
+                                        {mobileSubCategoryOptions.map((sub) => (
+                                            <button
+                                                key={sub.slug}
+                                                type="button"
+                                                className={`${styles.subCategoryButton} ${
+                                                    selectedSubCategory.slug === sub.slug ? styles.subCategoryButtonActive : ''
+                                                }`}
+                                                onClick={() => handleCategorySelect(activeMobileParentCategory, sub.slug)}
+                                            >
+                                                {sub.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
                     <div className={styles.sectionDivider} aria-hidden="true" />
+                    <div className={styles.mobileListActionsControls}>
+                        {renderSortControls()}
+                    </div>
                 </div>
                 <header className={styles.header}>
                     <div>

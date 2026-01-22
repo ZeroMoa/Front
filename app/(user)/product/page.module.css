@@ -206,7 +206,6 @@
     background: linear-gradient(135deg, #6988ff, #4f7cff);
     color: #ffffff;
     border-color: transparent;
-    box-shadow: 0 12px 22px rgba(79, 124, 255, 0.25);
     transform: translateY(-1px);
 }
 
@@ -729,7 +728,6 @@
     background: linear-gradient(135deg, #6988ff, #4f7cff);
     color: #ffffff;
     border-color: transparent;
-    box-shadow: 0 12px 22px rgba(79, 124, 255, 0.25);
     transform: translateY(-2px);
 }
 
@@ -846,6 +844,12 @@
 
 .badgeWrapper:hover .badgeTooltip,
 .badgeWrapper:focus-within .badgeTooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) scale(1);
+}
+
+.badgeTooltipVisible {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) scale(1);
@@ -1305,6 +1309,184 @@
         border-radius: 0.75rem;
         line-height: 1.4;
     }
+
+    .badgeWrapper:hover .badgeTooltip,
+    .badgeWrapper:focus-within .badgeTooltip {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(-50%) scale(0.92);
+    }
+
+    .mobileSearchSticky {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background: #ffffff;
+    }
+
+    .mobileSearchSticky .searchBox {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .mobileSearchSticky .searchInput {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .mobileSearchSticky .searchButton {
+        flex: 0 0 auto;
+    }
+
+    .mobileFilterChips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 0.75rem;
+    }
+
+    .mobileFilterChips .filterItem {
+        border: 1px solid rgba(189, 205, 232, 0.6);
+        border-radius: 999px;
+        padding: 0.35rem 0.8rem;
+        margin: 0;
+        background: rgba(244, 247, 252, 0.9);
+    }
+
+    .mobileFilterChips .filterItem input {
+        margin-right: 0.35rem;
+    }
+
+    .mobileFilterFeatures {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.6rem;
+    }
+
+    .mobileFilterFeature {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(169, 188, 240, 0.4);
+        padding: 0.55rem 0.8rem;
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+        color: #1f2b46;
+        font-size: 0.82rem;
+        font-weight: 600;
+        line-height: 1.4;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .mobileFilterFeature:active {
+        transform: translateY(-0.1rem);
+    }
+
+    .mobileFilterFeatureImage {
+        width: 1.6rem;
+        height: 1.6rem;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
+    .mobileFilterFeatureActive {
+        border-color: rgba(79, 124, 255, 0.6);
+        box-shadow: 0 0.4rem 0.9rem rgba(79, 124, 255, 0.18);
+        background: rgba(244, 248, 255, 0.85);
+    }
+
+    .mobileFilterFeatureLabel {
+        white-space: nowrap;
+    }
+
+    .mobileCategoryChips {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+        align-self: center;
+    }
+
+    .mobileCategoryChips::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mobileCategoryButton {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border: 1px solid rgba(189, 205, 232, 0.6);
+        border-radius: 999px;
+        padding: 0.45rem 0.9rem;
+        background: rgba(244, 248, 255, 0.9);
+        color: #3a4d72;
+        font-size: 0.78rem;
+        line-height: 1.4;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .mobileCategoryButtonActive {
+        background: linear-gradient(135deg, #6988ff, #4f7cff);
+        color: #ffffff;
+        border-color: transparent;
+    }
+
+    .mobileCategoryArrow {
+        font-size: 0.7rem;
+        opacity: 0.7;
+    }
+
+    .mobileSubCategoryRow {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding-bottom: 0.15rem;
+    }
+
+    .mobileSubCategoryRow::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mobileSubCategoryCard {
+        background: rgba(244, 248, 255, 0.9);
+        border: 1px solid rgba(185, 201, 228, 0.45);
+        border-radius: 0.85rem;
+        padding: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .mobileSubCategoryHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: transparent;
+        border: none;
+        padding: 0;
+        color: #2f3c58;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.82rem;
+        line-height: 1.4;
+        text-align: left;
+    }
+
+    .mobileSubCategoryTitle {
+        white-space: nowrap;
+    }
+
+    .mobileSubCategoryAction {
+        color: #8a98b8;
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+    }
 }
 
 @media (max-width: 360px) {
@@ -1378,7 +1560,50 @@
         margin: 0.3rem 0;
     }
 
-   
+    .mobileFilterChips {
+        gap: 0.4rem 0.6rem;
+    }
+
+    .mobileFilterChips .filterItem {
+        padding: 0.3rem 0.7rem;
+        font-size: 0.74rem;
+    }
+
+    .mobileCategoryButton {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.72rem;
+    }
+
+    .mobileCategoryArrow {
+        font-size: 0.65rem;
+    }
+
+    .mobileFilterFeatures {
+        gap: 0.4rem;
+    }
+
+    .mobileFilterFeature {
+        padding: 0.45rem 0.6rem;
+        font-size: 0.74rem;
+    }
+
+    .mobileFilterFeatureImage {
+        width: 1.4rem;
+        height: 1.4rem;
+    }
+
+    .mobileSubCategoryCard {
+        padding: 0.6rem;
+        gap: 0.5rem;
+    }
+
+    .mobileSubCategoryHeader {
+        font-size: 0.76rem;
+    }
+
+    .mobileSubCategoryAction {
+        font-size: 0.8rem;
+    }
 }
 
 .cardFavoriteButton {
@@ -1503,7 +1728,7 @@
     }
 
     .listActionsControls {
-        gap: 8px;
+        gap: 0.75rem;
         width: 100%;
         overflow-x: visible;
         padding-bottom: 0;
@@ -1513,14 +1738,31 @@
         display: flow;
     }
 
+    .mobileListActionsControls {
+        display: flow;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .mobileListActionsControls > * {
+        margin-right: 0.75rem;
+    }
+
+    .mobileListActionsControls > *:last-child {
+        margin-right: 0;
+    }
+
     .sortLabel,
     .pageSizeLabel {
         flex: 1 1 0;
         gap: 6px;
+        justify-content: right;
     }
 
     .labelText {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
 
     .boxSelect {
@@ -1536,5 +1778,49 @@
         font-size: 0.8rem;
         padding: 0 10px;
     }
+
+    .mobileHeader .mobileListActionsControls {
+        display: flex;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .mobileHeader .mobileListActionsControls > * {
+        margin-right: 0;
+        width: 100%;
+    }
+
+    .mobileHeader .sortLabel,
+    .mobileHeader .pageSizeLabel {
+        width: 100%;
+        justify-content: space-between;
+        flex: 1 1 0;
+    }
+
+    .mobileHeader .boxSelect,
+    .mobileHeader .pageSizeBox {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .mobileHeader .selectDisplayField {
+        font-size: 0.7rem;
+        padding: 0 8px;
+    }
+
+    .selectArrowContainer {
+        width: 20px;
+    }
+
+    .listActionsControls {
+        display: none;
+    }
+    
+    .buttonOption {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.7rem;
+    }
+    
 }
 

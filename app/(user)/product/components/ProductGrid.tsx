@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../page.module.css';
 import { Product } from '@/types/productTypes';
@@ -150,6 +150,24 @@ function ProductCard({
     const stopCardNavigation = (event: React.SyntheticEvent) => {
         event.stopPropagation();
     };
+    const [tooltipState, setTooltipState] = useState({ sweetener: false, caffeine: false });
+
+    const toggleTooltip = (type: 'sweetener' | 'caffeine') => {
+        setTooltipState((prev) => ({ ...prev, [type]: !prev[type] }));
+    };
+    const handleBadgeClick =
+        (type: 'sweetener' | 'caffeine') => (event: React.SyntheticEvent<HTMLSpanElement>) => {
+            stopCardNavigation(event);
+            toggleTooltip(type);
+        };
+    const handleBadgeKeyDown =
+        (type: 'sweetener' | 'caffeine') => (event: React.KeyboardEvent<HTMLSpanElement>) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                stopCardNavigation(event);
+                toggleTooltip(type);
+            }
+        };
 
     const recordScrollPosition = useCallback(() => {
         if (typeof window === 'undefined') {
@@ -287,34 +305,44 @@ function ProductCard({
             <div className={styles.badgeRow}>
                 {(hasAlternativeSweeteners(product) || product.caffeineMg > 0) && (
                     <>
-                        {hasAlternativeSweeteners(product) && (
-                            <span
-                                className={styles.badgeWrapper}
-                                onClick={stopCardNavigation}
-                                onPointerDown={stopCardNavigation}
-                                onKeyDown={stopCardNavigation}
-                            >
+                                {hasAlternativeSweeteners(product) && (
+                                    <span
+                                        className={styles.badgeWrapper}
+                                        onClick={handleBadgeClick('sweetener')}
+                                        onPointerDown={stopCardNavigation}
+                                        onKeyDown={handleBadgeKeyDown('sweetener')}
+                                    >
                                 <span className={styles.badge} tabIndex={0} aria-label="대체당 경고">
                                     <Image src={WARN_ICON} alt="대체당 경고" width={20} height={20} />
                                     <span>대체당</span>
                                 </span>
-                                <span className={`${styles.badgeTooltip} ${styles.badgeTooltipSweetener}`} role="tooltip">
+                                            <span
+                                                className={`${styles.badgeTooltip} ${styles.badgeTooltipSweetener} ${
+                                                    tooltipState.sweetener ? styles.badgeTooltipVisible : ''
+                                                }`}
+                                                role="tooltip"
+                                            >
                                     {ALT_SWEETENER_TOOLTIP}
                                 </span>
                             </span>
                         )}
                         {product.caffeineMg > 0 && (
-                            <span
-                                className={styles.badgeWrapper}
-                                onClick={stopCardNavigation}
-                                onPointerDown={stopCardNavigation}
-                                onKeyDown={stopCardNavigation}
-                            >
+                                        <span
+                                            className={styles.badgeWrapper}
+                                            onClick={handleBadgeClick('caffeine')}
+                                            onPointerDown={stopCardNavigation}
+                                            onKeyDown={handleBadgeKeyDown('caffeine')}
+                                        >
                                 <span className={styles.badge} tabIndex={0} aria-label="카페인 경고">
                                     <Image src={CAFFEINE_ICON} alt="카페인 경고" width={20} height={20} />
                                     <span>카페인</span>
                                 </span>
-                                <span className={`${styles.badgeTooltip} ${styles.badgeTooltipCaffeine}`} role="tooltip">
+                                            <span
+                                                className={`${styles.badgeTooltip} ${styles.badgeTooltipCaffeine} ${
+                                                    tooltipState.caffeine ? styles.badgeTooltipVisible : ''
+                                                }`}
+                                                role="tooltip"
+                                            >
                                     {CAFFEINE_TOOLTIP}
                                 </span>
                             </span>
