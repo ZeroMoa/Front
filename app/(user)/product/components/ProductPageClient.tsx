@@ -160,6 +160,7 @@ export default function ProductPageClient({
     const [clientContent, setClientContent] = useState<Product[]>(data.content);
     const searchParamString = searchParams?.toString() ?? '';
     const [mobileKeyword, setMobileKeyword] = useState(keyword);
+    const [isMobileView, setIsMobileView] = useState(false);
     
     // 커스텀 드롭다운 상태
     const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -179,6 +180,21 @@ export default function ProductPageClient({
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const mediaQuery = window.matchMedia('(max-width: 430px)');
+        const handleChange = () => setIsMobileView(mediaQuery.matches);
+        handleChange();
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
+        }
+        mediaQuery.addListener(handleChange);
+        return () => mediaQuery.removeListener(handleChange);
     }, []);
 
     // User 전용 로직: 항상 nutrition/new/search 모드에서 리셋 버튼 노출
@@ -825,11 +841,11 @@ export default function ProductPageClient({
                     <button
                         type="button"
                         className={styles.selectDisplayField}
-                        onClick={() => setShowSortDropdown((prev) => !prev)}
+                        onClick={() => setShowSortDropdown(!showSortDropdown)}
                     >
                         {SORT_OPTIONS.find((opt) => opt.value === normalizedSort)?.label || '정렬'}
                     </button>
-                    <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown((prev) => !prev)}>
+                    <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown(!showSortDropdown)}>
                         <span className={styles.selectArrowIcon}></span>
                     </div>
                     <div className={styles.boxLayer}>
@@ -863,11 +879,11 @@ export default function ProductPageClient({
                     <button
                         type="button"
                         className={styles.selectDisplayField}
-                        onClick={() => setShowPageSizeDropdown((prev) => !prev)}
+                        onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
                     >
                         {selectedPageSize}개씩 보기
                     </button>
-                    <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown((prev) => !prev)}>
+                    <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
                         <span className={styles.selectArrowIcon}></span>
                     </div>
                     <div className={styles.boxLayer}>
@@ -1139,10 +1155,16 @@ export default function ProductPageClient({
                             )}
                         </>
                     )}
-                    <div className={styles.sectionDivider} aria-hidden="true" />
-                    <div className={styles.mobileListActionsControls}>
-                        {renderSortControls()}
-                    </div>
+                    {isMobileView && (
+                        <>
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                            <div className={styles.mobileListActionsControls}>
+                                {renderSortControls()}
+                            </div>
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+
+                        </>
+                    )}
                 </div>
                 <header className={styles.header}>
                     <div>
@@ -1168,24 +1190,26 @@ export default function ProductPageClient({
                             신제품 초기화
                         </button>
                     )}
-                    <div className={styles.listActionsControls}>
-                        {mode === 'category' && activeCategorySlug === 'icecream' && (
-                            <>
-                                <button
-                                    type="button"
-                                    className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${
-                                        isNewActive ? styles.heroCardActive : ''
-                                    }`}
-                                    onClick={handleNewToggle}
-                                    aria-pressed={isNewActive}
-                                >
-                                    신제품
-                                </button>
-                                <span className={styles.heroDivider} aria-hidden="true" />
-                            </>
-                        )}
-                        {renderSortControls()}
-                    </div>
+                    {!isMobileView && (
+                        <div className={styles.listActionsControls}>
+                            {mode === 'category' && activeCategorySlug === 'icecream' && (
+                                <>
+                                    <button
+                                        type="button"
+                                        className={`${styles.heroInlineCard} ${styles.heroInlineNewButton} ${
+                                            isNewActive ? styles.heroCardActive : ''
+                                        }`}
+                                        onClick={handleNewToggle}
+                                        aria-pressed={isNewActive}
+                                    >
+                                        신제품
+                                    </button>
+                                    <span className={styles.heroDivider} aria-hidden="true" />
+                                </>
+                            )}
+                            {renderSortControls()}
+                        </div>
+                    )}
                 </div>
 
                 <ProductGrid

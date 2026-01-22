@@ -828,7 +828,7 @@
     visibility: hidden;
     transition: opacity 0.2s ease, transform 0.2s ease;
     pointer-events: none;
-    z-index: 20;
+    z-index: 200;
 }
 
 .badgeTooltip::after {
@@ -842,14 +842,22 @@
     border-color: rgba(48, 56, 80, 0.96) transparent transparent transparent;
 }
 
-.badgeWrapper:hover .badgeTooltip,
-.badgeWrapper:focus-within .badgeTooltip {
+@media (hover: hover) and (pointer: fine) {
+    .badgeWrapper:hover .badgeTooltip,
+    .badgeWrapper:focus-within .badgeTooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+.badgeTooltipVisible {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) scale(1);
 }
 
-.badgeTooltipVisible {
+.badgeWrapperActive .badgeTooltip {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) scale(1);
@@ -1151,7 +1159,7 @@
     .content {
         padding: 1rem 0.875rem 1.5rem;
         border-radius: 1rem;
-        gap: 0.25rem;
+        gap: 1.25rem;
     }
 
     .header,
@@ -1308,13 +1316,6 @@
         padding: 0.5rem 0.75rem;
         border-radius: 0.75rem;
         line-height: 1.4;
-    }
-
-    .badgeWrapper:hover .badgeTooltip,
-    .badgeWrapper:focus-within .badgeTooltip {
-        opacity: 0;
-        visibility: hidden;
-        transform: translateX(-50%) scale(0.92);
     }
 
     .mobileSearchSticky {
@@ -1812,8 +1813,29 @@
         width: 20px;
     }
 
-    .listActionsControls {
-        display: none;
+    .mobileHeader .mobileListActionsControls {
+        position: relative;
+        z-index: 40;
+        overflow: visible;
+    }
+
+    .mobileHeader .boxSelect {
+        position: relative;
+        z-index: 41;
+    }
+
+    .mobileHeader .boxLayer {
+        z-index: 120;
+        pointer-events: auto;
+    }
+
+    .mobileHeader .listOptions,
+    .mobileHeader .listItem,
+    .mobileHeader .buttonOption,
+    .mobileHeader .selectDisplayField,
+    .mobileHeader .selectArrowContainer {
+        pointer-events: auto;
+        touch-action: manipulation;
     }
     
     .buttonOption {

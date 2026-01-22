@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../page.module.css';
 import { Product } from '@/types/productTypes';
@@ -151,8 +151,27 @@ function ProductCard({
         event.stopPropagation();
     };
     const [tooltipState, setTooltipState] = useState({ sweetener: false, caffeine: false });
+    const [isMobileView, setIsMobileView] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const mediaQuery = window.matchMedia('(max-width: 430px)');
+        const handleChange = () => setIsMobileView(mediaQuery.matches);
+        handleChange();
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
+        }
+        mediaQuery.addListener(handleChange);
+        return () => mediaQuery.removeListener(handleChange);
+    }, []);
 
     const toggleTooltip = (type: 'sweetener' | 'caffeine') => {
+        if (!isMobileView) {
+            return;
+        }
         setTooltipState((prev) => ({ ...prev, [type]: !prev[type] }));
     };
     const handleBadgeClick =
@@ -307,7 +326,9 @@ function ProductCard({
                     <>
                                 {hasAlternativeSweeteners(product) && (
                                     <span
-                                        className={styles.badgeWrapper}
+                                        className={`${styles.badgeWrapper} ${
+                                            isMobileView && tooltipState.sweetener ? styles.badgeWrapperActive : ''
+                                        }`.trim()}
                                         onClick={handleBadgeClick('sweetener')}
                                         onPointerDown={stopCardNavigation}
                                         onKeyDown={handleBadgeKeyDown('sweetener')}
@@ -328,7 +349,9 @@ function ProductCard({
                         )}
                         {product.caffeineMg > 0 && (
                                         <span
-                                            className={styles.badgeWrapper}
+                                            className={`${styles.badgeWrapper} ${
+                                                isMobileView && tooltipState.caffeine ? styles.badgeWrapperActive : ''
+                                            }`.trim()}
                                             onClick={handleBadgeClick('caffeine')}
                                             onPointerDown={stopCardNavigation}
                                             onKeyDown={handleBadgeKeyDown('caffeine')}
