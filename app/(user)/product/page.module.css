@@ -47,6 +47,7 @@
     padding: 0 10px;
     border: 1px solid rgba(185, 201, 228, 0.5);
     overflow: hidden;
+    min-width : 5rem
 }
 
 .searchInput {
@@ -56,6 +57,8 @@
     padding: 12px 8px;
     font-size: 0.95rem;
     color: #23304a;
+    min-width: 0; 
+    width: 100%;
 }
 
 .searchInput:focus {
@@ -1375,6 +1378,8 @@
     .sectionDivider {
         margin: 0.3rem 0;
     }
+
+   
 }
 
 .cardFavoriteButton {
