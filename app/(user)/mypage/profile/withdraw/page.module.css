@@ -3,7 +3,7 @@
     justify-content: center;
     padding: 40px 0;
     background-color: #f7f7f7;
-    min-height: calc(100vh - var(--header-height)); /* 헤더 높이를 제외한 최소 높이 설정 */
+    min-height: calc(100dvh - var(--header-height)); /* 헤더 높이를 제외한 최소 높이 설정 */
 }
 
 .withdrawContainer {
@@ -300,4 +300,121 @@
     align-items: center;
     justify-content: center;
     height: 100%;
+}
+
+@media (max-width: 430px) {
+    .pageWrapper {
+        padding: 1.25rem 0 2rem;
+    }
+
+    .withdrawContainer {
+        padding: 1.25rem 1rem;
+        border-radius: 0.65rem;
+        max-width: 100%;
+    }
+
+    .headerSection {
+        margin-bottom: 1.25rem;
+    }
+
+    .pageTitle {
+        font-size: 1.4rem;
+        line-height: 1.4;
+    }
+
+    .noticeSection {
+        margin-bottom: 1.25rem;
+        padding: 0.85rem;
+        border-radius: 0.5rem;
+    }
+
+    .noticeLabel {
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .noticeContentWrapper {
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    .noticeImage {
+        width: 4.5rem;
+        height: 4.5rem;
+    }
+
+    .inputGroup {
+        margin-bottom: 1rem;
+    }
+
+    .labelWrapper {
+        margin-bottom: 0.5rem;
+    }
+
+    .label {
+        font-size: 0.85rem;
+    }
+
+    .inputField {
+        height: auto;
+        min-height: 2.75rem;
+        padding: 0.65rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .passwordToggle {
+        right: 0.6rem;
+        padding: 0.2rem;
+    }
+
+    .errorMessage {
+        font-size: 0.7rem;
+        margin-top: 0.35rem;
+        line-height: 1.4;
+    }
+
+    .checkboxWrapper {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .checkboxLabel {
+        font-size: 0.85rem;
+    }
+
+    .checkboxInput {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .textareaWrapper {
+        height: auto;
+        min-height: 6.5rem;
+    }
+
+    .commentTextarea {
+        padding: 0.65rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .contentLengthCounter {
+        font-size: 0.7rem;
+    }
+
+    .buttonGroup {
+        gap: 0.6rem;
+        margin-top: 1.5rem;
+    }
+
+    .bottomButton {
+        height: auto;
+        min-height: 2.75rem;
+        font-size: 0.9rem;
+        max-width: 100%;
+    }
+
+    .buttonLoadingText {
+        font-size: 0.8rem;
+    }
 }

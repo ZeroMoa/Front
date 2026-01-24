@@ -151,11 +151,6 @@
     opacity: 0.8;
 }
 
-.emailIdInput, .emailSeparator, .emailDomainSelectWrapper, .emailDomainButton, .emailDomainOptions, .emailDomainOptionItem, .emailDirectInput {
-    /* 이전 이메일 관련 스타일 삭제 또는 주석 처리 */
-    /* display: none; */
-}
-
 .boxEmail {
     display: flex;
     align-items: center;
@@ -437,5 +432,142 @@
     }
     .emailSeparator {
         margin: 4.5px 0; /* 5px 0 -> 4.5px 0 */
+    }
+}
+
+@media (max-width: 430px) {
+    .pageWrapper {
+        padding-top: 1.1rem;
+    }
+
+    .profileCard {
+        width: 100%;
+        max-width: 75%;
+        padding: 1.5rem 1.5rem;
+        border-radius: 0.65rem;
+    }
+
+    .headerSection {
+        margin-bottom: 0.75rem;
+    }
+
+    .pageTitle {
+        font-size: 1.4rem;
+        margin-bottom: 0.3rem;
+        line-height: 1.4;
+    }
+
+    .formSection form {
+        gap: 0.6rem;
+    }
+
+    .inputGroup label {
+        font-size: 0.75rem;
+        margin-bottom: 0.35rem;
+        line-height: 1.4;
+    }
+
+    .inputFieldContainer {
+        gap: 0.4rem;
+    }
+
+    .input,
+    .readOnlyInput,
+    .inputField {
+        padding: 0.6rem 0.65rem;
+        font-size: 0.85rem;
+        min-height: 2.4rem;
+    }
+
+    .passwordToggle {
+        right: 0.6rem;
+    }
+
+    .boxEmail {
+        gap: 0.35rem;
+    }
+
+    .boxInput {
+        border-radius: 0.45rem;
+    }
+
+    .inputInfo {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.85rem;
+        min-height: 2.25rem;
+    }
+
+    .textAt {
+        font-size: 0.85rem;
+    }
+
+    .boxSelect {
+        min-height: 2.3rem;
+        border-radius: 0.55rem;
+    }
+
+    .domainDisplayField,
+    .domainInputField {
+        padding: 0.45rem 0.55rem;
+        font-size: 0.85rem;
+    }
+
+    .selectArrowContainer {
+        width: 2rem;
+    }
+
+    .selectArrow {
+        font-size: 0.75rem;
+    }
+
+    .boxLayer {
+        top: calc(100% + 0.35rem);
+        border-radius: 0.6rem;
+        max-height: 10rem;
+    }
+
+    .listAdress {
+        padding: 0.35rem 0;
+    }
+
+    .buttonMail {
+        padding: 0.45rem 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    .textCont {
+        font-size: 0.75rem;
+        margin-top: 0.45rem;
+        line-height: 1.4;
+    }
+
+    .buttonGroup {
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .bottomButton {
+        padding: 0.65rem 0.9rem;
+        font-size: 0.9rem;
+        min-height: 2.5rem;
+    }
+
+    .loading,
+    .error,
+    .noData {
+        padding: 3rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .errorMessage,
+    .successMessage {
+        font-size: 0.7rem;
+        margin-top: 0.25rem;
+        line-height: 1.4;
+    }
+
+    .socialNotice {
+        padding: 0.55rem 0.65rem;
+        font-size: 0.75rem;
     }
 }
