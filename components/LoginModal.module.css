@@ -292,3 +292,11 @@
     background: rgba(200, 210, 235, 0.6);
     margin-bottom: 20px;
 }
+
+@media screen and (max-width: 430px) {
+
+    .optionsContainer {
+        font-size: 0.7rem;
+    }
+
+}
