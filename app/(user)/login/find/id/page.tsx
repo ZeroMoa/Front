@@ -170,6 +170,7 @@ export default function FindIdPage() {
                                                 className={`${styles.inputInfo} ${styles.emailInput} ${styles.domainDisplayField} ${
                                                     findIdEmailBack ? styles.hasValue : ''
                                                 }`}
+                                                onClick={() => setShowEmailDomainSelect((prev) => !prev)}
                                             >
                                                 {findIdEmailBack || '선택해주세요.'}
                                             </div>

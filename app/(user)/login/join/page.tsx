@@ -383,7 +383,10 @@ export default function JoinPage() {
                                             required={!emailError} /* 이메일 오류가 없을 때만 required */
                                         />
                                     ) : (
-                                        <div className={`${styles.inputInfo} ${styles.emailInput} ${styles.domainDisplayField} ${emailBack ? styles.hasValue : ''}`}> {/* emailBack에 hasValue 추가 */}
+                                        <div
+                                            className={`${styles.inputInfo} ${styles.emailInput} ${styles.domainDisplayField} ${emailBack ? styles.hasValue : ''}`}
+                                            onClick={() => setShowEmailDomainSelect((prev) => !prev)}
+                                        >
                                             {emailBack || '선택해주세요.'}
                                         </div>
                                     )}

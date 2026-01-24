@@ -295,6 +295,7 @@ const handleTokenExpiration = useCallback(() => {
                                                 className={`${styles.inputInfo} ${styles.emailInput} ${styles.domainDisplayField} ${
                                                     emailBack ? styles.hasValue : ''
                                                 }`}
+                                                onClick={() => setShowEmailDomainSelect((prev) => !prev)}
                                             >
                                                 {emailBack || '선택해주세요.'}
                                             </div>
