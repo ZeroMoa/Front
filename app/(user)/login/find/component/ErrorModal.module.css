@@ -31,16 +31,17 @@
 
 .modalContent button {
     padding: 12px 25px;
-    background: linear-gradient(135deg, #4f7cff, #6c5cff);
-    color: #fff;
     border: none;
     border-radius: 6px;
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
+
+    background-color: #f0f0f0;
+    color: #333;
 }
 
 .modalContent button:hover {
-    background: linear-gradient(135deg, #4f7cff, #6c5cff);
+    background-color : #e0e0e0;
 }

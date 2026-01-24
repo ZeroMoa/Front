@@ -690,6 +690,7 @@
     .buttonGroup {
         gap: 0.5rem;
         margin-top: 1.5rem;
+        flex-flow: wrap;
     }
 
     .button {
