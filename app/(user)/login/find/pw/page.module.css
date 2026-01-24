@@ -318,3 +318,142 @@
     background-color: #cccccc;
     cursor: not-allowed;
 }
+
+@media (max-width: 430px) {
+    .container {
+        padding: 1.25rem 0.75rem 1.75rem;
+    }
+
+    .card {
+        padding: 1.25rem 0.875rem;
+        border-radius: 0.65rem;
+        max-width: 100%;
+    }
+
+    .title {
+        font-size: 1.15rem;
+        margin-bottom: 1rem;
+        line-height: 1.4;
+    }
+
+    .tabContent {
+        margin-top: 0.6rem;
+    }
+
+    .inputGroup {
+        margin: 0.75rem 0 0.25rem;
+    }
+
+    .inputGroup label {
+        font-size: 0.75rem;
+        margin-bottom: 0.35rem;
+        line-height: 1.4;
+    }
+
+    .inputField {
+        padding: 0.65rem 0.7rem;
+        font-size: 0.85rem;
+        min-height: 2.5rem;
+    }
+
+    .passwordInputWrapper .inputField {
+        padding-right: 2.5rem;
+    }
+
+    .passwordToggle {
+        right: 0.5rem;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0.2rem;
+    }
+
+    .errorMessage {
+        font-size: 0.7rem;
+        margin-top: 0.25rem;
+        line-height: 1.4;
+    }
+
+    .confirmButton {
+        padding: 0.65rem;
+        font-size: 0.95rem;
+        min-height: 2.5rem;
+        margin-top: 0.6rem;
+    }
+
+    .boxEmail {
+        gap: 0.4rem;
+    }
+
+    .boxInput {
+        border-radius: 0.45rem;
+    }
+
+    .inputInfo {
+        padding: 0.55rem 0.65rem;
+        font-size: 0.85rem;
+        min-height: 2.3rem;
+    }
+
+    .emailInput,
+    .textAt {
+        font-size: 0.85rem;
+    }
+
+    .boxSelect {
+        min-height: 2.4rem;
+        border-radius: 0.55rem;
+    }
+
+    .domainDisplayField,
+    .domainInputField {
+        padding: 0.45rem 0.55rem;
+        font-size: 0.85rem;
+    }
+
+    .selectArrowContainer {
+        width: 2rem;
+    }
+
+    .selectArrow {
+        font-size: 0.75rem;
+    }
+
+    .boxLayer {
+        top: calc(100% + 0.35rem);
+        border-radius: 0.65rem;
+        max-height: 10.5rem;
+    }
+
+    .listAdress {
+        padding: 0.35rem 0;
+    }
+
+    .buttonMail {
+        padding: 0.45rem 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    .resultContainer {
+        gap: 1rem;
+    }
+
+    .resultMessage {
+        font-size: 1rem;
+    }
+
+    .resultSubMessage {
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+
+    .timerRow {
+        font-size: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .loginButton {
+        padding: 0.65rem;
+        font-size: 0.95rem;
+        min-height: 2.5rem;
+    }
+}
