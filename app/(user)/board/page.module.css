@@ -289,6 +289,10 @@
 }
 
 .noticeTable {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
     border-bottom: 1px solid rgba(220, 227, 238, 0.6);
     margin-top: 24px;
     background: #fff;
@@ -296,16 +300,6 @@
     box-shadow: 0 8px 24px rgba(60, 80, 110, 0.08);
     overflow: hidden;
     border: 1px solid rgba(157, 175, 205, 0.5);
-    padding-bottom: 15px;
-}
-
-.tableHeader,
-.noticeItem {
-    display: grid;
-    grid-template-columns: 0.8fr 4.2fr 1.5fr; /* 0.8fr(번호) + 4.2fr(제목) + 1.5fr(작성일자) */
-    align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(230, 236, 245, 0.8);
 }
 
 .tableHeader {
@@ -316,35 +310,51 @@
     text-align: center;
 }
 
+.tableHeader th,
+.noticeItem td {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(230, 236, 245, 0.8);
+}
+
 .headerNo,
 .itemNo {
     text-align: center;
+    width: 4.5rem;
 }
 
 .headerTitle,
 .itemTitle {
     text-align: left;
-    justify-self: start;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
 }
 
 .headerDate,
 .itemDate {
     text-align: center;
+    width: 6.5rem;
 }
 
 .noticeLink {
     text-decoration: none;
     color: inherit;
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
     transition: background-color 0.2s ease;
+}
+
+.itemTitle {
+    min-width: 0;
 }
 
 .noticeItem {
     background-color: #fff;
     color: #2e3b52;
+    cursor: pointer;
+}
+
+.noticeItem:last-child td {
+    border-bottom: none;
 }
 
 .noticeItem:hover {
@@ -354,9 +364,9 @@
 .itemTitleText {
     color: #2a364d;
     font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .itemAuthor,
@@ -516,13 +526,186 @@
         align-self: flex-end;
     }
 
-    .tableHeader,
-    .noticeItem {
-        grid-template-columns: 0.8fr 3fr 1fr;
-    }
-
     .headerDate,
     .itemDate {
-        display: none;
+        display: table-cell;
+    }
+}
+
+@media screen and (max-width: 430px) {
+    .container {
+        margin: 1.5rem auto 2.5rem;
+        padding: 1.25rem 1rem;
+        border-radius: 0.85rem;
+    }
+
+    .headerSection {
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .headerSection h1 {
+        font-size: 1.2rem;
+        margin-bottom: 0.35rem;
+        line-height: 1.4;
+    }
+
+    .headerSection span {
+        font-size: 0.75rem;
+        padding-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .topInfo {
+        font-size: 0.75rem;
+        padding-top: 0.6rem;
+    }
+
+    .searchAndWriteSection {
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .searchControls {
+        gap: 0.6rem;
+    }
+
+    .searchBar {
+        border-radius: 0.65rem;
+    }
+
+    .searchInput {
+        padding: 0.65rem 0.75rem;
+        width: 100%;
+        font-size: 0.85rem;
+    }
+
+    .searchButton {
+        padding: 0.65rem 0.8rem;
+        font-size: 0.95rem;
+    }
+
+    .filterSelects {
+        gap: 0.5rem;
+        flex-flow: row;
+    }
+
+    .boxSelect {
+        min-width: 0;
+        width: 100%;
+        height: 2.5rem;
+        border-radius: 0.65rem;
+    }
+
+    .selectDisplayField {
+        padding: 0 0.65rem;
+        font-size: 0.85rem;
+    }
+
+    .selectArrowContainer {
+        width: 2rem;
+    }
+
+    .boxLayer {
+        max-height: 11rem;
+        border-radius: 0.65rem;
+    }
+
+    .listOptions {
+        padding: 0.4rem 0;
+    }
+
+    .buttonOption {
+        padding: 0.45rem 0.65rem;
+        font-size: 0.85rem;
+    }
+
+    .writeButton {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+        border-radius: 0.7rem;
+    }
+
+    .loadingBox,
+    .errorBox,
+    .noNotices {
+        margin-top: 1rem;
+        padding: 1.5rem 1rem;
+        border-radius: 0.85rem;
+        font-size: 0.85rem;
+    }
+
+    .statusIcon {
+        width: 10rem;
+        height: 10rem;
+    }
+
+    .noticeTable {
+        margin-top: 1rem;
+        border-radius: 0.75rem;
+        padding-bottom: 0.6rem;
+    }
+
+    .tableHeader th,
+    .noticeItem td {
+        padding: 0.75rem 0.65rem;
+    }
+
+    .headerTitle,
+    .itemTitle {
+        gap: 0.4rem;
+    }
+
+    .headerNo,
+    .itemNo {
+        font-size: 0.75rem;
+    }
+
+    .itemTitleText {
+        font-size: 0.75rem;
+    }
+
+    .noticeBadge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.45rem;
+    }
+
+    .itemAuthor,
+    .itemDate {
+        font-size: 0.75rem;
+    }
+
+    .pagination {
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+    }
+
+    .pageNumberGroup {
+        gap: 0.35rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 999px;
+    }
+
+    .pageArrow {
+        width: 2rem;
+        height: 2rem;
+        border-width: 2px;
+    }
+
+    .pageArrow::before {
+        width: 0.75rem;
+        height: 0.75rem;
+    }
+
+    .firstArrow::before,
+    .lastArrow::before {
+        width: 1.1rem;
+    }
+
+    .pageButton {
+        width: 1.8rem;
+        height: 1.8rem;
+        font-size: 0.75rem;
     }
 }

@@ -213,6 +213,17 @@ export default function BoardPage() {
         return totalElements - (currentPageIndex * PAGE_SIZE + index);
     };
 
+    const formatShortDate = (value: string | Date) => {
+        const date = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return '';
+        }
+        const year = String(date.getFullYear()).slice(-2);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}.${month}.${day}`;
+    };
+
     const handlePageChange = (pageIndex: number) => {
         const nextPage = Math.max(pageIndex - 1, 0);
         setPage(nextPage);
@@ -249,29 +260,45 @@ export default function BoardPage() {
 
         return (
             <>
-                <div className={styles.noticeTable}>
-                    <div className={styles.tableHeader}>
-                        <span className={styles.headerNo}>번호</span>
-                        <span className={styles.headerTitle}>제목</span>
-                        <span className={styles.headerDate}>작성일자</span>
-                    </div>
-                    {notices.map((notice, index) => (
-                        <Link href={`/board/${notice.boardNo}`} key={notice.boardNo} className={styles.noticeLink}>
-                            <div className={styles.noticeItem}>
-                                <span className={styles.itemNo}>{getDisplayNumber(index)}</span>
-                                <div className={styles.itemTitle}>
-                                    <span
-                                        className={`${styles.noticeBadge} ${badgeClassMap[notice.boardType] ?? ''}`}
-                                    >
-                                        {BOARD_TYPE_LABELS[notice.boardType] ?? notice.boardType}
-                                    </span>
-                                    <span className={styles.itemTitleText}>{notice.title}</span>
-                                </div>
-                                <span className={styles.itemDate}>{new Date(notice.createdAt).toLocaleDateString('ko-KR')}</span>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
+                <table className={styles.noticeTable}>
+                    <thead>
+                        <tr className={styles.tableHeader}>
+                            <th scope="col" className={styles.headerNo}>번호</th>
+                            <th scope="col" className={styles.headerTitle}>제목</th>
+                            <th scope="col" className={styles.headerDate}>작성일자</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {notices.map((notice, index) => (
+                            <tr
+                                key={notice.boardNo}
+                                className={styles.noticeItem}
+                                role="link"
+                                tabIndex={0}
+                                onClick={() => router.push(`/board/${notice.boardNo}`)}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault();
+                                        router.push(`/board/${notice.boardNo}`);
+                                    }
+                                }}
+                            >
+                                <td className={styles.itemNo}>{getDisplayNumber(index)}</td>
+                                <td className={styles.itemTitle}>
+                                    <Link href={`/board/${notice.boardNo}`} className={styles.noticeLink}>
+                                        <span
+                                            className={`${styles.noticeBadge} ${badgeClassMap[notice.boardType] ?? ''}`}
+                                        >
+                                            {BOARD_TYPE_LABELS[notice.boardType] ?? notice.boardType}
+                                        </span>
+                                        <span className={styles.itemTitleText}>{notice.title}</span>
+                                    </Link>
+                                </td>
+                                <td className={styles.itemDate}>{formatShortDate(notice.createdAt)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
 
                 {totalPages > 0 && (
                     <Pagination
