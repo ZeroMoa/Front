@@ -385,7 +385,6 @@
     padding: 4px 10px;
     border-radius: 999px;
     flex-shrink: 0;
-    box-shadow: 0 8px 16px rgba(79, 124, 255, 0.18);
 }
 
 .badgeNOTICE {
@@ -660,10 +659,13 @@
     .headerNo,
     .itemNo {
         font-size: 0.75rem;
+        width: 2.6rem;
     }
 
     .itemTitleText {
         font-size: 0.75rem;
+        line-height: 1.4;
+        overflow-wrap: break-word;
     }
 
     .noticeBadge {
@@ -673,7 +675,8 @@
 
     .itemAuthor,
     .itemDate {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+        width: 3.8rem;
     }
 
     .pagination {
