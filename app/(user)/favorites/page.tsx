@@ -26,6 +26,7 @@ export default function FavoritesPage() {
     const router = useRouter();
     const getCurrentSearch = () => (typeof window === 'undefined' ? '' : window.location.search);
     const [searchString, setSearchString] = useState(getCurrentSearch);
+    const [isMobileView, setIsMobileView] = useState(false);
     const searchParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
     const updateSearchString = useCallback((params: URLSearchParams) => {
         const queryString = params.toString();
@@ -37,6 +38,20 @@ export default function FavoritesPage() {
         };
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const mediaQuery = window.matchMedia('(max-width: 430px)');
+        const handleChange = () => setIsMobileView(mediaQuery.matches);
+        handleChange();
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
+        }
+        mediaQuery.addListener(handleChange);
+        return () => mediaQuery.removeListener(handleChange);
     }, []);
     const { isLoggedIn, isLoading: authLoading } = useIsLoggedIn();
     const alertShownRef = useRef(false);
@@ -207,7 +222,8 @@ export default function FavoritesPage() {
 
     return (
         <div className={styles.pageWrapper}>
-            <header className={styles.header}>
+            {!isMobileView && (
+                <header className={styles.header}>
                 <div className={styles.titleGroup}>
                     <h1 className={styles.title}>좋아요한 상품</h1>
                     <p className={styles.description}>{headerDescription}</p>
@@ -297,6 +313,101 @@ export default function FavoritesPage() {
                     </div>
                 </div>
             </header>
+            )}
+            {isMobileView && (
+                <div className={styles.mobileHeader}>
+                    <div className={styles.mobileTitleRow}>
+                        <h1 className={styles.mobileTitle}>좋아요한 상품</h1>
+                        <span className={styles.mobileCount}>{totalElements.toLocaleString()}개</span>
+                    </div>
+                    <div className={styles.sectionDivider} aria-hidden="true" />
+                    <div className={styles.mobileControls}>
+                        <div className={styles.sortLabel}>
+                            <span className={styles.labelText}>정렬</span>
+                            <div
+                                ref={sortRef}
+                                className={`${styles.boxSelect} ${showSortDropdown ? styles.on : ''}`}
+                            >
+                                <button
+                                    type="button"
+                                    className={styles.selectDisplayField}
+                                    onClick={() => setShowSortDropdown(!showSortDropdown)}
+                                >
+                                    {SORT_OPTIONS.find(opt => opt.value === normalizedSort)?.label || '정렬'}
+                                </button>
+                                <div className={styles.selectArrowContainer} onClick={() => setShowSortDropdown(!showSortDropdown)}>
+                                    <span className={styles.selectArrowIcon}></span>
+                                </div>
+                                <div className={styles.boxLayer}>
+                                    <ul className={styles.listOptions}>
+                                        {SORT_OPTIONS.map((option) => (
+                                            <li key={option.value} className={styles.listItem}>
+                                                <button
+                                                    type="button"
+                                                    className={`${styles.buttonOption} ${option.value === normalizedSort ? styles.buttonOptionSelected : ''}`}
+                                                    onClick={() => {
+                                                        const params = new URLSearchParams(searchParams.toString());
+                                                        params.set('page', String(PAGE_MIN));
+                                                        params.set('size', String(currentSize));
+                                                        params.set('sort', option.value);
+                                                        router.replace(`/favorites?${params.toString()}`, { scroll: true });
+                                                        updateSearchString(params);
+                                                        setShowSortDropdown(false);
+                                                    }}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div className={styles.pageSizeLabel}>
+                            <span className={styles.labelText}>페이지 크기</span>
+                            <div
+                                ref={pageSizeRef}
+                                className={`${styles.boxSelect} ${showPageSizeDropdown ? styles.on : ''} ${styles.pageSizeBox}`}
+                            >
+                                <button
+                                    type="button"
+                                    className={styles.selectDisplayField}
+                                    onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}
+                                >
+                                    {currentSize}개씩 보기
+                                </button>
+                                <div className={styles.selectArrowContainer} onClick={() => setShowPageSizeDropdown(!showPageSizeDropdown)}>
+                                    <span className={styles.selectArrowIcon}></span>
+                                </div>
+                                <div className={styles.boxLayer}>
+                                    <ul className={styles.listOptions}>
+                                        {pageSizeOptions.map((option) => (
+                                            <li key={option} className={styles.listItem}>
+                                                <button
+                                                    type="button"
+                                                    className={`${styles.buttonOption} ${option === currentSize ? styles.buttonOptionSelected : ''}`}
+                                                    onClick={() => {
+                                                        const params = new URLSearchParams(searchParams.toString());
+                                                        params.set('page', String(PAGE_MIN));
+                                                        params.set('size', String(option));
+                                                        params.set('sort', normalizedSort);
+                                                        router.replace(`/favorites?${params.toString()}`, { scroll: true });
+                                                        updateSearchString(params);
+                                                        setShowPageSizeDropdown(false);
+                                                    }}
+                                                >
+                                                    {option}개씩 보기
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={styles.sectionDivider} aria-hidden="true" />
+                </div>
+            )}
 
             <section className={styles.content}>
                 {error ? (

@@ -1018,41 +1018,30 @@ export default function ProductPageClient({
             />
             <section className={styles.content}>
                 <div className={styles.mobileHeader}>
-                    <div className={styles.mobileSearchSticky}>
-                        <div className={styles.searchBox}>
-                            <input
-                                type="text"
-                                value={mobileKeyword}
-                                onChange={(event) => setMobileKeyword(event.target.value)}
-                                onKeyDown={handleMobileKeywordKeyDown}
-                                placeholder="상품명을 검색하세요"
-                                className={styles.searchInput}
-                            />
-                            <button type="button" className={styles.searchButton} onClick={handleMobileKeywordSubmit}>
-                                <Image
-                                    src={getCdnUrl('/images/search.png')}
-                                    alt="검색"
-                                    width={18}
-                                    height={18}
-                                    className={styles.searchButtonIcon}
-                                />
-                            </button>
-                        </div>
-                    </div>
-                    {hasSubCategories && mode === 'category' && (
-                        <>
-                            <div className={styles.sectionDivider} aria-hidden="true" />
-                            <div className={styles.mobileChips}>
-                                {renderSubCategoryButtons(true)}
-                                <span className={styles.mobileChipArrow} aria-hidden="true">
-                                    {'>'}
-                                </span>
+                    {mode === 'category' && (
+                        <header className={styles.header}>
+                            <div>
+                                <h1 className={styles.title}>{config.title}</h1>
+                                <p className={styles.description}>{config.description}</p>
                             </div>
-                        </>
+                            <div className={styles.headerMeta}>
+                                <span className={styles.headerMetaLabel}>총 제품</span>
+                                <span className={styles.totalCount}>{totalCountLabel}개</span>
+                            </div>
+                        </header>
                     )}
-                    {(mode === 'nutrition' || mode === 'new' || mode === 'search') && (
+                    {(mode === 'nutrition' || mode === 'new' || mode === 'search') ? (
                         <>
-                            <div className={styles.sectionDivider} aria-hidden="true" />
+                            <header className={styles.header}>
+                                <div>
+                                    <h1 className={styles.title}>{config.title}</h1>
+                                    <p className={styles.description}>{config.description}</p>
+                                </div>
+                                <div className={styles.headerMeta}>
+                                    <span className={styles.headerMetaLabel}>총 제품</span>
+                                    <span className={styles.totalCount}>{totalCountLabel}개</span>
+                                </div>
+                            </header>
                             <div className={styles.mobileFilterFeatures}>
                                 {MOBILE_FILTER_ITEMS.map((item) => {
                                     const isActive = activeHeroSlug === item.slug;
@@ -1077,6 +1066,61 @@ export default function ProductPageClient({
                                         </button>
                                     );
                                 })}
+                            </div>
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                            <div className={styles.mobileSearchSticky}>
+                                <div className={styles.searchBox}>
+                                    <input
+                                        type="text"
+                                        value={mobileKeyword}
+                                        onChange={(event) => setMobileKeyword(event.target.value)}
+                                        onKeyDown={handleMobileKeywordKeyDown}
+                                        placeholder="상품명을 검색하세요"
+                                        className={styles.searchInput}
+                                    />
+                                    <button type="button" className={styles.searchButton} onClick={handleMobileKeywordSubmit}>
+                                        <Image
+                                            src={getCdnUrl('/images/search.png')}
+                                            alt="검색"
+                                            width={18}
+                                            height={18}
+                                            className={styles.searchButtonIcon}
+                                        />
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className={styles.mobileSearchSticky}>
+                            <div className={styles.searchBox}>
+                                <input
+                                    type="text"
+                                    value={mobileKeyword}
+                                    onChange={(event) => setMobileKeyword(event.target.value)}
+                                    onKeyDown={handleMobileKeywordKeyDown}
+                                    placeholder="상품명을 검색하세요"
+                                    className={styles.searchInput}
+                                />
+                                <button type="button" className={styles.searchButton} onClick={handleMobileKeywordSubmit}>
+                                    <Image
+                                        src={getCdnUrl('/images/search.png')}
+                                        alt="검색"
+                                        width={18}
+                                        height={18}
+                                        className={styles.searchButtonIcon}
+                                    />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    {hasSubCategories && mode === 'category' && (
+                        <>
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                            <div className={styles.mobileChips}>
+                                {renderSubCategoryButtons(true)}
+                                <span className={styles.mobileChipArrow} aria-hidden="true">
+                                    {'>'}
+                                </span>
                             </div>
                         </>
                     )}

@@ -1175,6 +1175,40 @@
         gap: 0.75rem;
     }
 
+    .mobileHeader .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .mobileHeader .title {
+        font-size: 1.05rem;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    .mobileHeader .description {
+        display: none;
+    }
+
+    .mobileHeader .headerMeta {
+        min-width: 0;
+        align-items: flex-end;
+        gap: 0;
+    }
+
+    .mobileHeader .headerMetaLabel {
+        display: none;
+    }
+
+    .mobileHeader .totalCount {
+        font-size: 0.85rem;
+        color: #5b6787;
+        line-height: 1.4;
+        white-space: nowrap;
+    }
+
     .mobileTitleRow {
         align-items: center;
         justify-content: space-between;
